@@ -1,2 +1,3 @@
 # barades.com
-TFE pour la formation IFAPME
+
+Barades.com is a SPA aimed to help people plan their ttrpg game sessions.
