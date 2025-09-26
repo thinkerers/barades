@@ -8,6 +8,6 @@ sudo apt update
 sudo apt install nx
 ```
 
-## Ajout de Nx au repo
+## Create a new workspace with presets
 
-nx init
+npx create-nx-workspace@latest
