@@ -95,3 +95,9 @@ git push
 ```
 
 **Outcome**: The repository now has a single, clean Nx workspace at its root. Commands like `nx show projects` and `nx graph` confirm that the structure is correctly recognized by all Nx tools.
+
+
+
+## Run the angular app
+
+npx nx serve demo
