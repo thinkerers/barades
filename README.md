@@ -1,4 +1,4 @@
-# barades.com
+# barades
 
 Fidélisez vos clients avec Bar à Dés, la plateforme dédiée aux bars à jeux !
 
