@@ -60,3 +60,38 @@ git config --global pull.ff only       # Only fast-forward, fail if not possible
 Only one local commit; remote already had a merge PR. Rebase avoided unnecessary noise and preserved a clean timeline.
 
 ---
+
+## Troubleshooting: Fixing a Nested Nx Workspace (2025-09-27)
+
+**Problem**: An Nx workspace was accidentally created inside a subdirectory (`barades/org`) instead of at the repository root (`barades`). This happened by providing a name (`org`) to the `create-nx-workspace` command instead of `.` to specify the current directory. The root also contained partial files from a previously failed installation, causing conflicts.
+
+**Diagnosis**: The incorrect file structure was visible in the file explorer. Commands like `mv` failed with `Directory not empty` errors, confirming the presence of conflicting files at the root.
+
+### Resolution Steps
+
+The solution was to "promote" the contents of the nested `org` directory to the root.
+
+```bash
+# 1. Navigate to the repository root
+cd /path/to/barades
+
+# 2. Delete conflicting partial directories at the root
+# WARNING: rm -rf deletes permanently. Double-check your location.
+rm -rf ./.github ./.nx ./.vscode
+
+# 3. Move all contents from the nested folder to the current directory.
+# This command moves both hidden (.*) and non-hidden (*) files.
+# Note: Errors about moving '.' and '..' can be safely ignored.
+mv org/* org/.* .
+
+# 4. Remove the now-empty nested directory
+rmdir org
+
+# 5. Verify the clean structure and commit the fix
+git status
+git add .
+git commit -m "fix(core): correct workspace file structure"
+git push
+```
+
+**Outcome**: The repository now has a single, clean Nx workspace at its root. Commands like `nx show projects` and `nx graph` confirm that the structure is correctly recognized by all Nx tools.
