@@ -101,3 +101,5 @@ git push
 ## Run the angular app
 
 npx nx serve demo
+
+pour la suite, voir https://nx.dev/getting-started/tutorials/angular-monorepo-tutorial
