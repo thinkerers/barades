@@ -31,8 +31,8 @@
 **PHASE 1A : SETUP ARCHITECTURE**
 
 **15h35-16h00** : Préparation (25 min)
-- [ ] Créer compte Supabase (supabase.com)
-- [ ] Lire `SETUP_RAPIDE.md`
+- [x] Créer compte Supabase (supabase.com)
+- [x] Lire `SETUP_RAPIDE.md`
 
 **16h00-17h30** : Setup Nx (1h30)
 ```bash
@@ -42,18 +42,18 @@ npx create-nx-workspace@latest barades-nx \
   --style=scss \
   --nxCloud=skip
 ```
-- [ ] Installer dépendances (Angular Material, Prisma, Leaflet)
-- [ ] Configurer Tailwind CSS
+- [x] Installer dépendances (Angular Material, Prisma, Leaflet)
+- [x] Configurer Tailwind CSS
 
 **17h30-18h30** : Configuration (1h)
-- [ ] Setup Prisma + .env Supabase
-- [ ] Copier CSS prototype → `styles.scss`
-- [ ] Créer structure dossiers
+- [x] Setup Prisma + .env Supabase
+- [x] Copier CSS prototype → `styles.scss`
+- [x] Créer structure dossiers
 
 **18h30-19h30** : Premiers composants (1h)
-- [ ] Générer Header/Footer
-- [ ] Routing de base
-- [ ] Test compilation (`nx serve frontend`)
+- [x] Générer Header/Footer
+- [x] Routing de base
+- [x] Test compilation (`nx serve frontend`)
 
 **19h30** : Commit Git
 ```bash
@@ -61,7 +61,7 @@ git add .
 git commit -m "feat: initial Nx setup"
 ```
 
-**✅ Livrable J1** : Workspace Nx qui compile
+- [x] **✅ Livrable J1** : Workspace Nx qui compile
 
 ---
 
