@@ -186,6 +186,7 @@ git commit -m "feat: initial Nx setup"
   - User flows (parcours inscription → réservation)
   - Sitemap (architecture pages)
   - Export PDF
+- [ ] *(Option bonus si avance)* : `npx nx g @nx/angular:setup-ssr frontend` puis `npx nx g @nx/angular:setup-app-shell frontend` (App Shell / SSR)
 
 **Soir (20h-22h)** : Rapport Introduction (2h)
 - [ ] **20h-22h** : **Introduction** (3 pages)

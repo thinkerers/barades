@@ -1,13 +1,11 @@
 import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { NxWelcome } from './nx-welcome';
-import { Hero } from '@org/ui';
+import { RouterOutlet } from '@angular/router';
+
 @Component({
-  imports: [NxWelcome, RouterModule, Hero],
+  standalone: true,
+  imports: [RouterOutlet],
   selector: 'app-root',
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App {
-  protected title = 'barades';
-}
+export class App {}
