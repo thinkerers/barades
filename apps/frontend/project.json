@@ -1,26 +1,26 @@
 {
-  "name": "barades",
+  "name": "frontend",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "prefix": "app",
-  "sourceRoot": "apps/barades/src",
+  "sourceRoot": "apps/frontend/src",
   "tags": [],
   "targets": {
     "build": {
       "executor": "@angular/build:application",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/apps/barades",
-        "browser": "apps/barades/src/main.ts",
+        "outputPath": "dist/apps/frontend",
+        "browser": "apps/frontend/src/main.ts",
         "polyfills": ["zone.js"],
-        "tsConfig": "apps/barades/tsconfig.app.json",
+        "tsConfig": "apps/frontend/tsconfig.app.json",
         "assets": [
           {
             "glob": "**/*",
-            "input": "apps/barades/public"
+            "input": "apps/frontend/public"
           }
         ],
-        "styles": ["apps/barades/src/styles.css"]
+        "styles": ["apps/frontend/src/styles.css"]
       },
       "configurations": {
         "production": {
@@ -51,10 +51,10 @@
       "executor": "@angular/build:dev-server",
       "configurations": {
         "production": {
-          "buildTarget": "barades:build:production"
+          "buildTarget": "frontend:build:production"
         },
         "development": {
-          "buildTarget": "barades:build:development"
+          "buildTarget": "frontend:build:development"
         }
       },
       "defaultConfiguration": "development"
@@ -62,7 +62,7 @@
     "extract-i18n": {
       "executor": "@angular/build:extract-i18n",
       "options": {
-        "buildTarget": "barades:build"
+        "buildTarget": "frontend:build"
       }
     },
     "lint": {
@@ -72,17 +72,17 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "apps/barades/jest.config.ts",
-        "tsConfig": "apps/barades/tsconfig.spec.json"
+        "jestConfig": "apps/frontend/jest.config.ts",
+        "tsConfig": "apps/frontend/tsconfig.spec.json"
       }
     },
     "serve-static": {
       "continuous": true,
       "executor": "@nx/web:file-server",
       "options": {
-        "buildTarget": "barades:build",
+        "buildTarget": "frontend:build",
         "port": 4200,
-        "staticFilePath": "dist/apps/barades/browser",
+        "staticFilePath": "dist/apps/frontend/browser",
         "spa": true
       }
     },
@@ -90,8 +90,8 @@
       "executor": "@storybook/angular:start-storybook",
       "options": {
         "port": 4400,
-        "configDir": "apps/barades/.storybook",
-        "browserTarget": "barades:build-storybook",
+        "configDir": "apps/frontend/.storybook",
+        "browserTarget": "frontend:build-storybook",
         "compodoc": false
       },
       "configurations": {
@@ -105,8 +105,8 @@
       "outputs": ["{options.outputDir}"],
       "options": {
         "outputDir": "dist/storybook/barades",
-        "configDir": "apps/barades/.storybook",
-        "browserTarget": "barades:build-storybook",
+        "configDir": "apps/frontend/.storybook",
+        "browserTarget": "frontend:build-storybook",
         "compodoc": false
       },
       "configurations": {
@@ -118,20 +118,20 @@
     "test-storybook": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "test-storybook -c apps/barades/.storybook --url=http://localhost:4400"
+        "command": "test-storybook -c apps/frontend/.storybook --url=http://localhost:4400"
       }
     },
     "static-storybook": {
       "executor": "@nx/web:file-server",
       "dependsOn": ["build-storybook"],
       "options": {
-        "buildTarget": "barades:build-storybook",
+        "buildTarget": "frontend:build-storybook",
         "staticFilePath": "dist/storybook/barades",
         "spa": true
       },
       "configurations": {
         "ci": {
-          "buildTarget": "barades:build-storybook:ci"
+          "buildTarget": "frontend:build-storybook:ci"
         }
       }
     }
