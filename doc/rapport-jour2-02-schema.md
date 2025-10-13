@@ -61,9 +61,9 @@ model Session {
   recurrenceEndDate DateTime?
   online            Boolean      @default(false)
   level             SessionLevel
-  playersMax        Int
+  playersMax        Int          @default(4)
   playersCurrent    Int          @default(0)
-  tagColor          TagColor?
+  tagColor          TagColor     @default(GRAY)  // Non optionnel, avec valeur par défaut
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
@@ -72,20 +72,20 @@ model Session {
   locationId String?
 
   // Relations
-  host         User          @relation("SessionHost", fields: [hostId], references: [id])
-  location     Location?     @relation(fields: [locationId], references: [id])
+  host         User          @relation(fields: [hostId], references: [id], onDelete: Cascade)
+  location     Location?     @relation(fields: [locationId], references: [id], onDelete: SetNull)
   reservations Reservation[]
 
-  @@index([hostId])
   @@index([date])
-  @@index([hostId, date])  // Compound index pour queries fréquentes
+  @@index([hostId])
+  @@index([game])
 }
 ```
 
 **Fonctionnalités avancées** :
 - `recurrenceRule` : Support sessions récurrentes (format iCal standard)
-- `tagColor` : Catégorisation visuelle (PURPLE, BLUE, GREEN, RED, GRAY)
-- Compound index `[hostId, date]` : Optimise la recherche de sessions d'un MJ par date
+- `tagColor` : Catégorisation visuelle (PURPLE, BLUE, GREEN, RED, GRAY) - valeur par défaut GRAY
+- `playersMax` : Valeur par défaut 4 (optimisé pour la plupart des jeux de table)
 
 #### 2.2.3 Modèle Location
 
@@ -128,7 +128,7 @@ model Group {
   games       String[]   // Jeux pratiqués
   location    String
   playstyle   Playstyle
-  description String?
+  description String     @db.Text  // Non optionnel
   recruiting  Boolean    @default(true)
   avatar      String?
   createdAt   DateTime   @default(now())
@@ -138,11 +138,9 @@ model Group {
   creatorId String?
 
   // Relations
-  creator User?        @relation("GroupCreator", fields: [creatorId], references: [id])
+  creator User?        @relation("GroupCreator", fields: [creatorId], references: [id], onDelete: SetNull)
   members GroupMember[]
   polls   Poll[]
-
-  @@index([recruiting])
 }
 ```
 
@@ -255,6 +253,8 @@ enum LocationType {
   GAME_STORE  // Boutique de jeux
   CAFE        // Bar/Café
   PRIVATE     // Lieu privé ou en ligne
+  BAR         // Bar (distinct du café)
+  COMMUNITY_CENTER  // Centre communautaire
 }
 
 enum Playstyle {
@@ -278,23 +278,41 @@ enum TagColor {
 - Autocomplétion IDE
 - Documentation du domaine métier
 
-### 2.4 Indexes et optimisations (10 indexes)
+### 2.4 Indexes et optimisations
+
+**Note importante** : Les indexes listés ci-dessous sont créés via le script SQL `enable-rls.sql`, **pas directement dans `schema.prisma`**. Cette approche permet un contrôle fin des indexes PostgreSQL et évite les limitations du DSL Prisma.
+
+**Fichier** : `apps/backend/prisma/enable-rls.sql` (section 2)
+
+#### Indexes créés manuellement (10 au total)
 
 **Indexes simples** (7) :
-- `User`: email, username
-- `Session`: hostId, date
-- `Location`: city
-- `Group`: recruiting
-- `GroupMember`: userId, groupId
-- `Reservation`: sessionId, userId
-- `Poll`: groupId
+- `idx_sessions_hostId` : Optimise les requêtes "sessions d'un host"
+- `idx_sessions_date` : Tri par date pour calendriers
+- `idx_reservations_userId` : Recherche réservations par utilisateur
+- `idx_reservations_sessionId` : Participants d'une session
+- `idx_reservations_status` : Filtrer par statut (pending/confirmed)
+- `idx_group_members_userId` : Groupes d'un utilisateur
+- `idx_group_members_groupId` : Membres d'un groupe
+- `idx_groups_creatorId` : Groupes créés par un utilisateur
 
 **Indexes composés** (3) :
-- `Session`: `[hostId, date]` → Requêtes "sessions d'un MJ par date"
-- `Reservation`: `[sessionId, status]` → Compter réservations par statut
-- `GroupMember`: `[userId, groupId]` → Vérifier appartenance
+- `idx_sessions_host_date` : `(hostId, date)` → "Mes prochaines sessions"
+- `idx_reservations_session_status` : `(sessionId, status)` → Compter participants confirmés
+- `idx_groupmember_user_group` : `(userId, groupId)` → Vérifier appartenance (redondant avec `@@unique` mais optimise les JOINs)
 
-**Justification** : Ces indexes couvrent 90% des requêtes prévues dans l'application.
+**Justification de l'approche SQL** :
+- ✅ Contrôle précis des noms d'index (pas de `@idx_...` auto-générés)
+- ✅ Possibilité d'ajouter options PostgreSQL (`CONCURRENTLY`, `WHERE`, etc.)
+- ✅ Séparation concerns : schema = structure, SQL = optimisations
+- ❌ Nécessite synchronisation manuelle si schema change
+
+**Vérification** :
+```sql
+SELECT indexname, indexdef 
+FROM pg_indexes 
+WHERE schemaname = 'public' AND tablename IN ('sessions', 'reservations', 'group_members');
+```
 
 ### 2.5 Validation et déploiement
 

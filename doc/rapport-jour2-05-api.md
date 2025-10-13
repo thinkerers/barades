@@ -242,15 +242,13 @@ update(id: string, updateSessionDto: UpdateSessionDto) {
 }
 
 remove(id: string) {
-  return this.prisma.session.delete({
-    where: { id },
-  });
+  throw new Error('Method not implemented yet');
 }
 ```
 
 **Raison** : DTOs vides générés par CLI. Implémentation complète prévue Jour 3.
 
-**Note** : `remove()` fonctionne (pas besoin de DTO pour DELETE).
+**Note importante** : **Tous les endpoints POST/PATCH/DELETE sont non fonctionnels** pour le moment. Seuls GET /sessions et GET /sessions/:id sont opérationnels.
 
 ### 5.5 SessionsController - Endpoints HTTP
 
@@ -295,11 +293,11 @@ export class SessionsController {
 
 **Routes exposées** :
 ```
-GET    /api/sessions      → findAll()
-GET    /api/sessions/:id  → findOne(id)
-POST   /api/sessions      → create(dto)
-PATCH  /api/sessions/:id  → update(id, dto)
-DELETE /api/sessions/:id  → remove(id)
+GET    /api/sessions      → findAll()      ✅ Opérationnel
+GET    /api/sessions/:id  → findOne(id)    ✅ Opérationnel
+POST   /api/sessions      → create(dto)    ⏸️  Non implémenté
+PATCH  /api/sessions/:id  → update(id, dto) ⏸️  Non implémenté
+DELETE /api/sessions/:id  → remove(id)     ⏸️  Non implémenté
 ```
 
 ### 5.6 LocationsService - Particularités
@@ -542,6 +540,8 @@ curl http://localhost:3000/api/sessions
 - ✅ Dates ISO 8601
 - ✅ Enums en majuscules (INTERMEDIATE, PURPLE)
 
+**Note** : Seuls les endpoints GET ont été testés. POST/PATCH/DELETE renvoient des erreurs `Method not implemented yet`.
+
 #### 5.10.3 Test GET /api/locations
 
 **Commande** :
@@ -565,6 +565,14 @@ curl http://localhost:3000/api/groups
 - ✅ 2 groups retournés
 - ✅ Chaque group inclut creator, members, polls
 - ✅ `_count.members` présent pour affichage rapide
+
+**État des endpoints mutations** :
+- ❌ POST /api/sessions → `Error: Method not implemented yet`
+- ❌ POST /api/locations → `Error: Method not implemented yet`
+- ❌ POST /api/groups → `Error: Method not implemented yet`
+- ❌ PATCH/DELETE → Tous non implémentés
+
+**Raison** : DTOs vides, implémentation prévue Jour 3 avec validation Zod.
 
 ### 5.11 Analyse des performances
 
