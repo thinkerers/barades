@@ -556,6 +556,146 @@ Texte : #d1d5db (Light Gray) - Texte principal
 
 ---
 
+## ℹ️ FONCTIONNALITÉS FUTURES (POST-TFE)
+
+### 🎯 **Phase 2 : Améliorations UX (Sprint 1 semaine)**
+
+1. **Location Images Gallery**
+   - Table `location_images` avec foreign key vers `Location`
+   - Carousel de photos dans la popup Leaflet
+   - Upload multiple d'images côté admin
+   - **Valeur** : Meilleure présentation des lieux partenaires
+
+2. **Système de Ratings & Reviews**
+   - Table `ratings` : user_id, location_id, event_id, score, comment
+   - Notation 1-5 étoiles après chaque session
+   - Agrégation moyenne pour locations (déjà présent : `Location.rating`)
+   - **Valeur** : Confiance communautaire, feedback hosts
+
+3. **Chat de Groupe en Temps Réel**
+   - Table `messages` : group_id, user_id, content, created_at
+   - WebSockets (Socket.io) pour messaging live
+   - Notifications push (Web Push API + service worker)
+   - **Valeur** : Coordination entre sessions, création de lien social
+
+### 🎮 **Phase 3 : Features Jeu de Rôle (Sprint 2 semaines)**
+
+4. **Fiches de Personnages**
+   - Table `characters` : name, user_id, game_type, stats (JSON)
+   - Formulaire création perso par système (D&D, Pathfinder, etc.)
+   - Partage de fiche avec le groupe
+   - **Valeur** : Attire communauté JdR, différenciation concurrents
+
+5. **Event Availability (Alternative Poll Dates)**
+   - Table `event_availability` : event_id, user_id, available_dates (JSON)
+   - Interface calendar picker plus visuelle
+   - Algorithme optimisation dates (max participants)
+   - **Valeur** : Système poll plus puissant que l'actuel
+
+### 💰 **Phase 4 : Monétisation (Sprint 1 semaine)**
+
+6. **Liens Affiliés Produits**
+   - Tables `affiliate_links` + `affiliate_purchases`
+   - Tracking des clics et commissions (Amazon, Philibert, etc.)
+   - Section "Matériel recommandé" par jeu
+   - **Valeur** : Revenue stream passif
+
+7. **Abonnement Premium**
+   - Stripe integration pour paiements
+   - Features premium : 
+     - Groupes illimités (vs 3 gratuit)
+     - Historique sessions illimité
+     - Badge "Supporter" sur profil
+     - Analytics avancées (taux remplissage sessions)
+   - **Valeur** : Revenue récurrent, financement hosting
+
+### 📊 **Phase 5 : Analytics & Admin (Sprint 1 semaine)**
+
+8. **Dashboard Admin**
+   - Plausible Analytics integration (privacy-friendly)
+   - Métriques : DAU, sessions créées/semaine, taux conversion
+   - Modération : signalement contenus, ban users
+   - **Valeur** : Pilotage produit data-driven
+
+9. **Email Marketing**
+   - Resend newsletters (already using Resend for transactional)
+   - Segmentation : joueurs inactifs, nouveaux, super-users
+   - Templates : recap hebdo, nouvelles sessions, tips
+   - **Valeur** : Retention, re-engagement
+
+### 🌍 **Phase 6 : Scale & Performance (Sprint 2 semaines)**
+
+10. **Migration PostgreSQL → Supabase Edge Functions**
+    - Déplacer logique lourde côté DB (calcul poll dates, matchmaking)
+    - Row-Level Security (RLS) pour sécurité renforcée
+    - Realtime subscriptions pour live updates (alternative WebSockets)
+    - **Valeur** : Scalabilité, coûts réduits
+
+11. **Progressive Web App Avancée**
+    - Mode offline complet (IndexedDB sync)
+    - Installation native iOS/Android
+    - Background sync réservations
+    - Push notifications natives
+    - **Valeur** : App-like experience, engagement mobile
+
+12. **Intégration Calendriers Externes**
+    - Export iCal (Google Calendar, Outlook, Apple Calendar)
+    - Webhook synchronisation bidirectionnelle
+    - Rappels automatiques 24h avant session
+    - **Valeur** : Réduction no-shows, UX seamless
+
+---
+
+### 📈 **ROADMAP VISUELLE**
+
+```
+MVP (TFE - 7 jours)
+├─ Auth + Sessions + Map + Groups + Polls + Emails
+└─ 7 tables : User, Session, Location, Group, GroupMember, Reservation, Poll
+
+Phase 2 (Post-TFE - 1 semaine)
+├─ Location Images
+├─ Ratings & Reviews
+└─ Chat Temps Réel
+
+Phase 3 (JdR Focus - 2 semaines)
+├─ Character Sheets
+└─ Advanced Event Availability
+
+Phase 4 (Monétisation - 1 semaine)
+├─ Affiliate Links
+└─ Premium Subscriptions
+
+Phase 5 (Analytics - 1 semaine)
+├─ Admin Dashboard
+└─ Email Marketing
+
+Phase 6 (Scale - 2 semaines)
+├─ Supabase Edge Functions
+├─ Advanced PWA
+└─ Calendar Integrations
+```
+
+---
+
+### 🎓 **JUSTIFICATION POUR LE RAPPORT**
+
+> **Section "Perspectives d'Évolution"**
+>
+> Le projet Bar à Dés a été conçu avec une architecture **MVP-first** respectant la contrainte de temps du TFE (7 jours), tout en gardant une structure extensible pour des itérations futures.
+>
+> **Phase 1 (MVP)** : 7 tables couvrant les fonctionnalités essentielles (authentification, sessions, carte, groupes, sondages de dates, emails de confirmation).
+>
+> **Phases 2-6 (Post-TFE)** : Intégration progressive de features avancées identifiées lors de la conception initiale mais volontairement reportées :
+> - **UX** : galeries photos lieux, ratings, chat temps réel
+> - **Jeu de Rôle** : fiches de personnages, disponibilités avancées
+> - **Business** : liens affiliés, abonnements premium
+> - **Scale** : analytics, marketing automation, optimisations performance
+>
+> Cette approche **lean startup** permet de valider le product-market fit avant d'investir dans des fonctionnalités complexes, tout en démontrant une vision produit à long terme.
+
+---
+
 ## 🚨 ZONES DE RISQUE
 
 | Risque | Probabilité | Impact | Prévention |
