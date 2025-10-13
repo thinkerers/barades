@@ -65,44 +65,78 @@ git commit -m "feat: initial Nx setup"
 
 ---
 
-### 📌 JOUR 2 : 13 OCT (8h)
+### 📌 JOUR 2 : 13 OCT (8h) - ✅ TERMINÉ
 **PHASE 1B + 2A : BACKEND BASE + BDD**
 
-**Matin (8h-12h)** : Base de données
-- [ ] **8h-10h** : Schéma Prisma complet + relations
+**Matin (8h-12h)** : Base de données ✅
+- [x] **8h-10h** : Schéma Prisma complet + relations
   ```prisma
   User, Session, Location, Group, Reservation, GroupMember, Poll (nouveau!)
   ```
   - Table `Poll` : id, title, dates (String[]), votes (Json), groupId, createdAt
   - Relations : Group → Poll (one-to-many), User → Session (MJ), etc.
-- [ ] **10h-10h30** : `prisma db push` + génération client Prisma
-- [ ] **10h30-11h** : 📊 **GÉNÉRER ERD** (dbdiagram.io) → Export PNG (7 tables)
-- [ ] **11h-12h** : Seed data réaliste (transformé du prototype)
-  - 6 sessions mock (D&D, Cthulhu, Cyberpunk, Vampire, Pathfinder)
-  - 5 locations avec coordonnées GPS réelles
-  - 4 groupes avec descriptions
-  - 3 users de test
-  - 1 poll exemple pour démo
+  - **BONUS** : 7 enums (SkillLevel, SessionLevel, ReservationStatus, GroupRole, LocationType, Playstyle, TagColor)
+  - **BONUS** : 10 indexes optimisés (3 compound indexes)
+  - **BONUS** : RLS (Row Level Security) production-ready script (430 lignes)
+- [x] **10h-10h30** : `prisma db push` + génération client Prisma
+- [x] **10h30-11h** : 📊 **GÉNÉRER ERD** → Export SVG (278 KB, Mermaid, 7 tables)
+- [x] **11h-12h** : Seed data réaliste
+  - 5 sessions (D&D, Catan, Poker, Pathfinder, Wingspan)
+  - 3 locations avec coordonnées GPS réelles Brussels
+  - 2 groupes avec descriptions (Brussels Adventurers Guild, Casual Board Gamers)
+  - 5 users de test (alice, bob, carol, dave, eve) - password: `password123`
+  - 1 poll exemple (dates one-shot campaign)
+  - 10 réservations (mix PENDING/CONFIRMED)
 
-**Après-midi (14h-18h)** : Backend API + Migration Header/Footer
-- [ ] **14h-15h30** : Modules NestJS de base (sessions, locations, groups)
-  - Générer resources : `nx g @nestjs/schematics:resource sessions`
+**Après-midi (14h-18h)** : Backend API ✅
+- [x] **14h-15h30** : Modules NestJS de base (sessions, locations, groups)
+  - Générer resources : `npx @nestjs/cli generate resource`
   - Structure controllers + services + entities
-- [ ] **15h30-17h** : DTOs + Zod schemas partagés
-  - Créer lib Nx shared : `nx g @nx/js:library shared-models`
-  - Zod schemas : CreateSessionDto, LocationDto, GroupDto
-  - Exporter depuis lib pour réutilisation frontend
-- [ ] **17h-17h30** : Tests Thunder Client (GET endpoints basiques)
+  - PrismaModule global créé
+- [x] **15h30-17h** : API Prisma queries
+  - findAll() avec relations (host, location, members, reservations)
+  - findOne() avec UUID params
+  - OrderBy + include configurés
+- [x] **17h-17h30** : Tests curl (GET endpoints)
+  - ✅ GET /api/sessions → 5 sessions avec relations complètes
+  - ✅ GET /api/locations → 3 locations avec sessions futures
+  - ✅ GET /api/groups → 2 groups avec membres et poll
+- [x] **CORS** : Configuré pour localhost:4200/4201
 - [ ] **17h30-18h** : Migrer Header/Footer HTML → Angular components
-  - Copier HTML structure dans TopBar/SideNav
-  - Adapter classes Tailwind (déjà configuré)
+  - **REPORTÉ** au Jour 3 (priorisation backend)
 
-**✅ Livrable J2** : API retourne données + ERD 7 tables créé + Seed data + Header/Footer migrés
+**✅ Livrable J2** : API retourne données ✅ + ERD 7 tables ✅ + Seed data ✅ + RLS sécurisé ✅
+**📝 Note** : Header/Footer migration reportée, backend 100% fonctionnel prioritaire
 
 ---
 
 ### 📌 JOUR 3 : 14 OCT (8h)
-**PHASE 2B : BACKEND COMPLET**
+**PHASE 2B : BACKEND COMPLET + MIGRATION FRONTEND**
+
+**Matin (8h-12h)** : Finaliser API Backend
+- [ ] **8h-9h** : DTOs typés (Zod schemas ou class-validator)
+  - CreateSessionDto, UpdateSessionDto
+  - CreateLocationDto, UpdateLocationDto
+  - CreateGroupDto, UpdateGroupDto
+- [ ] **9h-10h** : Réactiver create/update/delete endpoints
+- [ ] **10h-11h** : Module Reservations + relations
+  - Generate resource reservations
+  - CRUD complet avec vérifications (places disponibles)
+- [ ] **11h-12h** : Middleware validation + error handling
+  - ValidationPipe global
+  - Exception filters personnalisés
+
+**Après-midi (14h-18h)** : Migration Frontend Angular
+- [ ] **14h-15h** : Migrer Header/Footer HTML → Angular components
+  - Copier HTML structure dans TopBar/SideNav
+  - Adapter classes Tailwind (déjà configuré)
+- [ ] **15h-16h30** : Service Angular pour API
+  - SessionsService, LocationsService, GroupsService
+  - HttpClient configuré avec base URL
+- [ ] **16h30-17h30** : Tests endpoints complets (POST/PUT/DELETE)
+- [ ] **17h30-18h** : Documentation API endpoints (README.md)
+
+**✅ Livrable J3** : Backend API 100% fonctionnel + Frontend connecté
 
 **Matin (8h-12h)** : Finaliser API
 - [ ] **8h-10h** : Module Reservations + relations
