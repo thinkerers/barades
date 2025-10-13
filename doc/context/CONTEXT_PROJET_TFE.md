@@ -10,7 +10,7 @@
 
 ### Identité du Projet
 - **Nom** : Bar à Dés
-- **Type** : Plateforme web de gestion de sessions de jeux de rôle
+- **Type** : Plateforme web (SPA) de gestion de sessions de jeux sur table
 - **Formation** : Développeur Web Front-End X75 (2024-2025)
 - **Nature** : Travail de Fin d'Études (TFE)
 - **Formateur** : Duribreux G.
@@ -32,14 +32,15 @@
 
 ### Type d'Application
 - ✅ **Single Page Application (SPA)** événementielle
-- ✅ **Front office** : consultation sessions, carte, groupes
-- ✅ **Back office** : gestion sessions, profil, réservations
+- ✅ **Front office** : consultation sessions, carte, groupes, outils joueurs
+- ✅ **Back office** : gestion sessions, profil, réservations, sondages planning
 
-### Fonctionnalités Obligatoires
+### Fonctionnalités Cibles
 1. **Intégration API Maps** : Google Maps OU OpenStreetMap (Leaflet) ✅
-2. **Système de réservation en ligne** : Récupération par email OU interface dédiée ⚠️
-3. **Sécurité robuste** : Protection données utilisateurs
-4. **Technologies modernes** : Frameworks autorisés, performants
+2. **Système de réservation en ligne** : Email de confirmation OU interface dédiée ⚠️
+3. **Gestion sondages / planning** : Poll dates multi-utilisateurs avec shift-select, calcul automatique meilleure date, liens partageables ✅ (prototype complet)
+4. **Sécurité robuste** : Protection données utilisateurs (bcrypt, Zod, Supabase Auth)
+5. **Technologies modernes** : Frameworks autorisés, performants
 
 ### Documents Préparatoires Requis
 - [x] Planning d'exécution ✅ (ce fichier + `PLANNING_FINAL_REVISE.md`)
@@ -110,14 +111,17 @@ Deployment:
 ```
 
 ### Fonctionnalités Implémentées (Prototype)
-1. **Authentification** : Login/Register (localStorage)
-2. **Sessions** : Liste avec filtres (jeu, lieu, disponibilité)
-3. **Carte interactive** : Leaflet avec markers de lieux
-4. **Groupes** : Liste, détail, système de poll dates
-5. **Profil utilisateur** : Édition bio, avatar
-6. **Outils** : Dice roller (lanceur de dés)
-7. **Pages statiques** : About, Contact, Careers, Charter, Forum, Help
-8. **PWA** : Manifest et service worker générés dynamiquement
+1. **Authentification** : Login/Register (localStorage avec validation)
+2. **Sessions** : Liste avec filtres avancés (keyword, système, lieu, disponibilité, en ligne/sur table)
+3. **Carte interactive** : Leaflet avec markers cliquables, géolocalisation, popups custom
+4. **Groupes** : Liste, détail, système complet de poll dates avec shift-select et partage de lien
+5. **Profil utilisateur** : Édition bio, avatar (upload preview), username, email
+6. **Outils** : Dice roller (lanceur de dés avec animations), recommandations produits
+7. **Forum communautaire** : Catégories, topics, replies, derniers posts
+8. **FAQ dynamique** : Recherche live, filtrage par catégories
+9. **Pages institutionnelles** : About, Contact (avec carte), Careers (postes + formulaire), Charter, Partenaires (formulaire)
+10. **Planning standalone** : Création/partage de sondages de dates avec lien unique, vote multi-dates, calcul meilleure date
+11. **PWA** : Manifest et service worker générés dynamiquement, offline-ready
 
 ### Design Prototype
 - **Style** : Dark theme avec glassmorphism
