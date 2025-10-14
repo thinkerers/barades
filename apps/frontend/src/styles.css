@@ -3,3 +3,15 @@
 @tailwind utilities;
 
 /* You can add global styles to this file, and also import other style files */
+
+/* Fix Leaflet icon paths */
+.leaflet-default-icon-path {
+  background-image: url('/assets/leaflet/marker-icon.png');
+}
+
+/* Ensure Leaflet map container has proper dimensions */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 1;
+}

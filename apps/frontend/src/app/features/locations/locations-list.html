@@ -1,0 +1,95 @@
+<div class="locations-container">
+  <header class="locations-header">
+    <h1>Lieux de jeu</h1>
+    <p>Découvrez les lieux où se déroulent les sessions</p>
+  </header>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement des lieux...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-container">
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <p>{{ error }}</p>
+    <button (click)="retry()" class="retry-button">Réessayer</button>
+  </div>
+
+  <!-- Map and List - Always rendered but hidden during loading -->
+  <div class="content-wrapper" [class.hidden]="loading || error">
+    <!-- Map Container -->
+    <div class="map-container">
+      <div id="map" class="map"></div>
+    </div>
+
+    <!-- Locations List -->
+    <div class="locations-list">
+      <h2>Liste des lieux ({{ locations.length }})</h2>
+      
+      <div class="location-cards">
+        <div *ngFor="let location of locations" class="location-card">
+          <div class="location-header">
+            <h3>{{ location.name }}</h3>
+            <span class="location-type">{{ getLocationTypeLabel(location.type) }}</span>
+          </div>
+
+          <div class="location-info">
+            <div class="info-row" *ngIf="location.address">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span>{{ location.address }}, {{ location.city }}</span>
+            </div>
+
+            <div class="info-row" *ngIf="location.city && !location.address">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span>{{ location.city }}</span>
+            </div>
+
+            <div class="info-row">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <span>{{ location.rating.toFixed(1) }}/5</span>
+            </div>
+
+            <div class="info-row" *ngIf="location.capacity">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              <span>Capacité: {{ location.capacity }} personnes</span>
+            </div>
+          </div>
+
+          <div class="amenities" *ngIf="location.amenities.length > 0">
+            <span *ngFor="let amenity of location.amenities" class="amenity-tag">{{ amenity }}</span>
+          </div>
+
+          <div class="location-actions">
+            <a *ngIf="location.website" [href]="location.website" target="_blank" rel="noopener" class="website-button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+              </svg>
+              Site web
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
