@@ -110,45 +110,81 @@ git commit -m "feat: initial Nx setup"
 
 ---
 
-### 📌 JOUR 3 : 14 OCT (8h)
-**PHASE 2B : BACKEND COMPLET + MIGRATION FRONTEND**
+### 📌 JOUR 3 : 14 OCT (8h) - ✅ TERMINÉ
+**PHASE 2B : MIGRATION FRONTEND ANGULAR COMPLÈTE**
 
-**Matin (8h-12h)** : Finaliser API Backend
-- [ ] **8h-9h** : DTOs typés (Zod schemas ou class-validator)
-  - CreateSessionDto, UpdateSessionDto
-  - CreateLocationDto, UpdateLocationDto
-  - CreateGroupDto, UpdateGroupDto
-- [ ] **9h-10h** : Réactiver create/update/delete endpoints
-- [ ] **10h-11h** : Module Reservations + relations
-  - Generate resource reservations
-  - CRUD complet avec vérifications (places disponibles)
-- [ ] **11h-12h** : Middleware validation + error handling
-  - ValidationPipe global
-  - Exception filters personnalisés
+**Réalisations effectives** :
 
-**Après-midi (14h-18h)** : Migration Frontend Angular
-- [ ] **14h-15h** : Migrer Header/Footer HTML → Angular components
-  - Copier HTML structure dans TopBar/SideNav
-  - Adapter classes Tailwind (déjà configuré)
-- [ ] **15h-16h30** : Service Angular pour API
-  - SessionsService, LocationsService, GroupsService
-  - HttpClient configuré avec base URL
-- [ ] **16h30-17h30** : Tests endpoints complets (POST/PUT/DELETE)
-- [ ] **17h30-18h** : Documentation API endpoints (README.md)
+**Matin (8h-12h)** : Migration composants ✅
+- [x] **8h-10h** : Services Angular pour API
+  - ✅ SessionsService avec HttpClient (GET + POST/PATCH/DELETE implémentés)
+  - ✅ LocationsService avec HttpClient (GET implémentés, CRUD stubs Jour 4)
+  - ✅ GroupsService avec HttpClient (GET implémentés, CRUD stubs Jour 4)
+  - ✅ Interfaces TypeScript complètes (Session, Location, Group)
+  - ✅ Configuration environment.ts (apiUrl: localhost:3000/api)
+- [x] **10h-12h** : Composants de pages
+  - ✅ SessionsListPage (70 lignes) : liste sessions avec formatDate, getLevelLabel, getTagColorClass
+  - ✅ LocationsListComponent (260 lignes) : liste lieux + carte Leaflet intégrée
+  - ✅ GroupsListComponent (60 lignes) : liste groupes avec playstyle badges
 
-**✅ Livrable J3** : Backend API 100% fonctionnel + Frontend connecté
+**Après-midi (14h-18h)** : Intégration Leaflet + Navigation ✅
+- [x] **14h-16h** : Intégration Leaflet maps
+  - ✅ Installation leaflet@1.9.4 + @types/leaflet
+  - ✅ Configuration Nx : assets CSS + images markers
+  - ✅ Carte OpenStreetMap centrée sur Bruxelles
+  - ✅ Markers colorés par type de lieu (red=GAME_STORE, orange=CAFE, green=BAR)
+  - ✅ Popups HTML personnalisés avec infos lieux
+  - ✅ Initialisation avec setTimeout(100) dans ngOnInit
+  - ✅ Console logging étendu pour debugging
+- [x] **16h-17h30** : Navigation complète
+  - ✅ TopBar (12 lignes) : logo + liens Sessions/Lieux/Groupes + bouton connexion
+  - ✅ SideNav (12 lignes) : menu latéral avec Accueil/Sessions/Groupes/Profil
+  - ✅ AppLayout (12 lignes) : structure flex avec TopBar + (SideNav + Content) + Footer
+  - ✅ Routing configuré dans app.routes.ts (lazy loading)
+- [x] **17h30-18h** : Footer component
+  - ✅ Footer (14 lignes) : 4 sections (Bar à Dés, Communauté, Ressources, Légal)
+  - ✅ 13 liens internes + 5 liens externes (GitHub, Twitter, Instagram, Facebook, Discord)
+  - ✅ Copyright dynamique avec currentYear
+  - ✅ Responsive grid (2 colonnes mobile → 4 colonnes desktop)
 
-**Matin (8h-12h)** : Finaliser API
-- [ ] **8h-10h** : Module Reservations + relations
-- [ ] **10h-11h** : Middleware validation + error handling
-- [ ] **11h-12h** : Tests endpoints complets
+**Tests unitaires** : ✅
+- ✅ 22 tests passants (9 fichiers .spec.ts)
+  - sessions-list.spec.ts : 3 tests (création, état initial)
+  - locations-list.spec.ts : 4 tests (création, load, erreur, labels)
+  - groups-list.spec.ts : 5 tests (création, load, erreur, labels, couleurs)
+  - footer.spec.ts : 4 tests (création, année, sections, social links)
+  - top-bar.spec.ts : 1 test (création)
+  - side-nav.spec.ts : 1 test (création)
+  - + 3 fichiers générés par Nx : app.spec.ts (2), home-page.spec.ts (1), app-layout.spec.ts (1)
 
-**Après-midi (14h-18h)** : Backend finalisé
-- [ ] **14h-16h** : CORS + env vars + sécurité
-- [ ] **16h-17h** : Documentation API endpoints
-- [ ] **17h-18h** : Seed data réaliste (10+ sessions, 5+ lieux)
+**Documentation TFE** : ✅
+- [x] 8 fichiers de rapport créés (~3 439 lignes) :
+  1. rapport-jour3-00-index.md (index + métriques)
+  2. rapport-jour3-01-overview.md (architecture Angular)
+  3. rapport-jour3-02-services.md (Services + HttpClient)
+  4. rapport-jour3-03-components.md (Composants de pages)
+  5. rapport-jour3-04-leaflet.md (Intégration carte)
+  6. rapport-jour3-05-navigation.md (Navigation + Layout)
+  7. rapport-jour3-06-tests.md (Tests unitaires)
+  8. rapport-jour3-07-issues.md (Problèmes rencontrés)
 
-**✅ Livrable J3** : Backend API 100% fonctionnel
+**Commits Git** : ✅
+- [x] `e431ced` - feat(frontend): Day 3 - migrate Sessions/Locations/Groups pages
+- [x] `4417bdb` - feat(frontend): add Footer component
+- [x] `9063f58` - docs(jour3): add complete Day 3 migration documentation
+
+**✅ Livrable J3** : 
+- ✅ Frontend Angular 100% fonctionnel avec 3 pages (Sessions, Locations, Groups)
+- ✅ Navigation complète (TopBar, SideNav, Footer)
+- ✅ Carte Leaflet intégrée avec markers et popups
+- ✅ 22 tests unitaires passants
+- ✅ Documentation TFE complète et versionnée
+
+**📝 Notes** :
+- DTOs backend reportés au Jour 4 (focus migration frontend prioritaire)
+- Backend CRUD (POST/PATCH/DELETE) implémenté pour SessionsService, stubbed pour Locations/Groups
+- Leaflet map toujours visible (pas de toggle map/list dans cette version)
+- Tests Leaflet non inclus (complexité DOM, mocking difficile)
 
 ---
 
