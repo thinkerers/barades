@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterModule } from '@angular/router';
 import { SideNav } from './side-nav';
 
 describe('SideNav', () => {
@@ -7,7 +8,7 @@ describe('SideNav', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SideNav],
+      imports: [SideNav, RouterModule.forRoot([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SideNav);

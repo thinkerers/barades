@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterModule } from '@angular/router';
 import { AppLayout } from './app-layout';
 
 describe('AppLayout', () => {
@@ -7,7 +8,7 @@ describe('AppLayout', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppLayout],
+      imports: [AppLayout, RouterModule.forRoot([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AppLayout);
