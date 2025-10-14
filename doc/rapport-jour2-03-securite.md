@@ -107,18 +107,21 @@ ALTER TABLE "Poll" ENABLE ROW LEVEL SECURITY;
 -- ============================================
 -- SECTION 3: INDEXES OPTIMISÉS (10 indexes)
 -- ============================================
--- Simple indexes
-CREATE INDEX IF NOT EXISTS "idx_user_email" ON "User"("email");
-CREATE INDEX IF NOT EXISTS "idx_user_username" ON "User"("username");
--- ... (7 autres)
+- Simple indexes
+CREATE INDEX IF NOT EXISTS idx_sessions_hostId ON public.sessions("hostId");
+CREATE INDEX IF NOT EXISTS idx_sessions_date ON public.sessions(date);
+CREATE INDEX IF NOT EXISTS idx_reservations_userId ON public.reservations("userId");
+CREATE INDEX IF NOT EXISTS idx_reservations_sessionId ON public.reservations("sessionId");
+CREATE INDEX IF NOT EXISTS idx_reservations_status ON public.reservations(status);
+CREATE INDEX IF NOT EXISTS idx_group_members_userId ON public.group_members("userId");
+CREATE INDEX IF NOT EXISTS idx_group_members_groupId ON public.group_members("groupId");
+CREATE INDEX IF NOT EXISTS idx_groups_creatorId ON public.groups("creatorId");
 
--- Compound indexes
-CREATE INDEX IF NOT EXISTS "idx_session_host_date" 
-  ON "Session"("hostId", "date");
-CREATE INDEX IF NOT EXISTS "idx_reservation_session_status" 
-  ON "Reservation"("sessionId", "status");
-CREATE INDEX IF NOT EXISTS "idx_groupmember_user_group" 
-  ON "GroupMember"("userId", "groupId");
+- Compound indexes
+CREATE INDEX IF NOT EXISTS idx_sessions_host_date 
+  ON public.sessions("hostId", date);
+CREATE INDEX IF NOT EXISTS idx_reservations_session_status 
+  ON public.reservations("sessionId", status);
 
 -- ============================================
 -- SECTION 4: POLICIES (commentées) (200+ lignes)
