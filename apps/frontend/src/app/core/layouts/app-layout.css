@@ -27,3 +27,7 @@
 	padding: 1.5rem;
 	min-width: 0;
 }
+
+.app-layout__footer {
+	flex: 0 0 auto;
+}
