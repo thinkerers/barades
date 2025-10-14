@@ -21,30 +21,29 @@
 
 ```prisma
 model User {
-  id         String   @id @default(uuid())
-  email      String   @unique
-  username   String   @unique
-  password   String
-  bio        String?
-  avatar     String?
-  skillLevel SkillLevel?
+  id          String      @id @default(uuid())
+  email       String      @unique
+  username    String      @unique
+  password    String      // Stocké hashé (bcrypt)
+  bio         String?     @db.Text
+  avatar      String?
+  skillLevel  SkillLevel?
   preferences Json?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   // Relations
-  hostedSessions    Session[]      @relation("SessionHost")
-  reservations      Reservation[]
-  groupMemberships  GroupMember[]
-  createdGroups     Group[]        @relation("GroupCreator")
+  hostedSessions Session[]
+  reservations   Reservation[]
+  groupMembers   GroupMember[]
+  createdGroups  Group[]       @relation("GroupCreator")
 
-  @@index([email])
-  @@index([username])
+  @@map("users")
 }
 ```
 
 **Champs clés** :
-- `skillLevel` : Niveau d'expérience (BEGINNER, INTERMEDIATE, ADVANCED, EXPERT)
+- `skillLevel` : Niveau d'expérience (BEGINNER, INTERMEDIATE, EXPERT)
 - `preferences` : JSON flexible pour stocker favoris, notifications, etc.
 - Relations one-to-many avec sessions (en tant que host), réservations, groupes
 
@@ -55,23 +54,21 @@ model Session {
   id                String       @id @default(uuid())
   game              String
   title             String
-  description       String?
+  description       String?      @db.Text
   date              DateTime
-  recurrenceRule    String?      // Format iCal (FREQ=WEEKLY;BYDAY=TU)
+  recurrenceRule    String?
   recurrenceEndDate DateTime?
   online            Boolean      @default(false)
   level             SessionLevel
   playersMax        Int          @default(4)
   playersCurrent    Int          @default(0)
-  tagColor          TagColor     @default(GRAY)  // Non optionnel, avec valeur par défaut
+  tagColor          TagColor     @default(GRAY)
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
-  // Foreign Keys
+  // Relations
   hostId     String
   locationId String?
-
-  // Relations
   host         User          @relation(fields: [hostId], references: [id], onDelete: Cascade)
   location     Location?     @relation(fields: [locationId], references: [id], onDelete: SetNull)
   reservations Reservation[]
@@ -79,6 +76,7 @@ model Session {
   @@index([date])
   @@index([hostId])
   @@index([game])
+  @@map("sessions")
 }
 ```
 
@@ -96,13 +94,13 @@ model Location {
   address      String?
   city         String
   type         LocationType
-  rating       Float?
-  amenities    String[]     // Array PostgreSQL natif
+  rating       Float        @default(0)
+  amenities    String[]
   capacity     Int?
-  openingHours Json?        // {monday: "10:00-22:00", ...}
-  icon         String?
-  lat          Float?
-  lon          Float?
+  openingHours Json?
+  icon         String       @default("store")
+  lat          Float
+  lon          Float
   website      String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
@@ -111,6 +109,8 @@ model Location {
   sessions Session[]
 
   @@index([city])
+  @@index([lat, lon])
+  @@map("locations")
 }
 ```
 
@@ -123,24 +123,23 @@ model Location {
 
 ```prisma
 model Group {
-  id          String     @id @default(uuid())
+  id          String    @id @default(uuid())
   name        String
-  games       String[]   // Jeux pratiqués
+  games       String[]
   location    String
   playstyle   Playstyle
-  description String     @db.Text  // Non optionnel
-  recruiting  Boolean    @default(true)
+  description String    @db.Text
+  recruiting  Boolean   @default(true)
   avatar      String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  // Foreign Key
   creatorId String?
+  creator   User?         @relation("GroupCreator", fields: [creatorId], references: [id], onDelete: SetNull)
+  members   GroupMember[]
+  polls     Poll[]
 
-  // Relations
-  creator User?        @relation("GroupCreator", fields: [creatorId], references: [id], onDelete: SetNull)
-  members GroupMember[]
-  polls   Poll[]
+  @@map("groups")
 }
 ```
 
@@ -152,51 +151,45 @@ model Group {
 ```prisma
 model GroupMember {
   id       String    @id @default(uuid())
-  role     GroupRole
+  role     GroupRole @default(MEMBER)
   joinedAt DateTime  @default(now())
 
-  // Foreign Keys
-  userId  String
+  userId String
   groupId String
+  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group   Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  // Relations
-  user  User  @relation(fields: [userId], references: [id])
-  group Group @relation(fields: [groupId], references: [id])
-
-  @@unique([userId, groupId])  // Un user ne peut rejoindre qu'une fois
-  @@index([userId])
-  @@index([groupId])
+  @@unique([userId, groupId])
+  @@map("group_members")
 }
 ```
 
 **Contrainte métier** : `@@unique([userId, groupId])` empêche les doublons
+
+**Rôle par défaut** : `MEMBER` (les admins sont explicitement définis dans le seed)
 
 #### 2.2.6 Modèle Reservation
 
 ```prisma
 model Reservation {
   id        String            @id @default(uuid())
-  status    ReservationStatus
-  message   String?
+  status    ReservationStatus @default(PENDING)
+  message   String?           @db.Text
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 
-  // Foreign Keys
   sessionId String
   userId    String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Relations
-  session Session @relation(fields: [sessionId], references: [id])
-  user    User    @relation(fields: [userId], references: [id])
-
-  @@unique([sessionId, userId])  // Une seule réservation par user/session
-  @@index([sessionId])
-  @@index([userId])
-  @@index([sessionId, status])   // Compound index pour compter par statut
+  @@unique([sessionId, userId])
+  @@index([status])
+  @@map("reservations")
 }
 ```
 
-**Statuts possibles** : PENDING, CONFIRMED, CANCELLED
+**Statuts possibles** : PENDING (défaut), CONFIRMED, CANCELLED
 
 #### 2.2.7 Modèle Poll
 
@@ -204,18 +197,15 @@ model Reservation {
 model Poll {
   id        String   @id @default(uuid())
   title     String
-  dates     String[] // Array de dates proposées
-  votes     Json     // {"2025-10-25": ["userId1", "userId2"], ...}
+  dates     String[]
+  votes     Json     @default("{}")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Foreign Key
   groupId String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
 
-  // Relation
-  group Group @relation(fields: [groupId], references: [id])
-
-  @@index([groupId])
+  @@map("polls")
 }
 ```
 
@@ -225,50 +215,50 @@ model Poll {
 
 ```prisma
 enum SkillLevel {
-  BEGINNER
-  INTERMEDIATE
-  ADVANCED
-  EXPERT
+  BEGINNER     @map("Beginner")
+  INTERMEDIATE @map("Intermediate")
+  EXPERT       @map("Expert")
 }
 
 enum SessionLevel {
-  BEGINNER      // Débutants bienvenus
-  INTERMEDIATE  // Expérience requise
-  ADVANCED      // Joueurs confirmés
-  OPEN          // Tous niveaux
+  BEGINNER     @map("Beginner")
+  INTERMEDIATE @map("Intermediate")
+  ADVANCED     @map("Advanced")
+  OPEN         @map("Open to all")
 }
 
 enum ReservationStatus {
-  PENDING    // En attente validation MJ
-  CONFIRMED  // Acceptée
-  CANCELLED  // Annulée
+  PENDING   @map("pending")
+  CONFIRMED @map("confirmed")
+  CANCELLED @map("cancelled")
 }
 
 enum GroupRole {
-  ADMIN   // Peut gérer membres, éditer groupe
-  MEMBER  // Membre standard
+  MEMBER @map("member")
+  ADMIN  @map("admin")
 }
 
 enum LocationType {
-  GAME_STORE  // Boutique de jeux
-  CAFE        // Bar/Café
-  PRIVATE     // Lieu privé ou en ligne
-  BAR         // Bar (distinct du café)
-  COMMUNITY_CENTER  // Centre communautaire
+  BAR              @map("Bar")
+  CAFE             @map("Cafe")
+  GAME_STORE       @map("Game Store")
+  COMMUNITY_CENTER @map("Community Center")
+  PRIVATE          @map("Private")
 }
 
 enum Playstyle {
-  COMPETITIVE     // Jeu compétitif
-  CASUAL          // Jeu relaxé
-  STORY_DRIVEN    // Narratif / RP
+  CASUAL       @map("Casual")
+  COMPETITIVE  @map("Competitive")
+  STORY_DRIVEN @map("Story-driven")
+  SOCIAL       @map("Social")
 }
 
 enum TagColor {
-  PURPLE
-  BLUE
-  GREEN
-  RED
-  GRAY
+  RED    @map("red")
+  GREEN  @map("green")
+  PURPLE @map("purple")
+  BLUE   @map("blue")
+  GRAY   @map("gray")
 }
 ```
 
@@ -286,20 +276,19 @@ enum TagColor {
 
 #### Indexes créés manuellement (10 au total)
 
-**Indexes simples** (7) :
-- `idx_sessions_hostId` : Optimise les requêtes "sessions d'un host"
-- `idx_sessions_date` : Tri par date pour calendriers
-- `idx_reservations_userId` : Recherche réservations par utilisateur
-- `idx_reservations_sessionId` : Participants d'une session
+**Indexes simples** (8) :
+- `idx_sessions_hostId` : Filtrer les sessions d'un MJ
+- `idx_sessions_date` : Ordonner les sessions par date
+- `idx_reservations_userId` : Lister les réservations d'un joueur
+- `idx_reservations_sessionId` : Rechercher les participants d'une session
 - `idx_reservations_status` : Filtrer par statut (pending/confirmed)
-- `idx_group_members_userId` : Groupes d'un utilisateur
-- `idx_group_members_groupId` : Membres d'un groupe
-- `idx_groups_creatorId` : Groupes créés par un utilisateur
+- `idx_group_members_userId` : Retrouver les groupes d'un utilisateur
+- `idx_group_members_groupId` : Lister les membres d'un groupe
+- `idx_groups_creatorId` : Retrouver les groupes créés par un MJ/admin
 
-**Indexes composés** (3) :
-- `idx_sessions_host_date` : `(hostId, date)` → "Mes prochaines sessions"
-- `idx_reservations_session_status` : `(sessionId, status)` → Compter participants confirmés
-- `idx_groupmember_user_group` : `(userId, groupId)` → Vérifier appartenance (redondant avec `@@unique` mais optimise les JOINs)
+**Indexes composés** (2) :
+- `idx_sessions_host_date` → `(hostId, date)` pour filtrer les sessions d'un MJ
+- `idx_reservations_session_status` → `(sessionId, status)` pour compter les participants par statut
 
 **Justification de l'approche SQL** :
 - ✅ Contrôle précis des noms d'index (pas de `@idx_...` auto-générés)
@@ -324,8 +313,16 @@ npx prisma db push
 **Résultat** :
 - ✅ 7 tables créées dans PostgreSQL
 - ✅ 7 enums créés
-- ✅ 10 indexes générés
 - ✅ Prisma Client généré dans `apps/backend/generated/prisma`
+- 📌 Indexes appliqués séparément via `enable-rls.sql`
+
+**Étape suivante** :
+```sql
+\i apps/backend/prisma/enable-rls.sql
+```
+- Active Row Level Security
+- Crée les 10 indexes détaillés ci-dessus
+- Documente les futures policies (toujours commentées au Jour 2)
 
 **Vérification Supabase** :
 - Table Editor montre les 7 tables
