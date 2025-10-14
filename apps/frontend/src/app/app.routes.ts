@@ -1,6 +1,7 @@
 import { Route } from '@angular/router';
 import { AppLayout } from './core/layouts/app-layout';
 import { HomePage } from './features/home/home-page';
+import { SessionsListPage } from './features/sessions/sessions-list';
 
 export const appRoutes: Route[] = [
 	{
@@ -10,6 +11,10 @@ export const appRoutes: Route[] = [
 			{
 				path: '',
 				component: HomePage,
+			},
+			{
+				path: 'sessions',
+				component: SessionsListPage,
 			},
 		],
 	},

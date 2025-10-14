@@ -1,5 +1,10 @@
 <header class="top-bar">
-	<div class="top-bar__logo">Bar à Dés</div>
+	<a routerLink="/" class="top-bar__logo">Bar à Dés</a>
+	<nav class="top-bar__nav">
+		<a routerLink="/sessions" routerLinkActive="active" class="top-bar__link">Sessions</a>
+		<a routerLink="/locations" routerLinkActive="active" class="top-bar__link">Lieux</a>
+		<a routerLink="/groups" routerLinkActive="active" class="top-bar__link">Groupes</a>
+	</nav>
 	<nav class="top-bar__actions">
 		<button type="button" class="top-bar__action">Se connecter</button>
 	</nav>
