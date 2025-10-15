@@ -35,10 +35,15 @@
 - ✅ Seed migré vers argon2
 - ✅ Tests fonctionnels validés
 
-**Frontend Angular** :
-- ❌ AuthService (reporté)
-- ❌ Login/Register components (reporté)
-- ❌ AuthGuard Angular (reporté)
+**Frontend Angular** (complété le même jour) :
+- ✅ AuthService (127 lignes)
+- ✅ Login/Register components (Angular Material)
+- ✅ AuthGuard Angular (CanActivateFn)
+- ✅ HTTP Interceptor (injection Bearer token)
+- ✅ TopBar avec affichage conditionnel
+- ✅ Proxy configuration (résolution CSP)
+
+**Note** : Ce rapport se concentre sur le backend. Voir `rapport-jour4-01-frontend.md` pour les détails du frontend.
 
 ---
 

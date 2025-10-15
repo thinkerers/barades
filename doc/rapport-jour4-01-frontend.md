@@ -333,24 +333,12 @@ export const authGuard: CanActivateFn = (route, state) => {
 };
 ```
 
-**Usage** : Protection des routes
+**Note** : Le `authGuard` est créé mais n'est pas encore appliqué aux routes. Son application sera faite lors de l'implémentation des fonctionnalités Sessions/Locations/Groups.
 
-```typescript
-// apps/frontend/src/app/app.routes.ts
-export const appRoutes: Route[] = [
-  {
-    path: 'sessions',
-    component: SessionsListPage,
-    canActivate: [authGuard] // Route protégée
-  },
-  // ...
-];
-```
-
-**Fonctionnement** :
-1. Vérifie si l'utilisateur est authentifié
-2. Si OUI → Autorise l'accès (`return true`)
-3. Si NON → Redirige vers `/login` avec `returnUrl` dans query params
+**Fonctionnement futur** :
+1. Vérifiera si l'utilisateur est authentifié
+2. Si OUI → Autorisera l'accès (`return true`)
+3. Si NON → Redirigera vers `/login` avec `returnUrl` dans query params
 4. Après login réussi → Redirection vers `returnUrl`
 
 ---
@@ -463,7 +451,7 @@ export class LoginComponent {
         <!-- Submit button -->
         <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || isLoading" class="full-width submit-button">
           @if (isLoading) {
-            <span>Connexion en cours...</span>
+            <mat-spinner diameter="20"></mat-spinner>
           } @else {
             Se connecter
           }
@@ -471,7 +459,7 @@ export class LoginComponent {
 
         <!-- Register link -->
         <div class="register-link">
-          <p>Pas encore de compte ? <a routerLink="/register">S'inscrire</a></p>
+          <p>Pas encore de compte ? <a routerLink="/register">Créer un compte</a></p>
         </div>
       </form>
     </mat-card-content>
@@ -534,18 +522,21 @@ export class RegisterComponent {
   private passwordMatchValidator(g: AbstractControl): ValidationErrors | null {
     return g.get('password')?.value === g.get('confirmPassword')?.value
       ? null
-      : { mismatch: true };
+      : { passwordMismatch: true };
   }
 
-  // Indicateur de force du mot de passe
-  getPasswordStrength(): number {
+  // Indicateur de force du mot de passe (retourne 'weak', 'medium', ou 'strong')
+  getPasswordStrength(): string {
     const password = this.registerForm.get('password')?.value || '';
     let strength = 0;
-    if (password.length >= 12) strength += 25;
-    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
-    if (/\d/.test(password)) strength += 25;
-    if (/[^a-zA-Z0-9]/.test(password)) strength += 25;
-    return strength;
+    if (password.length >= 12) strength++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+    if (/\d/.test(password)) strength++;
+    if (/[^a-zA-Z0-9]/.test(password)) strength++;
+    
+    if (strength < 3) return 'weak';
+    if (strength < 4) return 'medium';
+    return 'strong';
   }
 
   onSubmit(): void {
@@ -585,10 +576,7 @@ export class RegisterComponent {
     <div class="password-strength-label">Force du mot de passe :</div>
     <div class="password-strength-bar">
       <div class="password-strength-fill" 
-           [style.width.%]="getPasswordStrength()"
-           [class.weak]="getPasswordStrength() < 50"
-           [class.medium]="getPasswordStrength() >= 50 && getPasswordStrength() < 75"
-           [class.strong]="getPasswordStrength() >= 75">
+           [class]="'password-strength-' + getPasswordStrength()">
       </div>
     </div>
   </div>
@@ -601,7 +589,7 @@ export class RegisterComponent {
   @if (registerForm.get('confirmPassword')?.hasError('required') && registerForm.get('confirmPassword')?.touched) {
     <mat-error>La confirmation est requise</mat-error>
   }
-  @if (registerForm.hasError('mismatch') && registerForm.get('confirmPassword')?.touched) {
+  @if (registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched) {
     <mat-error>Les mots de passe ne correspondent pas</mat-error>
   }
 </mat-form-field>

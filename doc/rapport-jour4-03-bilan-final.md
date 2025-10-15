@@ -164,8 +164,10 @@ fix(frontend): configure proxy and improve auth UX
 ### Tests Unitaires
 ```bash
 ✅ TopBar component renders correctly (Jest)
-✅ AuthService methods callable (TypeScript compilation)
+⚠️ Pas de tests pour AuthService, AuthGuard, Interceptor (à ajouter au Jour 5)
 ```
+
+**Note** : Les tests backend manuels (curl) et frontend manuels (interface) ont été prioritaires. Tests unitaires complets à implémenter lors du Jour 5.
 
 ---
 
