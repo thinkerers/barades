@@ -290,27 +290,17 @@ git commit -m "feat: initial Nx setup"
 
 ---
 
-### 📌 JOUR 5 : 16 OCT (8h)
+### 📌 JOUR 5 : 16 OCT (8h) - ✅ TERMINÉ
 **PHASE 4A : SESSIONS + MAP**
 
-**Matin (8h-12h)** : Sessions
-- [ ] **8h-10h** : SessionsListComponent + **filtres avancés**
-  - Radio buttons (En ligne / Sur table / Tous)
-  - Keyword search
-  - Game system dropdown
-  - Availability checkbox
-- [ ] **10h-11h** : SessionCardComponent (HTML/CSS prototype)
-- [ ] **11h-12h** : Connexion API backend
+**Réalisations effectives** :
+- ✅ `SessionsListPage` refactorée avec filtres combinables (type, disponibilités, recherche multi champs, description incluse) et compteur de filtres actifs.
+- ✅ `SessionCardComponent` finalisé (badges statut, host/location optionnels, couleurs dynamiques `session.tagColor`, styles BEM, helpers `getTagColorClass`/`isFull`).
+- ✅ `LocationsListComponent` enrichi : filtres croisés, markers typés, popups HTML avancés, géolocalisation utilisateur + auto-zoom vers le lieu le plus proche, synchronisation liste ↔ carte avec surbrillance.
+- ✅ Suite de tests Jest élargie (sessions/locations) → 176 tests verts.
+- ✅ Documentation « Jour 5 » corrigée et alignée sur le code + errata tenu à jour.
 
-**Après-midi (14h-18h)** : Carte interactive
-- [ ] **14h-16h** : LocationsMapComponent + Leaflet + **filtres lieux**
-  - Checkboxes amenities (WiFi, Tables, Nourriture)
-  - Type de lieu dropdown (Bar, Café, Boutique)
-  - Keyword search
-- [ ] **16h-17h** : Markers cliquables + popups custom (dark theme)
-- [ ] **17h-18h** : Géolocalisation + zoom auto + sync liste ↔ carte
-
-**✅ Livrable J5** : Liste sessions + carte fonctionnelles
+**Livrable J5** : Sessions (liste + carte) opérationnelles avec fonctionnalités avancées et documentation validée
 
 ---
 

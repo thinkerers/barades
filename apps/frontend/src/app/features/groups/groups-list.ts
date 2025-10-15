@@ -1,12 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { GroupsService, Group } from '../../core/services/groups.service';
+import { GroupCardComponent } from './group-card';
 
 @Component({
   selector: 'app-groups-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, GroupCardComponent],
   templateUrl: './groups-list.html',
   styleUrl: './groups-list.css'
 })
@@ -36,26 +36,6 @@ export class GroupsListComponent implements OnInit {
         this.loading = false;
       }
     });
-  }
-
-  getPlaystyleLabel(playstyle: string): string {
-    const labels: Record<string, string> = {
-      'COMPETITIVE': 'Compétitif',
-      'CASUAL': 'Décontracté',
-      'STORY_DRIVEN': 'Narratif',
-      'SANDBOX': 'Bac à sable'
-    };
-    return labels[playstyle] || playstyle;
-  }
-
-  getPlaystyleColor(playstyle: string): string {
-    const colors: Record<string, string> = {
-      'COMPETITIVE': 'red',
-      'CASUAL': 'green',
-      'STORY_DRIVEN': 'purple',
-      'SANDBOX': 'blue'
-    };
-    return colors[playstyle] || 'gray';
   }
 
   retry(): void {

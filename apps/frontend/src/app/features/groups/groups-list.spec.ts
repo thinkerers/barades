@@ -68,17 +68,11 @@ describe('GroupsListComponent', () => {
     expect(component.loading).toBe(false);
   });
 
-  it('should get correct playstyle label', () => {
-    expect(component.getPlaystyleLabel('COMPETITIVE')).toBe('Compétitif');
-    expect(component.getPlaystyleLabel('CASUAL')).toBe('Décontracté');
-    expect(component.getPlaystyleLabel('STORY_DRIVEN')).toBe('Narratif');
-    expect(component.getPlaystyleLabel('SANDBOX')).toBe('Bac à sable');
-  });
+  it('should retry loading groups', () => {
+    const spy = jest.spyOn(groupsService, 'getGroups').mockReturnValue(of(mockGroups));
+    
+    component.retry();
 
-  it('should get correct playstyle color', () => {
-    expect(component.getPlaystyleColor('COMPETITIVE')).toBe('red');
-    expect(component.getPlaystyleColor('CASUAL')).toBe('green');
-    expect(component.getPlaystyleColor('STORY_DRIVEN')).toBe('purple');
-    expect(component.getPlaystyleColor('SANDBOX')).toBe('blue');
+    expect(spy).toHaveBeenCalled();
   });
 });
