@@ -188,20 +188,68 @@ git commit -m "feat: initial Nx setup"
 
 ---
 
-### 📌 JOUR 4 : 15 OCT (8h)
-**PHASE 3 : AUTHENTIFICATION**
+### 📌 JOUR 4 : 15 OCT (8h) - ✅ TERMINÉ (Backend uniquement)
+**PHASE 3 : AUTHENTIFICATION BACKEND**
 
-**Matin (8h-12h)** : Supabase Auth
-- [ ] **8h-9h** : Config Supabase Authentication
-- [ ] **9h-11h** : AuthService Angular + Supabase client
-- [ ] **11h-12h** : Login/Register forms (Angular Material)
+**Réalisations effectives** :
 
-**Après-midi (14h-18h)** : Sécurisation
-- [ ] **14h-15h** : AuthGuard routes protégées
-- [ ] **15h-16h30** : Backend NestJS JWT strategy
-- [ ] **16h30-18h** : Profil utilisateur éditable
+**Backend NestJS** (4h effectives) :
+- [x] **Architecture custom sans Passport.js** (approche Trilon)
+  - Article de référence : https://trilon.io/blog/nestjs-authentication-without-passport
+  - Choix pédagogique : code explicite pour TFE, contrôle total sur JWT
+- [x] **Module Auth complet** (222 lignes de code)
+  - ✅ `auth.controller.ts` : POST /auth/signup + POST /auth/login
+  - ✅ `auth.service.ts` : Hash argon2 + JWT generation + validation
+  - ✅ `auth.module.ts` : JwtModule config avec JWT_SECRET (1h expiration)
+  - ✅ `dto/auth.dto.ts` : SignupDto + LoginDto
+  - ✅ `guards/jwt-auth.guard.ts` : Protection routes (vérifie Authorization header)
+- [x] **Sécurité renforcée**
+  - ✅ Argon2 au lieu de bcrypt (recommandé OWASP, résistant GPU attacks)
+  - ✅ Validation password : 12 caractères minimum
+  - ✅ Validation confirmPassword match
+  - ✅ Messages d'erreur génériques (anti user enumeration)
+  - ✅ JWT payload : { sub: userId, username, email }
+- [x] **Base de données**
+  - ✅ Schema Prisma mis à jour (passwordHash, firstName, lastName)
+  - ✅ Migration SQL créée : `update-user-auth.sql`
+  - ✅ Migration appliquée : `npx prisma db push`
+  - ✅ Seed migré vers argon2 (cohérence avec AuthService)
+  - ✅ 5 users de test créés (password: `password123`)
+- [x] **Tests fonctionnels validés** ✅
+  - ✅ POST /auth/signup → Création compte + JWT retourné
+  - ✅ POST /auth/login → Authentification + JWT retourné
+  - ✅ GET /sessions → Route publique accessible
+  - ✅ POST /sessions sans token → 401 Unauthorized ✅
+  - ✅ POST /sessions avec token → Guard autorise l'accès ✅
+- [x] **SessionsModule** : Import AuthModule + @UseGuards(JwtAuthGuard) sur POST
 
-**✅ Livrable J4** : Auth complète fonctionnelle
+**Dépendances installées** :
+- ✅ `@nestjs/jwt@11.0.1`
+- ✅ `argon2@0.44.0`
+
+**Documentation** :
+- [x] Mise à jour `doc/rapport-jour2-03-securite.md` avec architecture custom
+
+**Commits Git** : ✅
+- [x] `246b190` - feat(auth): implement custom JWT authentication without Passport
+
+**✅ Livrable J4** : 
+- ✅ Backend auth 100% fonctionnel (signup, login, JWT, guards)
+- ✅ Tests curl validés (signup, login, protected routes)
+- ✅ Code propre et documenté (222 lignes)
+
+**❌ Non fait (reporté Jour 5)** :
+- [ ] Frontend Angular AuthService
+- [ ] Login/Register components (Angular Material)
+- [ ] AuthGuard Angular
+- [ ] HTTP Interceptor
+- [ ] Profil utilisateur éditable
+
+**📝 Notes** :
+- Architecture custom justifiée : ~30 lignes d'abstraction Passport vs contrôle total
+- Argon2 choisi pour sécurité renforcée (vs bcrypt)
+- JWT expiration : 1h (pas de refresh token pour MVP)
+- Frontend auth reporté car backend prioritaire (fondation solide)
 
 ---
 
