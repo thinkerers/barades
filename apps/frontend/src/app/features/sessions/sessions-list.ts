@@ -64,8 +64,9 @@ export class SessionsListPage implements OnInit {
   applyFilters(): void {
     this.filteredSessions = this.sessions.filter(session => {
       // Search filter (title, game, description)
-      if (this.searchTerm) {
-        const term = this.searchTerm.toLowerCase();
+      const trimmedSearch = this.searchTerm.trim();
+      if (trimmedSearch) {
+        const term = trimmedSearch.toLowerCase();
         const matchesSearch = 
           session.title.toLowerCase().includes(term) ||
           session.game.toLowerCase().includes(term) ||
@@ -113,7 +114,7 @@ export class SessionsListPage implements OnInit {
   getActiveFiltersCount(): number {
     let count = 0;
     
-    if (this.searchTerm) count++;
+    if (this.searchTerm.trim()) count++;
     if (this.sessionType !== 'all') count++;
     if (this.selectedGameSystem) count++;
     if (this.onlyAvailable) count++;

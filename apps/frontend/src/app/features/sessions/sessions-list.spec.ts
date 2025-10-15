@@ -1,36 +1,592 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { RouterModule } from '@angular/router';
 import { SessionsListPage } from './sessions-list';
+import { SessionsService, Session } from '../../core/services/sessions.service';
+import { of, throwError } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { SessionCardComponent } from './session-card';
+import { provideRouter } from '@angular/router';
 
 describe('SessionsListPage', () => {
   let component: SessionsListPage;
   let fixture: ComponentFixture<SessionsListPage>;
+  let mockSessionsService: jest.Mocked<SessionsService>;
+
+  const mockSessions: Session[] = [
+    {
+      id: '1',
+      game: 'Dungeons & Dragons 5e',
+      title: 'Les Mines de Phandelver',
+      description: 'Une aventure épique pour débutants dans l\'univers de D&D',
+      date: '2025-10-20T18:00:00.000Z',
+      recurrenceRule: null,
+      recurrenceEndDate: null,
+      online: false,
+      level: 'BEGINNER',
+      playersMax: 5,
+      playersCurrent: 3,
+      tagColor: 'GREEN',
+      createdAt: '2025-10-01T00:00:00.000Z',
+      updatedAt: '2025-10-01T00:00:00.000Z',
+      hostId: 'host-1',
+      locationId: 'loc-1',
+      host: {
+        id: 'host-1',
+        username: 'GameMaster42',
+        avatar: null
+      },
+      location: {
+        id: 'loc-1',
+        name: 'Brussels Game Store',
+        city: 'Brussels',
+        type: 'GAME_STORE',
+        lat: 50.8476,
+        lon: 4.3572
+      }
+    },
+    {
+      id: '2',
+      game: 'Pathfinder 2e',
+      title: 'La Quête du Dragon',
+      description: 'Pour joueurs expérimentés cherchant un défi',
+      date: '2025-10-21T19:00:00.000Z',
+      recurrenceRule: null,
+      recurrenceEndDate: null,
+      online: true,
+      level: 'ADVANCED',
+      playersMax: 4,
+      playersCurrent: 4,
+      tagColor: 'RED',
+      createdAt: '2025-10-02T00:00:00.000Z',
+      updatedAt: '2025-10-02T00:00:00.000Z',
+      hostId: 'host-2',
+      locationId: null,
+      host: {
+        id: 'host-2',
+        username: 'DragonMaster',
+        avatar: null
+      },
+      location: undefined
+    },
+    {
+      id: '3',
+      game: 'Call of Cthulhu',
+      title: 'Les Ombres d\'Innsmouth',
+      description: 'Horreur et mystère au rendez-vous',
+      date: '2025-10-22T20:00:00.000Z',
+      recurrenceRule: null,
+      recurrenceEndDate: null,
+      online: false,
+      level: 'INTERMEDIATE',
+      playersMax: 6,
+      playersCurrent: 2,
+      tagColor: 'PURPLE',
+      createdAt: '2025-10-03T00:00:00.000Z',
+      updatedAt: '2025-10-03T00:00:00.000Z',
+      hostId: 'host-3',
+      locationId: 'loc-2',
+      host: {
+        id: 'host-3',
+        username: 'CthulhuKeeper',
+        avatar: null
+      },
+      location: {
+        id: 'loc-2',
+        name: 'Antwerp RPG Club',
+        city: 'Antwerp',
+        type: 'ASSOCIATION',
+        lat: 51.2194,
+        lon: 4.4025
+      }
+    },
+    {
+      id: '4',
+      game: 'Dungeons & Dragons 5e',
+      title: 'Campagne des Royaumes Oubliés',
+      description: null,
+      date: '2025-10-23T18:30:00.000Z',
+      recurrenceRule: 'WEEKLY',
+      recurrenceEndDate: '2025-12-31T00:00:00.000Z',
+      online: true,
+      level: 'OPEN',
+      playersMax: 5,
+      playersCurrent: 1,
+      tagColor: 'BLUE',
+      createdAt: '2025-10-04T00:00:00.000Z',
+      updatedAt: '2025-10-04T00:00:00.000Z',
+      hostId: 'host-1',
+      locationId: null,
+      host: {
+        id: 'host-1',
+        username: 'GameMaster42',
+        avatar: null
+      },
+      location: undefined
+    }
+  ];
 
   beforeEach(async () => {
+    mockSessionsService = {
+      getSessions: jest.fn(),
+      getSession: jest.fn(),
+      createSession: jest.fn(),
+      updateSession: jest.fn(),
+      deleteSession: jest.fn()
+    } as unknown as jest.Mocked<SessionsService>;
+
     await TestBed.configureTestingModule({
-      imports: [SessionsListPage, RouterModule.forRoot([])],
+      imports: [SessionsListPage, SessionCardComponent, FormsModule],
       providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
-      ],
+        { provide: SessionsService, useValue: mockSessionsService },
+        provideRouter([])
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(SessionsListPage);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  describe('Component Initialization', () => {
+    it('should create', () => {
+      expect(component).toBeTruthy();
+    });
+
+    it('should initialize with default filter values', () => {
+      expect(component.searchTerm).toBe('');
+      expect(component.sessionType).toBe('all');
+      expect(component.selectedGameSystem).toBe('');
+      expect(component.onlyAvailable).toBe(false);
+    });
+
+    it('should load sessions on init', () => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      fixture.detectChanges();
+      expect(mockSessionsService.getSessions).toHaveBeenCalled();
+      expect(component.sessions).toEqual(mockSessions);
+      expect(component.filteredSessions).toEqual(mockSessions);
+    });
+
+    it('should populate game systems from sessions', () => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      fixture.detectChanges();
+      expect(component.gameSystems).toContain('Dungeons & Dragons 5e');
+      expect(component.gameSystems).toContain('Pathfinder 2e');
+      expect(component.gameSystems).toContain('Call of Cthulhu');
+      expect(component.gameSystems.length).toBe(3);
+    });
+
+    it('should handle loading state', () => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      expect(component.loading).toBe(true);
+      fixture.detectChanges();
+      expect(component.loading).toBe(false);
+    });
+
+    it('should handle error state', () => {
+      const error = new Error('Failed to load sessions');
+      mockSessionsService.getSessions.mockReturnValue(throwError(() => error));
+      fixture.detectChanges();
+      expect(component.loading).toBe(false);
+      expect(component.error).toBe('Impossible de charger les sessions. Vérifiez que le backend est démarré.');
+    });
   });
 
-  it('should initialize with loading state', () => {
-    expect(component.loading).toBe(true);
+  describe('Search Filter', () => {
+    beforeEach(() => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      fixture.detectChanges();
+    });
+
+    it('should filter by title (case insensitive)', () => {
+      component.searchTerm = 'quête';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(1);
+      expect(component.filteredSessions[0].id).toBe('2');
+    });
+
+    it('should filter by game name', () => {
+      component.searchTerm = 'pathfinder';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(1);
+      expect(component.filteredSessions[0].id).toBe('2');
+    });
+
+    it('should filter by description', () => {
+      component.searchTerm = 'horreur';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(1);
+      expect(component.filteredSessions[0].id).toBe('3');
+    });
+
+    it('should return all sessions when search term is empty', () => {
+      component.searchTerm = '';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(4);
+    });
+
+    it('should return empty array when no matches found', () => {
+      component.searchTerm = 'nonexistent game';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(0);
+    });
+
+    it('should handle sessions with null description', () => {
+      component.searchTerm = 'royaumes';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(1);
+      expect(component.filteredSessions[0].id).toBe('4');
+    });
+
+    it('should trim search term', () => {
+      component.searchTerm = '  quête  ';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(1);
+      expect(component.filteredSessions[0].id).toBe('2');
+    });
   });
 
-  it('should have empty sessions array initially', () => {
-    expect(component.sessions).toEqual([]);
+  describe('Session Type Filter', () => {
+    beforeEach(() => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      fixture.detectChanges();
+    });
+
+    it('should show all sessions when type is "all"', () => {
+      component.sessionType = 'all';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(4);
+    });
+
+    it('should filter online sessions', () => {
+      component.sessionType = 'online';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(2);
+      expect(component.filteredSessions.every(s => s.online)).toBe(true);
+    });
+
+    it('should filter on-site sessions', () => {
+      component.sessionType = 'onsite';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(2);
+      expect(component.filteredSessions.every(s => !s.online)).toBe(true);
+    });
+  });
+
+  describe('Game System Filter', () => {
+    beforeEach(() => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      fixture.detectChanges();
+    });
+
+    it('should show all sessions when no game system selected', () => {
+      component.selectedGameSystem = '';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(4);
+    });
+
+    it('should filter by selected game system', () => {
+      component.selectedGameSystem = 'Dungeons & Dragons 5e';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(2);
+      expect(component.filteredSessions.every(s => s.game === 'Dungeons & Dragons 5e')).toBe(true);
+    });
+
+    it('should filter by Pathfinder', () => {
+      component.selectedGameSystem = 'Pathfinder 2e';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(1);
+      expect(component.filteredSessions[0].id).toBe('2');
+    });
+
+    it('should filter by Call of Cthulhu', () => {
+      component.selectedGameSystem = 'Call of Cthulhu';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(1);
+      expect(component.filteredSessions[0].id).toBe('3');
+    });
+  });
+
+  describe('Availability Filter', () => {
+    beforeEach(() => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      fixture.detectChanges();
+    });
+
+    it('should show all sessions when availability filter is off', () => {
+      component.onlyAvailable = false;
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(4);
+    });
+
+    it('should filter only available sessions', () => {
+      component.onlyAvailable = true;
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(3);
+      expect(component.filteredSessions.every(s => s.playersCurrent < s.playersMax)).toBe(true);
+    });
+
+    it('should exclude full sessions', () => {
+      component.onlyAvailable = true;
+      component.applyFilters();
+      const fullSession = component.filteredSessions.find(s => s.id === '2');
+      expect(fullSession).toBeUndefined();
+    });
+  });
+
+  describe('Combined Filters', () => {
+    beforeEach(() => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      fixture.detectChanges();
+    });
+
+    it('should apply search + type filters together', () => {
+      component.searchTerm = 'royaumes';
+      component.sessionType = 'online';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(1);
+      expect(component.filteredSessions[0].id).toBe('4');
+    });
+
+    it('should apply search + game system filters together', () => {
+      component.searchTerm = 'mines';
+      component.selectedGameSystem = 'Dungeons & Dragons 5e';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(1);
+      expect(component.filteredSessions[0].id).toBe('1');
+    });
+
+    it('should apply type + availability filters together', () => {
+      component.sessionType = 'online';
+      component.onlyAvailable = true;
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(1);
+      expect(component.filteredSessions[0].id).toBe('4');
+    });
+
+    it('should apply all filters together', () => {
+      component.searchTerm = 'campagne';
+      component.sessionType = 'online';
+      component.selectedGameSystem = 'Dungeons & Dragons 5e';
+      component.onlyAvailable = true;
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(1);
+      expect(component.filteredSessions[0].id).toBe('4');
+    });
+
+    it('should return empty when combined filters match nothing', () => {
+      component.searchTerm = 'pathfinder';
+      component.sessionType = 'onsite';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(0);
+    });
+
+    it('should handle all restrictive filters at once', () => {
+      component.searchTerm = 'dragon';
+      component.sessionType = 'online';
+      component.selectedGameSystem = 'Dungeons & Dragons 5e';
+      component.onlyAvailable = true;
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(1);
+      expect(component.filteredSessions[0].id).toBe('4');
+    });
+  });
+
+  describe('Reset Filters', () => {
+    beforeEach(() => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      fixture.detectChanges();
+    });
+
+    it('should reset all filter values', () => {
+      component.searchTerm = 'dragon';
+      component.sessionType = 'online';
+      component.selectedGameSystem = 'Pathfinder 2e';
+      component.onlyAvailable = true;
+
+      component.resetFilters();
+
+      expect(component.searchTerm).toBe('');
+      expect(component.sessionType).toBe('all');
+      expect(component.selectedGameSystem).toBe('');
+      expect(component.onlyAvailable).toBe(false);
+    });
+
+    it('should restore all sessions after reset', () => {
+      component.searchTerm = 'nonexistent';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(0);
+
+      component.resetFilters();
+      expect(component.filteredSessions.length).toBe(4);
+    });
+
+    it('should call applyFilters after reset', () => {
+      const spy = jest.spyOn(component, 'applyFilters');
+      component.resetFilters();
+      expect(spy).toHaveBeenCalled();
+    });
+  });
+
+  describe('Active Filters Count', () => {
+    beforeEach(() => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      fixture.detectChanges();
+    });
+
+    it('should return 0 when no filters active', () => {
+      expect(component.getActiveFiltersCount()).toBe(0);
+    });
+
+    it('should count search term as active filter', () => {
+      component.searchTerm = 'dragon';
+      expect(component.getActiveFiltersCount()).toBe(1);
+    });
+
+    it('should count online type as active filter', () => {
+      component.sessionType = 'online';
+      expect(component.getActiveFiltersCount()).toBe(1);
+    });
+
+    it('should count onsite type as active filter', () => {
+      component.sessionType = 'onsite';
+      expect(component.getActiveFiltersCount()).toBe(1);
+    });
+
+    it('should not count "all" type as active filter', () => {
+      component.sessionType = 'all';
+      expect(component.getActiveFiltersCount()).toBe(0);
+    });
+
+    it('should count game system as active filter', () => {
+      component.selectedGameSystem = 'Pathfinder 2e';
+      expect(component.getActiveFiltersCount()).toBe(1);
+    });
+
+    it('should count availability as active filter', () => {
+      component.onlyAvailable = true;
+      expect(component.getActiveFiltersCount()).toBe(1);
+    });
+
+    it('should count multiple active filters', () => {
+      component.searchTerm = 'dragon';
+      component.sessionType = 'online';
+      component.selectedGameSystem = 'Dungeons & Dragons 5e';
+      component.onlyAvailable = true;
+      expect(component.getActiveFiltersCount()).toBe(4);
+    });
+
+    it('should handle whitespace-only search term as inactive', () => {
+      component.searchTerm = '   ';
+      expect(component.getActiveFiltersCount()).toBe(0);
+    });
+  });
+
+  describe('UI Integration', () => {
+    beforeEach(() => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      fixture.detectChanges();
+    });
+
+    it('should display loading state', () => {
+      component.loading = true;
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement;
+      expect(compiled.textContent).toContain('Chargement des sessions');
+    });
+
+    it('should display error message', () => {
+      component.loading = false;
+      component.error = 'Test error';
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement;
+      expect(compiled.textContent).toContain('Test error');
+    });
+
+    it('should display correct results count', () => {
+      component.searchTerm = 'quête';
+      component.applyFilters();
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement;
+      expect(compiled.textContent).toContain('(1 / 4)');
+    });
+
+    it('should display empty state when no results', () => {
+      component.searchTerm = 'nonexistent';
+      component.applyFilters();
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement;
+      expect(compiled.textContent).toContain('Aucune session ne correspond');
+    });
+
+    it('should render session cards for filtered results', () => {
+      fixture.detectChanges();
+      const cards = fixture.nativeElement.querySelectorAll('app-session-card');
+      expect(cards.length).toBe(4);
+    });
+
+    it('should update cards when filters change', () => {
+      component.searchTerm = 'quête';
+      component.applyFilters();
+      fixture.detectChanges();
+      const cards = fixture.nativeElement.querySelectorAll('app-session-card');
+      expect(cards.length).toBe(1);
+    });
+
+    it('should show active filters count badge', () => {
+      component.searchTerm = 'dragon';
+      component.sessionType = 'online';
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement;
+      expect(compiled.textContent).toContain('2');
+    });
+
+    it('should disable reset button when no filters active', () => {
+      fixture.detectChanges();
+      const button = fixture.nativeElement.querySelector('.btn-clear-filters');
+      expect(button.disabled).toBe(true);
+    });
+
+    it('should enable reset button when filters active', () => {
+      component.searchTerm = 'dragon';
+      fixture.detectChanges();
+      const button = fixture.nativeElement.querySelector('.btn-clear-filters');
+      expect(button.disabled).toBe(false);
+    });
+  });
+
+  describe('Edge Cases', () => {
+    it('should handle empty sessions array', () => {
+      mockSessionsService.getSessions.mockReturnValue(of([]));
+      fixture.detectChanges();
+      expect(component.sessions).toEqual([]);
+      expect(component.filteredSessions).toEqual([]);
+      expect(component.gameSystems).toEqual([]);
+    });
+
+    it('should handle sessions with duplicate game names', () => {
+      const duplicateSessions = [
+        { ...mockSessions[0], id: '1' },
+        { ...mockSessions[0], id: '2' }
+      ];
+      mockSessionsService.getSessions.mockReturnValue(of(duplicateSessions));
+      fixture.detectChanges();
+      expect(component.gameSystems.length).toBe(1);
+      expect(component.gameSystems[0]).toBe('Dungeons & Dragons 5e');
+    });
+
+    it('should handle special characters in search', () => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      fixture.detectChanges();
+      component.searchTerm = 'D&D';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBeGreaterThan(0);
+    });
+
+    it('should handle very long search terms', () => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      fixture.detectChanges();
+      component.searchTerm = 'a'.repeat(1000);
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(0);
+    });
   });
 });
