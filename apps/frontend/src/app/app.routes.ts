@@ -4,8 +4,20 @@ import { HomePage } from './features/home/home-page';
 import { SessionsListPage } from './features/sessions/sessions-list';
 import { LocationsListComponent } from './features/locations/locations-list';
 import { GroupsListComponent } from './features/groups/groups-list';
+import { LoginComponent } from './features/auth/login/login.component';
+import { RegisterComponent } from './features/auth/register/register.component';
 
 export const appRoutes: Route[] = [
+	// Auth routes (no layout)
+	{
+		path: 'login',
+		component: LoginComponent,
+	},
+	{
+		path: 'register',
+		component: RegisterComponent,
+	},
+	// App routes (with layout)
 	{
 		path: '',
 		component: AppLayout,

@@ -6,6 +6,12 @@
 		<a routerLink="/groups" routerLinkActive="active" class="top-bar__link">Groupes</a>
 	</nav>
 	<nav class="top-bar__actions">
-		<button type="button" class="top-bar__action">Se connecter</button>
+		@if (authService.isAuthenticated()) {
+			<span class="top-bar__user">{{ authService.getCurrentUser()?.username }}</span>
+			<button type="button" class="top-bar__action" (click)="logout()">Se déconnecter</button>
+		} @else {
+			<a routerLink="/login" class="top-bar__action">Se connecter</a>
+			<a routerLink="/register" class="top-bar__action top-bar__action--primary">S'inscrire</a>
+		}
 	</nav>
 </header>
