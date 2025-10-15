@@ -1,5 +1,5 @@
 import { PrismaClient, SkillLevel, SessionLevel, TagColor, LocationType, Playstyle, GroupRole, ReservationStatus } from '../generated/prisma';
-import * as bcrypt from 'bcrypt';
+import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
@@ -23,13 +23,15 @@ async function main() {
   // 2. Create Users
   // ============================================
   console.log('👥 Creating users...');
-  const hashedPassword = await bcrypt.hash('password123', 10);
+  const hashedPassword = await argon2.hash('password123');
 
   const alice = await prisma.user.create({
     data: {
       email: 'alice@barades.com',
       username: 'alice_dm',
-      password: hashedPassword,
+      passwordHash: hashedPassword,
+      firstName: 'Alice',
+      lastName: 'Dungeon',
       bio: 'Experienced D&D dungeon master with 10+ years of storytelling. Love creating immersive worlds!',
       avatar: 'https://i.pravatar.cc/150?img=1',
       skillLevel: SkillLevel.EXPERT,
@@ -44,7 +46,9 @@ async function main() {
     data: {
       email: 'bob@barades.com',
       username: 'bob_boardgamer',
-      password: hashedPassword,
+      passwordHash: hashedPassword,
+      firstName: 'Bob',
+      lastName: 'Board',
       bio: 'Board game enthusiast. I organize weekly game nights at local cafés.',
       avatar: 'https://i.pravatar.cc/150?img=2',
       skillLevel: SkillLevel.INTERMEDIATE,
@@ -59,7 +63,9 @@ async function main() {
     data: {
       email: 'carol@barades.com',
       username: 'carol_newbie',
-      password: hashedPassword,
+      passwordHash: hashedPassword,
+      firstName: 'Carol',
+      lastName: 'Newbie',
       bio: 'New to tabletop gaming but eager to learn! Looking for beginner-friendly groups.',
       avatar: 'https://i.pravatar.cc/150?img=3',
       skillLevel: SkillLevel.BEGINNER,
@@ -70,7 +76,9 @@ async function main() {
     data: {
       email: 'dave@barades.com',
       username: 'dave_poker',
-      password: hashedPassword,
+      passwordHash: hashedPassword,
+      firstName: 'Dave',
+      lastName: 'Poker',
       bio: 'Poker player looking for regular cash games in Brussels area.',
       avatar: 'https://i.pravatar.cc/150?img=4',
       skillLevel: SkillLevel.INTERMEDIATE,
@@ -84,7 +92,9 @@ async function main() {
     data: {
       email: 'eve@barades.com',
       username: 'eve_admin',
-      password: hashedPassword,
+      passwordHash: hashedPassword,
+      firstName: 'Eve',
+      lastName: 'Admin',
       bio: 'Platform administrator. Organizing community events and meetups!',
       avatar: 'https://i.pravatar.cc/150?img=5',
       skillLevel: SkillLevel.EXPERT,

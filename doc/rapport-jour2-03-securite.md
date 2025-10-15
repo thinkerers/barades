@@ -68,6 +68,9 @@ Supabase est une plateforme BaaS (Backend as a Service) qui expose automatiqueme
 1. **Simplicité** : Une seule source de vérité pour l'authentification (NestJS)
 2. **Flexibilité** : Logique métier complexe dans le code, pas SQL
 3. **Sécurité par défaut** : RLS activé = PostgREST bloqué, même si clé anon leak
+4. **Découplage** : Pas de vendor lock-in Supabase Auth, custom JWT avec `@nestjs/jwt` + `argon2`
+
+**Note importante** : L'authentification sera implémentée **sans Passport.js** (voir [article Trilon](https://trilon.io/blog/nestjs-authentication-without-passport)), en utilisant directement `@nestjs/jwt` pour plus de contrôle et de transparence pédagogique (TFE).
 
 ### 3.4 Script RLS production-ready
 
@@ -81,16 +84,24 @@ Supabase est une plateforme BaaS (Backend as a Service) qui expose automatiqueme
 -- ============================================
 /*
   TRUST MODEL:
-  - Frontend → Backend NestJS (JWT auth)
+  - Frontend → Backend NestJS (custom JWT auth, no Passport)
   - Backend → Supabase (service_role key, bypass RLS)
   - PostgREST API → BLOCKED (no permissive policies)
 
-  JWT STRUCTURE (if Supabase Auth was used):
+  JWT STRUCTURE (custom implementation):
   {
-    "sub": "user-uuid",
-    "role": "authenticated",
-    "user_role": "user" | "admin"
+    "sub": "user-uuid",          // user.id
+    "username": "user@email.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "iat": 1234567890,          // issued at
+    "exp": 1234571490           // expiration (1h)
   }
+
+  AUTHENTICATION FLOW:
+  1. POST /auth/signup → argon2.hash(password) → save User → return JWT
+  2. POST /auth/login → argon2.verify(password) → return JWT
+  3. Protected routes → JwtGuard extracts & verifies JWT → req.user = payload
 */
 
 -- ============================================
@@ -260,18 +271,25 @@ curl https://yugtxsppenzskyutjytx.supabase.co/rest/v1/User \
 
 ### 3.7 Évolutions futures possibles
 
-**Si passage à Supabase Auth** :
-1. Décommenter les policies dans le script
-2. Adapter les JWT claims (sub, role, user_role)
-3. Créer policies granulaires :
-   - Users peuvent voir leurs propres données
-   - MJ peuvent éditer leurs sessions
-   - Admins ont accès complet
+**Si besoin de refresh tokens** :
+1. Ajouter table `RefreshToken` avec expiration longue (7 jours)
+2. Endpoint POST /auth/refresh pour obtenir nouveau access token
+3. Rotation automatique des refresh tokens
+
+**Si besoin d'OAuth (Google, GitHub)** :
+1. Option 1 : Ajouter Passport.js uniquement pour OAuth strategies
+2. Option 2 : Utiliser Supabase Auth (OAuth intégré)
+3. Mapper les OAuth users vers table `User` Prisma
 
 **Si besoin d'audit trail** :
 1. Installer `pgaudit` extension
 2. Configurer log_statement = 'all'
 3. Parser logs Supabase pour analytics
+
+**Pourquoi pas Passport.js ?** :
+- Pour une auth locale simple (username/password + JWT), Passport n'apporte que ~30 lignes d'abstraction
+- Custom implementation = **contrôle total** + **code explicite** (meilleur pour TFE)
+- Référence : [NestJS Authentication without Passport (Trilon)](https://trilon.io/blog/nestjs-authentication-without-passport)
 
 ---
 
