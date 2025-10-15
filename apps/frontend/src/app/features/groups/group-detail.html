@@ -62,6 +62,18 @@
       <p class="description">{{ group.description }}</p>
     </section>
 
+    <!-- Poll Section -->
+    <section class="group-detail__section">
+      <h2>Sondage de dates</h2>
+      <app-poll-widget
+        [poll]="activePoll"
+        [groupId]="group.id"
+        [currentUserId]="currentUserId"
+        (pollCreated)="onPollCreated($event)"
+        (voted)="onVoted()"
+      ></app-poll-widget>
+    </section>
+
     <!-- Members Section -->
     <section class="group-detail__section">
       <div class="section-header">

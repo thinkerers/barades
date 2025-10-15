@@ -6,6 +6,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { SessionsModule } from '../sessions/sessions.module';
 import { LocationsModule } from '../locations/locations.module';
 import { GroupsModule } from '../groups/groups.module';
+import { PollsModule } from '../polls/polls.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { AuthModule } from '../auth/auth.module';
     SessionsModule,
     LocationsModule,
     GroupsModule,
+    PollsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

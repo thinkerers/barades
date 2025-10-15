@@ -2,6 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GroupsService, Group } from '../../core/services/groups.service';
+import { PollsService, Poll } from '../../core/services/polls.service';
+import { PollWidgetComponent } from './poll-widget';
 
 interface GroupMember {
   id: string;
@@ -31,7 +33,7 @@ interface GroupDetail extends Group {
 @Component({
   selector: 'app-group-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, PollWidgetComponent],
   templateUrl: './group-detail.html',
   styleUrl: './group-detail.css'
 })
@@ -39,15 +41,20 @@ export class GroupDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private groupsService = inject(GroupsService);
+  private pollsService = inject(PollsService);
 
   group: GroupDetail | null = null;
+  polls: Poll[] = [];
+  activePoll: Poll | null = null;
   loading = true;
   error: string | null = null;
+  currentUserId = 'user-1'; // TODO: Get from auth service
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadGroup(id);
+      this.loadPolls(id);
     } else {
       this.error = 'ID de groupe invalide';
       this.loading = false;
@@ -69,6 +76,43 @@ export class GroupDetailComponent implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  private loadPolls(groupId: string): void {
+    this.pollsService.getPolls(groupId).subscribe({
+      next: (polls) => {
+        this.polls = polls;
+        if (polls.length > 0) {
+          // Load full details for the most recent poll
+          this.loadPollDetails(polls[0].id);
+        }
+      },
+      error: (err) => {
+        console.error('Error loading polls:', err);
+      }
+    });
+  }
+
+  private loadPollDetails(pollId: string): void {
+    this.pollsService.getPoll(pollId).subscribe({
+      next: (poll) => {
+        this.activePoll = poll;
+      },
+      error: (err) => {
+        console.error('Error loading poll details:', err);
+      }
+    });
+  }
+
+  onPollCreated(poll: Poll): void {
+    this.polls = [poll, ...this.polls];
+    this.loadPollDetails(poll.id);
+  }
+
+  onVoted(): void {
+    if (this.activePoll) {
+      this.loadPollDetails(this.activePoll.id);
+    }
   }
 
   getPlaystyleLabel(playstyle: string): string {

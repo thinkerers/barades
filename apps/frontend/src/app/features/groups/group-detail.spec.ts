@@ -5,11 +5,13 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { of, throwError } from 'rxjs';
 import { GroupDetailComponent } from './group-detail';
 import { GroupsService } from '../../core/services/groups.service';
+import { PollsService } from '../../core/services/polls.service';
 
 describe('GroupDetailComponent', () => {
   let component: GroupDetailComponent;
   let fixture: ComponentFixture<GroupDetailComponent>;
   let groupsService: GroupsService;
+  let pollsService: PollsService;
   let router: Router;
 
   const mockGroup = {
@@ -84,7 +86,11 @@ describe('GroupDetailComponent', () => {
     fixture = TestBed.createComponent(GroupDetailComponent);
     component = fixture.componentInstance;
     groupsService = TestBed.inject(GroupsService);
+    pollsService = TestBed.inject(PollsService);
     router = TestBed.inject(Router);
+    
+    // Mock polls service by default
+    jest.spyOn(pollsService, 'getPolls').mockReturnValue(of([]));
   });
 
   it('should create', () => {
@@ -272,7 +278,7 @@ describe('GroupDetailComponent', () => {
 
     it('should show join button when can join', () => {
       const compiled = fixture.nativeElement as HTMLElement;
-      const joinButton = compiled.querySelector('.btn--primary');
+      const joinButton = compiled.querySelector('.section-actions .btn--primary');
       expect(joinButton).toBeTruthy();
       expect(joinButton?.textContent).toContain('Rejoindre');
     });
