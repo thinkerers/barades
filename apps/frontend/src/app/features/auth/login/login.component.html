@@ -23,9 +23,6 @@
           @if (loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched) {
             <mat-error>Le mot de passe est requis</mat-error>
           }
-          @if (loginForm.get('password')?.hasError('minlength') && loginForm.get('password')?.touched) {
-            <mat-error>Le mot de passe doit contenir au moins 12 caractères</mat-error>
-          }
         </mat-form-field>
 
         <!-- Error message -->

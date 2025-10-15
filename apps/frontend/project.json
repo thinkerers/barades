@@ -62,10 +62,14 @@
           "buildTarget": "frontend:build:production"
         },
         "development": {
-          "buildTarget": "frontend:build:development"
+          "buildTarget": "frontend:build:development",
+          "proxyConfig": "apps/frontend/proxy.conf.json"
         }
       },
-      "defaultConfiguration": "development"
+      "defaultConfiguration": "development",
+      "options": {
+        "proxyConfig": "apps/frontend/proxy.conf.json"
+      }
     },
     "extract-i18n": {
       "executor": "@angular/build:extract-i18n",
