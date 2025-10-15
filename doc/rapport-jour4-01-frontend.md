@@ -360,6 +360,7 @@ export const authGuard: CanActivateFn = (route, state) => {
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatProgressSpinnerModule,
     RouterLink
   ],
   templateUrl: './login.component.html',
@@ -408,7 +409,7 @@ export class LoginComponent {
 **Points clés** :
 - ✅ Reactive Forms avec validation
 - ✅ Gestion du `returnUrl` pour redirection post-login
-- ✅ Loading state (`isLoading`)
+- ✅ Loading state avec `mat-spinner`
 - ✅ Affichage des erreurs (`errorMessage`)
 - ✅ **Pas de validation minLength** sur le login (uniquement backend)
 
@@ -471,7 +472,7 @@ export class LoginComponent {
 - ✅ Angular Material components
 - ✅ Validation en temps réel
 - ✅ Bouton désactivé si formulaire invalide
-- ✅ Loading state avec message
+- ✅ Loading state avec mat-spinner
 - ✅ Lien vers inscription
 
 ---
@@ -491,6 +492,7 @@ export class LoginComponent {
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatProgressSpinnerModule,
     RouterLink
   ],
   templateUrl: './register.component.html',
@@ -509,33 +511,32 @@ export class RegisterComponent {
     this.registerForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       username: ['', [Validators.required, Validators.minLength(3)]],
-      password: ['', [Validators.required, Validators.minLength(12)]],
-      confirmPassword: ['', [Validators.required]],
       firstName: [''],
-      lastName: ['']
+      lastName: [''],
+      password: ['', [Validators.required, Validators.minLength(12)]],
+      confirmPassword: ['', [Validators.required]]
     }, {
       validators: this.passwordMatchValidator
     });
   }
 
   // Custom validator pour vérifier que password === confirmPassword
-  private passwordMatchValidator(g: AbstractControl): ValidationErrors | null {
-    return g.get('password')?.value === g.get('confirmPassword')?.value
-      ? null
-      : { passwordMismatch: true };
+  private passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
+    const password = control.get('password')?.value;
+    const confirmPassword = control.get('confirmPassword')?.value;
+
+    if (password && confirmPassword && password !== confirmPassword) {
+      return { passwordMismatch: true };
+    }
+    return null;
   }
 
-  // Indicateur de force du mot de passe (retourne 'weak', 'medium', ou 'strong')
+  // Indicateur de force du mot de passe (basé uniquement sur la longueur)
   getPasswordStrength(): string {
     const password = this.registerForm.get('password')?.value || '';
-    let strength = 0;
-    if (password.length >= 12) strength++;
-    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
-    if (/\d/.test(password)) strength++;
-    if (/[^a-zA-Z0-9]/.test(password)) strength++;
-    
-    if (strength < 3) return 'weak';
-    if (strength < 4) return 'medium';
+    if (password.length === 0) return '';
+    if (password.length < 12) return 'weak';
+    if (password.length < 16) return 'medium';
     return 'strong';
   }
 
@@ -562,7 +563,7 @@ export class RegisterComponent {
 
 **Points clés** :
 - ✅ Validateur personnalisé `passwordMatchValidator`
-- ✅ Calcul de la force du mot de passe (0-100%)
+- ✅ Indicateur de force du mot de passe (weak/medium/strong basé sur longueur)
 - ✅ Validation email avec `Validators.email`
 - ✅ Username minimum 3 caractères
 - ✅ Password minimum 12 caractères
@@ -572,13 +573,15 @@ export class RegisterComponent {
 ```html
 <!-- Password strength indicator -->
 @if (registerForm.get('password')?.value) {
-  <div class="password-strength">
-    <div class="password-strength-label">Force du mot de passe :</div>
-    <div class="password-strength-bar">
-      <div class="password-strength-fill" 
-           [class]="'password-strength-' + getPasswordStrength()">
-      </div>
-    </div>
+  <div class="password-strength" [class]="getPasswordStrength()">
+    <div class="strength-bar"></div>
+    <span class="strength-label">
+      @switch (getPasswordStrength()) {
+        @case ('weak') { Faible }
+        @case ('medium') { Moyen }
+        @case ('strong') { Fort }
+      }
+    </span>
   </div>
 }
 
@@ -596,8 +599,8 @@ export class RegisterComponent {
 ```
 
 **Features UI** :
-- ✅ Barre de progression pour la force du mot de passe
-- ✅ Couleurs dynamiques (rouge → orange → vert)
+- ✅ Indicateur de force du mot de passe avec labels textuels (Faible/Moyen/Fort)
+- ✅ Couleurs dynamiques via classes CSS
 - ✅ Validation de correspondance en temps réel
 - ✅ Messages d'erreur contextuels
 
