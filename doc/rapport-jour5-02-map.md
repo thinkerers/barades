@@ -266,27 +266,10 @@ getUserLocation(): void {
         lat: position.coords.latitude,
         lon: position.coords.longitude
       };
+      
+      this.addUserMarker();
+      this.findNearestLocation();
       this.geolocating = false;
-
-      // Add user marker to map
-      if (this.map && !this.userMarker) {
-        this.userMarker = L.marker(
-          [this.userPosition.lat, this.userPosition.lon],
-          {
-            icon: L.icon({
-              iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
-              shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-              iconSize: [25, 41],
-              iconAnchor: [12, 41],
-              popupAnchor: [1, -34],
-              shadowSize: [41, 41]
-            })
-          }
-        ).addTo(this.map);
-
-        // Center map on user
-        this.map.setView([this.userPosition.lat, this.userPosition.lon], 13);
-      }
     },
     
     // Error callback with 4 error types
@@ -315,6 +298,41 @@ getUserLocation(): void {
       maximumAge: 0 // Don't use cached position
     }
   );
+}
+```
+
+**Ajout du marqueur utilisateur** :
+```typescript
+private addUserMarker(): void {
+  if (!this.userPosition || !this.map) {
+    return;
+  }
+
+  if (this.userMarker) {
+    this.userMarker.remove();
+  }
+
+  const userIcon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+  });
+
+  this.userMarker = L.marker(
+    [this.userPosition.lat, this.userPosition.lon],
+    { icon: userIcon }
+  )
+    .addTo(this.map)
+    .bindPopup('<strong>📍 Votre position</strong>')
+    .openPopup();
+
+  this.map.setView([this.userPosition.lat, this.userPosition.lon], 13, {
+    animate: true,
+    duration: 1
+  });
 }
 ```
 
@@ -472,13 +490,13 @@ private calculateDistance(
   const R = 6371; // Earth radius in km
   
   // Convert to radians
-  const dLat = this.toRadians(lat2 - lat1);
-  const dLon = this.toRadians(lon2 - lon1);
+  const dLat = this.deg2rad(lat2 - lat1);
+  const dLon = this.deg2rad(lon2 - lon1);
   
   const a = 
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(this.toRadians(lat1)) * 
-    Math.cos(this.toRadians(lat2)) *
+    Math.cos(this.deg2rad(lat1)) * 
+    Math.cos(this.deg2rad(lat2)) *
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
@@ -487,27 +505,71 @@ private calculateDistance(
   return distance;
 }
 
-private toRadians(degrees: number): number {
+private deg2rad(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
 ```
 
 **Méthode FindNearest** :
 ```typescript
-findNearestLocation(): void {
-  if (!this.userPosition) {
-    this.geolocationError = 'Aucune position utilisateur disponible';
-    return;
-  }
+private findNearestLocation(): void {
+  if (!this.userPosition || !this.map || this.filteredLocations.length === 0) return;
 
-  // Build array with distances
-  const locationsWithDistance = this.locations
+  const userLat = this.userPosition.lat;
+  const userLon = this.userPosition.lon;
+
+  // Calculate distances to all filtered locations
+  const locationsWithDistance = this.filteredLocations
     .filter(loc => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0))
     .map(location => ({
       location,
       distance: this.calculateDistance(
-        this.userPosition!.lat,
-        this.userPosition!.lon,
+        userLat,
+        userLon,
+        location.lat,
+        location.lon
+      )
+    }))
+    .sort((a, b) => a.distance - b.distance);
+
+  if (locationsWithDistance.length === 0) return;
+
+  const nearest = locationsWithDistance[0];
+
+  // Create bounds to include both user position and nearest location
+  const bounds = L.latLngBounds([
+    [userLat, userLon],
+    [nearest.location.lat, nearest.location.lon]
+  ]);
+
+  // Fit map to show both markers with padding
+  this.map.fitBounds(bounds, {
+    padding: [50, 50],
+    maxZoom: 15,
+    animate: true,
+    duration: 1
+  });
+
+  // Highlight nearest location in list
+  setTimeout(() => {
+    this.onMarkerClick(nearest.location.id);
+  }, 1000);
+}
+```typescript
+findNearestLocation(): void {
+  if (!this.userPosition || !this.map || this.filteredLocations.length === 0) {
+    return;
+  }
+
+  const { lat: userLat, lon: userLon } = this.userPosition;
+
+  const locationsWithDistance = this.filteredLocations
+    .filter(loc => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0))
+    .map(location => ({
+      location,
+      distance: this.calculateDistance(
+        userLat,
+        userLon,
         location.lat,
         location.lon
       )
@@ -519,12 +581,12 @@ findNearestLocation(): void {
     
     // Create bounds including user position and nearest location
     const bounds = L.latLngBounds([
-      [this.userPosition.lat, this.userPosition.lon],
+      [userLat, userLon],
       [nearest.location.lat, nearest.location.lon]
     ]);
     
     // Fit map to show both points
-    this.map?.fitBounds(bounds, { 
+    this.map.fitBounds(bounds, { 
       padding: [50, 50],
       maxZoom: 15,
       animate: true,
@@ -550,7 +612,7 @@ findNearestLocation(): void {
 </button>
 ```
 
-**Tests** (5 tests) :
+**Tests** (4 tests) :
 ```typescript
 describe('calculateDistance', () => {
   it('should calculate distance Brussels to Antwerp (~45km)', () => {
@@ -594,39 +656,29 @@ describe('calculateDistance', () => {
 **Méthode getAmenityIcon** :
 ```typescript
 private getAmenityIcon(amenity: string): string {
-  const icons: Record<string, string> = {
+  const iconMap: Record<string, string> = {
     'WiFi': `
-      <span class="amenity-icon">
+      <div class="amenity-icon" title="WiFi">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
           <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
           <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
           <line x1="12" y1="20" x2="12.01" y2="20"></line>
         </svg>
-        WiFi
-      </span>
+        <span>WiFi</span>
+      </div>
     `,
     'Tables': `
-      <span class="amenity-icon">
+      <div class="amenity-icon" title="Tables de jeu">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-          <line x1="6" y1="8" x2="18" y2="8"></line>
+          <path d="M2 2h20v20H2z"></path>
+          <path d="M6 6h12v12H6z"></path>
         </svg>
-        Tables
-      </span>
+        <span>Tables</span>
+      </div>
     `,
     'Food': `
-      <span class="amenity-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path>
-          <path d="M7 2v20"></path>
-          <path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path>
-        </svg>
-        Food
-      </span>
-    `,
-    'Drinks': `
-      <span class="amenity-icon">
+      <div class="amenity-icon" title="Restauration">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
           <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
@@ -634,51 +686,113 @@ private getAmenityIcon(amenity: string): string {
           <line x1="10" y1="1" x2="10" y2="4"></line>
           <line x1="14" y1="1" x2="14" y2="4"></line>
         </svg>
-        Drinks
-      </span>
+        <span>Food</span>
+      </div>
+    `,
+    'Drinks': `
+      <div class="amenity-icon" title="Boissons">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 2H6v20h12V2z"></path>
+          <path d="M6 7h12"></path>
+        </svg>
+        <span>Drinks</span>
+      </div>
     `,
     'Parking': `
-      <span class="amenity-icon">
+      <div class="amenity-icon" title="Parking">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-          <path d="M9 17V7h4a3 3 0 0 1 0 6h-4"></path>
+          <path d="M9 17V7h4a3 3 0 0 1 0 6H9"></path>
         </svg>
-        Parking
-      </span>
+        <span>Parking</span>
+      </div>
     `
   };
 
-  return icons[amenity] || `<span class="amenity-icon">${amenity}</span>`;
+  return iconMap[amenity] || `<div class="amenity-icon"><span>${amenity}</span></div>`;
 }
 ```
 
-**Création Popup** :
+**Création Popup via `createPopupContent()`** :
 ```typescript
-private initMap(): void {
-  // ... map init ...
+private createPopupContent(location: Location): string {
+  // Amenities with icons
+  const amenitiesHtml = location.amenities.length > 0
+    ? `
+      <div class="popup-amenities">
+        ${location.amenities.map(amenity => this.getAmenityIcon(amenity)).join('')}
+      </div>
+    `
+    : '';
+
+  const capacityHtml = location.capacity
+    ? `
+      <div class="popup-row">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <span>${location.capacity} personnes</span>
+      </div>
+    `
+    : '';
+
+  return `
+    <div class="location-popup">
+      <div class="popup-header">
+        <h3>${location.name}</h3>
+        <span class="popup-badge">${this.getLocationTypeLabel(location.type)}</span>
+      </div>
+      
+      <div class="popup-rating">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        <span>${location.rating.toFixed(1)}/5</span>
+      </div>
+      
+      ${capacityHtml}
+      ${amenitiesHtml}
+    </div>
+  `;
+}
+```
+
+**Utilisation dans `addMarkers()`** :
+```typescript
+private addMarkers(): void {
+  if (!this.map) return;
+
+  // Clear existing markers
+  this.markers.forEach(marker => marker.remove());
+  this.markers = [];
+  this.markersByLocationId.clear();
 
   this.locations.forEach(location => {
-    const marker = L.marker([location.lat, location.lon]);
+    // Skip online locations
+    if (location.type === 'PRIVATE' && location.lat === 0 && location.lon === 0) {
+      return;
+    }
 
-    // Build amenities HTML
-    const amenitiesHtml = location.amenities.length > 0
-      ? `
-        <div class="popup-amenities">
-          ${location.amenities.map(a => this.getAmenityIcon(a)).join('')}
-        </div>
-      `
-      : '';
+    const icon = this.getLocationIcon(location.type);
 
-    // Create dark-themed popup
-    const popupContent = `
-      <div class="location-popup">
-        <h3 class="popup-title">${location.name}</h3>
-        <p class="popup-address">📍 ${location.address}, ${location.city}</p>
-        <p class="popup-rating">⭐ ${location.rating}/5</p>
-        ${amenitiesHtml}
-        <p class="popup-capacity">👥 Capacité: ${location.capacity} personnes</p>
-      </div>
-    `;
+    if (this.map) {
+      const marker = L.marker([location.lat, location.lon], { icon })
+        .addTo(this.map)
+        .bindPopup(this.createPopupContent(location));
+
+      // Add click handler to marker
+      marker.on('click', () => {
+        this.onMarkerClick(location.id);
+      });
+
+      this.markers.push(marker);
+      this.markersByLocationId.set(location.id, marker);
+    }
+  });
+}
 
     marker.bindPopup(popupContent, {
       className: 'custom-popup',
