@@ -472,6 +472,28 @@ curl -X GET http://localhost:3000/api/sessions | jq
 
 **Réponse** : Tableau de 5 sessions avec relations complètes ✅
 
+**5. Route protégée AVEC token valide**
+```bash
+curl -X POST http://localhost:3000/api/sessions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGc..." \
+  -d '{"title": "Test"}' | jq
+```
+
+**Réponse** :
+```json
+{
+  "statusCode": 500,
+  "message": "Internal server error"
+}
+```
+⚠️ **Guard fonctionne** (token accepté) mais `SessionsService.create()` n'est pas implémenté :
+```typescript
+create(_createSessionDto: CreateSessionDto) {
+  throw new Error('Method not implemented yet');
+}
+```
+
 ---
 
 ### Résultats des tests
@@ -481,10 +503,12 @@ curl -X GET http://localhost:3000/api/sessions | jq
 | POST /auth/signup | JWT retourné | ✅ |
 | POST /auth/login | JWT retourné | ✅ |
 | GET /sessions (public) | Données retournées | ✅ |
-| POST /sessions sans token | 401 Unauthorized | ✅ |
-| POST /sessions avec token | Guard autorise | ✅ |
+| POST /sessions sans token | 401 Unauthorized (guard bloque) | ✅ |
+| POST /sessions avec token | 500 Error (guard OK, create() non implémenté) | ⚠️ |
 
-**Conclusion** : Authentification 100% fonctionnelle ✅
+**Conclusion** : 
+- ✅ **Authentification 100% fonctionnelle** (signup, login, JWT, guard)
+- ⚠️ **Route protégée testée partiellement** : Guard fonctionne, mais création de session non implémentée
 
 ---
 
@@ -685,11 +709,13 @@ npx tsx apps/backend/prisma/seed.ts
 
 ### Objectifs atteints ✅
 
-- ✅ Authentification backend fonctionnelle
-- ✅ Signup + Login endpoints
-- ✅ JwtAuthGuard pour protection routes
-- ✅ Tests validés (curl)
-- ✅ Code propre et documenté
+- ✅ Authentification backend fonctionnelle (signup, login, JWT)
+- ✅ JwtAuthGuard implémenté et testé (vérifie token correctement)
+- ✅ Tests validés : signup, login, guard bloque sans token
+- ✅ Code propre et documenté (222 lignes)
+- ⚠️ Route protégée POST /sessions : Guard fonctionne mais `create()` non implémenté (erreur 500)
+
+**Note importante** : Le JwtAuthGuard valide bien le token et attache `request.user`, mais `SessionsService.create()` lance `Error('Method not implemented yet')`. L'implémentation métier de création de session reste à faire.
 
 ### Temps dépensé
 
