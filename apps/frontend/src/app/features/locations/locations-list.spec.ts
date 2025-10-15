@@ -458,7 +458,8 @@ describe('LocationsListComponent', () => {
       }
       
       // Mock initMap to prevent Leaflet initialization errors
-      jest.spyOn(component as any, 'initMap').mockImplementation(() => {});
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      jest.spyOn(component as any, 'initMap').mockImplementation(jest.fn());
       
       jest.spyOn(locationsService, 'getLocations').mockReturnValue(of(mockLocations));
       fixture.detectChanges();
@@ -466,17 +467,20 @@ describe('LocationsListComponent', () => {
       // Setup a mock map and marker for testing
       component['map'] = {
         setView: jest.fn().mockReturnThis(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
       
       const mockMarker = {
         openPopup: jest.fn()
       };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       component['markersByLocationId'].set('1', mockMarker as any);
     });
 
     describe('onLocationClick', () => {
       it('should set selectedLocationId and zoom to marker for valid location', () => {
-        const setViewSpy = jest.spyOn(component['map'], 'setView');
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const setViewSpy = jest.spyOn(component['map']!, 'setView');
         
         component.onLocationClick('1');
         
@@ -641,7 +645,8 @@ describe('LocationsListComponent', () => {
 
     beforeEach(() => {
       // Mock initMap to prevent Leaflet initialization
-      jest.spyOn(component as any, 'initMap').mockImplementation(() => {});
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      jest.spyOn(component as any, 'initMap').mockImplementation(jest.fn());
       
       jest.spyOn(locationsService, 'getLocations').mockReturnValue(of(mockLocations));
       
