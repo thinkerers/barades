@@ -31,16 +31,18 @@ Créer un système complet de gestion et affichage des sessions de jeu avec :
 @Component({
   selector: 'app-sessions-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, SessionCardComponent],
+  imports: [CommonModule, FormsModule, RouterLink, SessionCardComponent],
   templateUrl: './sessions-list.html',
   styleUrl: './sessions-list.css'
 })
-export class SessionsListComponent implements OnInit {
+export class SessionsListPage implements OnInit {
+  private readonly sessionsService = inject(SessionsService);
+  
   // State
   sessions: Session[] = [];
   filteredSessions: Session[] = [];
-  loading = false;
-  error = '';
+  loading = true;
+  error: string | null = null;
 
   // Filters
   searchTerm = '';
@@ -48,7 +50,8 @@ export class SessionsListComponent implements OnInit {
   selectedGameSystem = '';
   onlyAvailable = false;
 
-  constructor(private sessionsService: SessionsService) {}
+  // Unique game systems for dropdown
+  gameSystems: string[] = [];
 
   ngOnInit(): void {
     this.loadSessions();
@@ -56,14 +59,24 @@ export class SessionsListComponent implements OnInit {
 
   loadSessions(): void {
     this.loading = true;
+    this.error = null;
+    
     this.sessionsService.getSessions().subscribe({
-      next: (data) => {
-        this.sessions = data;
-        this.filteredSessions = data;
+      next: (sessions) => {
+        this.sessions = sessions;
+        this.filteredSessions = [...sessions];
+        
+        // Extract unique game systems for dropdown
+        this.gameSystems = [...new Set(sessions.map(s => s.game))].sort();
+        
         this.loading = false;
+        
+        // Apply filters if any are already set
+        this.applyFilters();
       },
       error: (err) => {
-        this.error = 'Erreur lors du chargement des sessions';
+        console.error('Error loading sessions:', err);
+        this.error = 'Impossible de charger les sessions. Vérifiez que le backend est démarré.';
         this.loading = false;
       }
     });
@@ -71,27 +84,37 @@ export class SessionsListComponent implements OnInit {
 
   applyFilters(): void {
     this.filteredSessions = this.sessions.filter(session => {
-      // 1. Search by title
-      const matchesSearch = !this.searchTerm.trim() || 
-        session.title.toLowerCase().includes(this.searchTerm.trim().toLowerCase());
-      
-      // 2. Filter by type (online/onsite)
-      const matchesType = 
-        this.sessionType === 'all' ||
-        (this.sessionType === 'online' && session.online) ||
-        (this.sessionType === 'onsite' && !session.online);
-      
+      // 1. Search by title, game, or description
+      const trimmedSearch = this.searchTerm.trim();
+      if (trimmedSearch) {
+        const term = trimmedSearch.toLowerCase();
+        const matchesSearch = 
+          session.title.toLowerCase().includes(term) ||
+          session.game.toLowerCase().includes(term) ||
+          (session.description && session.description.toLowerCase().includes(term));
+        
+        if (!matchesSearch) return false;
+      }
+
+      // 2. Filter by type (online/onsite/all)
+      if (this.sessionType === 'online' && !session.online) {
+        return false;
+      }
+      if (this.sessionType === 'onsite' && session.online) {
+        return false;
+      }
+
       // 3. Filter by game system
-      const matchesGame = 
-        this.selectedGameSystem === '' || 
-        session.game === this.selectedGameSystem;
-      
-      // 4. Filter by availability
-      const matchesAvailability = 
-        !this.onlyAvailable || 
-        (session.playersMax - session.playersCurrent > 0);
-      
-      return matchesSearch && matchesType && matchesGame && matchesAvailability;
+      if (this.selectedGameSystem && session.game !== this.selectedGameSystem) {
+        return false;
+      }
+
+      // 4. Filter by availability (only sessions with available spots)
+      if (this.onlyAvailable && session.playersCurrent >= session.playersMax) {
+        return false;
+      }
+
+      return true;
     });
   }
 
@@ -438,35 +461,37 @@ it('should reset all filters', () => {
 export class SessionCardComponent {
   @Input({ required: true }) session!: Session;
 
-  getTagColorClass(tag: string): string {
+  getTagColorClass(color: string): string {
     const colorMap: Record<string, string> = {
-      'BLUE': 'tag--blue',
+      'RED': 'tag--red',
       'GREEN': 'tag--green',
       'PURPLE': 'tag--purple',
-      'RED': 'tag--red',
-      'YELLOW': 'tag--yellow'
+      'BLUE': 'tag--blue',
+      'GRAY': 'tag--gray'
     };
-    return colorMap[tag] || 'tag--blue';
+    return colorMap[color] || 'tag--gray';
   }
 
-  getLevelLabel(level: SessionLevel): string {
-    const labels: Record<SessionLevel, string> = {
+  getLevelLabel(level: string): string {
+    const labels: Record<string, string> = {
       'BEGINNER': 'Débutant',
       'INTERMEDIATE': 'Intermédiaire',
       'ADVANCED': 'Avancé',
-      'ALL_LEVELS': 'Tous niveaux'
+      'OPEN': 'Tous niveaux'
     };
-    return labels[level];
+    return labels[level] || level;
   }
 
-  formatDate(date: string | Date): string {
-    return new Date(date).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('fr-FR', {
+      weekday: 'long',
       year: 'numeric',
+      month: 'long',
+      day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    });
+    }).format(date);
   }
 
   getAvailableSpots(): number {
@@ -478,10 +503,10 @@ export class SessionCardComponent {
   }
 
   getStatusClass(): string {
-    if (this.isFull()) {
-      return 'tag--red';
-    }
-    return 'tag--green';
+    const available = this.getAvailableSpots();
+    if (available === 0) return 'status--full';
+    if (available <= 2) return 'status--limited';
+    return 'status--available';
   }
 }
 ```
@@ -491,82 +516,108 @@ export class SessionCardComponent {
 ### Template HTML
 
 ```html
-<div class="session-card">
-  <!-- Header with title and tags -->
-  <div class="card-header">
-    <h3 class="card-title">{{ session.name }}</h3>
-    <div class="tags-container" *ngIf="session.tags && session.tags.length > 0">
-      <span 
-        *ngFor="let tag of session.tags" 
-        class="tag"
-        [ngClass]="getTagColorClass(tag.color)"
-      >
-        {{ tag.name }}
-      </span>
-    </div>
+<article 
+  class="session-card"
+  [class]="'session-card--' + session.tagColor.toLowerCase()"
+>
+  <!-- Tag Color Indicator -->
+  <div class="session-card__tag" [ngClass]="getTagColorClass(session.tagColor)"></div>
+
+  <!-- Header -->
+  <header class="session-card__header">
+    <h3 class="session-card__title">{{ session.title }}</h3>
+    <span class="session-card__game">{{ session.game }}</span>
+  </header>
+
+  <!-- Status Badge -->
+  <div class="session-card__status" [ngClass]="getStatusClass()">
+    <span *ngIf="!isFull()">{{ getAvailableSpots() }} place(s) disponible(s)</span>
+    <span *ngIf="isFull()">Complet</span>
   </div>
 
-  <!-- Body with details -->
-  <div class="card-body">
+  <!-- Details -->
+  <div class="session-card__details">
     <!-- Game System -->
-    <div class="info-row">
-      <span class="info-icon">🎲</span>
-      <span class="info-label">Système:</span>
-      <span class="info-value">{{ session.game }}</span>
+    <div class="session-card__detail">
+      <svg class="icon" viewBox="0 0 24 24" width="20" height="20">
+        <path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/>
+      </svg>
+      <span>{{ session.game }}</span>
     </div>
 
     <!-- Level -->
-    <div class="info-row">
-      <span class="info-icon">📊</span>
-      <span class="info-label">Niveau:</span>
-      <span class="info-value">{{ getLevelLabel(session.level) }}</span>
+    <div class="session-card__detail">
+      <svg class="icon" viewBox="0 0 24 24" width="20" height="20">
+        <path fill="currentColor" d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+      </svg>
+      <span>{{ getLevelLabel(session.level) }}</span>
     </div>
 
-    <!-- Host (Game Master) -->
-    <div class="info-row">
-      <span class="info-icon">👤</span>
-      <span class="info-label">MJ:</span>
-      <span class="info-value">{{ session.host.username }}</span>
+    <!-- Host -->
+    <div class="session-card__detail" *ngIf="session.host">
+      <svg class="icon" viewBox="0 0 24 24" width="20" height="20">
+        <path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+      </svg>
+      <span>{{ session.host.username }}</span>
     </div>
 
     <!-- Date -->
-    <div class="info-row">
-      <span class="info-icon">📅</span>
-      <span class="info-label">Date:</span>
-      <span class="info-value">{{ formatDate(session.date) }}</span>
+    <div class="session-card__detail">
+      <svg class="icon" viewBox="0 0 24 24" width="20" height="20">
+        <path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/>
+      </svg>
+      <span>{{ formatDate(session.date) }}</span>
     </div>
 
-    <!-- Location or Online -->
-    <div class="info-row">
-      <span class="info-icon">📍</span>
-      <span class="info-label">Lieu:</span>
-      <span class="info-value" *ngIf="session.location">
-        {{ session.location.name }}
-      </span>
-      <span class="info-value online-badge" *ngIf="!session.location">
-        🌐 En ligne
-      </span>
+    <!-- Location -->
+    <div class="session-card__detail" *ngIf="session.location">
+      <svg class="icon" viewBox="0 0 24 24" width="20" height="20">
+        <path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+      </svg>
+      <span>{{ session.location.name }}, {{ session.location.city }}</span>
+    </div>
+    
+    <!-- Online indicator -->
+    <div class="session-card__detail" *ngIf="session.online">
+      <svg class="icon" viewBox="0 0 24 24" width="20" height="20">
+        <path fill="currentColor" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-4h11v4zm0-5H4V9h11v4zm5 5h-4V9h4v9z"/>
+      </svg>
+      <span>En ligne</span>
     </div>
 
-    <!-- Available Spots -->
-    <div class="info-row">
-      <span class="info-icon">👥</span>
-      <span class="info-label">Places:</span>
-      <span class="status-badge" [ngClass]="getStatusClass()">
-        <span *ngIf="!isFull()">
-          {{ getAvailableSpots() }} disponible{{ getAvailableSpots() > 1 ? 's' : '' }}
-        </span>
-        <span *ngIf="isFull()">
-          Complet
-        </span>
+    <!-- Players -->
+    <div class="session-card__detail session-card__detail--players">
+      <svg class="icon" viewBox="0 0 24 24" width="20" height="20">
+        <path fill="currentColor" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+      </svg>
+      <span>
+        <strong>{{ session.playersCurrent }}/{{ session.playersMax }}</strong> joueurs
       </span>
     </div>
   </div>
 
-  <!-- Footer with action button -->
-  <div class="card-footer">
+  <!-- Description -->
+  <p class="session-card__description" *ngIf="session.description">
+    {{ session.description }}
+  </p>
+
+  <!-- Actions -->
+  <footer class="session-card__actions">
+    <button 
+      type="button" 
+      class="button button--primary"
+      [disabled]="isFull()"
+    >
+      {{ isFull() ? 'Complet' : 'Réserver ma place' }}
+    </button>
     <a 
       [routerLink]="['/sessions', session.id]"
+      class="button button--secondary"
+    >
+      Voir détails
+    </a>
+  </footer>
+</article>
       class="details-button"
     >
       Voir détails →

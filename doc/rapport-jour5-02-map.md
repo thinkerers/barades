@@ -274,7 +274,7 @@ getUserLocation(): void {
           [this.userPosition.lat, this.userPosition.lon],
           {
             icon: L.icon({
-              iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+              iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png',
               shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
               iconSize: [25, 41],
               iconAnchor: [12, 41],
@@ -524,10 +524,17 @@ findNearestLocation(): void {
     ]);
     
     // Fit map to show both points
-    this.map?.fitBounds(bounds, { padding: [50, 50] });
+    this.map?.fitBounds(bounds, { 
+      padding: [50, 50],
+      maxZoom: 15,
+      animate: true,
+      duration: 1
+    });
     
-    // Select the nearest location
-    this.selectedLocationId = nearest.location.id;
+    // Highlight nearest location in list after animation
+    setTimeout(() => {
+      this.onMarkerClick(nearest.location.id);
+    }, 1000);
   }
 }
 ```
