@@ -188,8 +188,8 @@ git commit -m "feat: initial Nx setup"
 
 ---
 
-### 📌 JOUR 4 : 15 OCT (8h) - ✅ TERMINÉ (Backend uniquement)
-**PHASE 3 : AUTHENTIFICATION BACKEND**
+### 📌 JOUR 4 : 15 OCT (8h) - ✅ TERMINÉ (Backend + Frontend Auth complet!)
+**PHASE 3 : AUTHENTIFICATION COMPLÈTE (BACKEND + FRONTEND)**
 
 **Réalisations effectives** :
 
@@ -211,7 +211,7 @@ git commit -m "feat: initial Nx setup"
   - ✅ JWT payload : { sub: userId, username, email }
 - [x] **Base de données**
   - ✅ Schema Prisma mis à jour (passwordHash, firstName, lastName)
-  - ✅ Migration SQL créée : `update-user-auth.sql`
+  - ✅ Migration SQL créée : `update-user-auth.sql` (supprimée ensuite, redondante)
   - ✅ Migration appliquée : `npx prisma db push`
   - ✅ Seed migré vers argon2 (cohérence avec AuthService)
   - ✅ 5 users de test créés (password: `password123`)
@@ -223,33 +223,70 @@ git commit -m "feat: initial Nx setup"
   - ✅ POST /sessions avec token → Guard autorise l'accès ✅
 - [x] **SessionsModule** : Import AuthModule + @UseGuards(JwtAuthGuard) sur POST
 
+**Frontend Angular** (4h effectives - COMPLÉTÉ malgré prévision de report!) :
+- [x] **AuthService** (127 lignes)
+  - ✅ signup(), login(), logout() avec HttpClient
+  - ✅ Gestion JWT dans localStorage
+  - ✅ BehaviorSubject pour currentUser$ (Observable)
+  - ✅ isAuthenticated(), getCurrentUser() helpers
+- [x] **LoginComponent** (63 lignes + 55 HTML + 115 SCSS)
+  - ✅ Formulaire réactif Angular Material
+  - ✅ Validation côté client
+  - ✅ Gestion erreurs avec snackbar
+  - ✅ Redirection automatique après login
+- [x] **RegisterComponent** (93 lignes + 106 HTML + 115 SCSS)
+  - ✅ Formulaire avancé avec validation password
+  - ✅ Indicateur force mot de passe visuel
+  - ✅ Custom validator confirmPassword match
+  - ✅ Champs firstName/lastName optionnels
+- [x] **AuthGuard** (17 lignes)
+  - ✅ Protection routes avec CanActivateFn
+  - ✅ Redirection /login avec returnUrl query param
+- [x] **HTTP Interceptor** (33 lignes)
+  - ✅ Injection automatique Bearer token
+  - ✅ Gestion erreurs 401 (logout + redirect)
+- [x] **TopBar mis à jour**
+  - ✅ Affichage conditionnel (Connexion/Profil selon état auth)
+  - ✅ Dropdown menu utilisateur avec logout
+- [x] **Proxy Configuration**
+  - ✅ Résolution CSP/CORS pour développement
+  - ✅ `/api` → `http://localhost:3000`
+
 **Dépendances installées** :
-- ✅ `@nestjs/jwt@11.0.1`
-- ✅ `argon2@0.44.0`
+- ✅ Backend : `@nestjs/jwt@11.0.1`, `argon2@0.44.0`
+- ✅ Frontend : Angular Material 20.2.8 (déjà présent)
 
 **Documentation** :
+- [x] Rapport complet Jour 4 (4 fichiers, ~2200 lignes)
+  - `rapport-jour4-00-index.md` : Vue d'ensemble + architecture
+  - `rapport-jour4-01-frontend.md` : Détails implémentation Angular
+  - `rapport-jour4-02-problemes-resolus.md` : Bugs et solutions
+  - `rapport-jour4-03-bilan-final.md` : Métriques + commits
 - [x] Mise à jour `doc/rapport-jour2-03-securite.md` avec architecture custom
 
 **Commits Git** : ✅
 - [x] `246b190` - feat(auth): implement custom JWT authentication without Passport
+- [x] `9e57400` - docs: update planning Day 1-3 completed
+- [x] `ea4c7fa` - docs: add Day 4 report (backend)
+- [x] `7e12918` - docs: correct Day 4 report POST /sessions
+- [x] `ac92d02` - feat(frontend): complete authentication system
+- [x] `adc9231` - fix(frontend): configure proxy and improve UX
+- [x] `a0f06bd` - chore(prisma): remove redundant update-user-auth.sql
+- [x] `b3f3ee0` - docs(sql): add status note to enable-rls.sql
 
 **✅ Livrable J4** : 
 - ✅ Backend auth 100% fonctionnel (signup, login, JWT, guards)
-- ✅ Tests curl validés (signup, login, protected routes)
-- ✅ Code propre et documenté (222 lignes)
-
-**❌ Non fait (reporté Jour 5)** :
-- [ ] Frontend Angular AuthService
-- [ ] Login/Register components (Angular Material)
-- [ ] AuthGuard Angular
-- [ ] HTTP Interceptor
-- [ ] Profil utilisateur éditable
+- ✅ Frontend auth 100% fonctionnel (login, register, guard, interceptor)
+- ✅ Tests validés (backend curl + frontend Jest)
+- ✅ Documentation complète (2200+ lignes)
+- ✅ Code propre et documenté (~1089 lignes de code auth)
 
 **📝 Notes** :
 - Architecture custom justifiée : ~30 lignes d'abstraction Passport vs contrôle total
 - Argon2 choisi pour sécurité renforcée (vs bcrypt)
 - JWT expiration : 1h (pas de refresh token pour MVP)
-- Frontend auth reporté car backend prioritaire (fondation solide)
+- **Frontend auth complété le même jour** (au lieu d'être reporté) grâce à bonne productivité
+- Profil utilisateur éditable reporté au Jour 5 (feature secondaire)
 
 ---
 
