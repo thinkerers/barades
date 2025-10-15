@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/nx/schemas/project-schema.json",
+  "name": "workspace",
+  "projectType": "application",
+  "root": ".",
+  "targets": {
+    "dev": {
+      "executor": "@nx/workspace:run-commands",
+      "options": {
+        "parallel": true,
+        "commands": [
+          {
+            "command": "nx serve frontend"
+          },
+          {
+            "command": "nx serve backend"
+          }
+        ]
+      }
+    }
+  }
+}
