@@ -13,10 +13,14 @@
 
 ## Run tasks
 
-To run the dev server for your app, use:
+To run the dev servers for your apps, use:
 
 ```sh
-npx nx serve barades
+# Frontend Angular app (served on http://localhost:4200)
+npx nx serve frontend
+
+# Backend NestJS API (served on http://localhost:3000)
+npx nx serve backend
 ```
 
 To create a production bundle:
