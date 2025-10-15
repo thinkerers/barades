@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { LocationsListComponent } from './locations-list';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
@@ -90,6 +90,9 @@ describe('LocationsListComponent', () => {
     fixture = TestBed.createComponent(LocationsListComponent);
     component = fixture.componentInstance;
     locationsService = TestBed.inject(LocationsService);
+    
+    // Mock the initMap method to prevent Leaflet initialization
+    jest.spyOn<LocationsListComponent, never>(component, 'initMap' as never).mockImplementation();
   });
 
   it('should create', () => {
@@ -443,6 +446,359 @@ describe('LocationsListComponent', () => {
 
       it('should map parking to Parking', () => {
         expect(component.getAmenityName('parking')).toBe('Parking');
+      });
+    });
+  });
+
+  describe('Map Interactivity', () => {
+    beforeEach(() => {
+      // Mock scrollIntoView for JSDOM
+      if (!Element.prototype.scrollIntoView) {
+        Element.prototype.scrollIntoView = jest.fn();
+      }
+      
+      // Mock initMap to prevent Leaflet initialization errors
+      jest.spyOn(component as any, 'initMap').mockImplementation(() => {});
+      
+      jest.spyOn(locationsService, 'getLocations').mockReturnValue(of(mockLocations));
+      fixture.detectChanges();
+      
+      // Setup a mock map and marker for testing
+      component['map'] = {
+        setView: jest.fn().mockReturnThis(),
+      } as any;
+      
+      const mockMarker = {
+        openPopup: jest.fn()
+      };
+      component['markersByLocationId'].set('1', mockMarker as any);
+    });
+
+    describe('onLocationClick', () => {
+      it('should set selectedLocationId and zoom to marker for valid location', () => {
+        const setViewSpy = jest.spyOn(component['map'], 'setView');
+        
+        component.onLocationClick('1');
+        
+        expect(component.selectedLocationId).toBe('1');
+        expect(setViewSpy).toHaveBeenCalledWith(
+          [50.8476, 4.3572], // Brussels Game Store coordinates
+          15,
+          { animate: true, duration: 0.5 }
+        );
+      });
+
+      it('should not set selectedLocationId if location not found', () => {
+        component.onLocationClick('nonexistent');
+        expect(component.selectedLocationId).toBeNull();
+      });
+
+      it('should not set selectedLocationId if map is not initialized', () => {
+        component['map'] = null;
+        component.onLocationClick('1');
+        expect(component.selectedLocationId).toBeNull(); // Returns early
+      });
+
+      it('should not set selectedLocationId for online locations (PRIVATE with 0,0 coords)', () => {
+        component.onLocationClick('4'); // Online location
+        // The method returns early for online locations before setting selectedLocationId
+        expect(component.selectedLocationId).toBeNull();
+      });
+    });
+
+    describe('onMarkerClick', () => {
+      it('should set selectedLocationId', () => {
+        component.onMarkerClick('1');
+        expect(component.selectedLocationId).toBe('1');
+      });
+
+      it('should call scrollIntoView if element exists', () => {
+        const mockElement = {
+          scrollIntoView: jest.fn(),
+          classList: {
+            add: jest.fn(),
+            remove: jest.fn()
+          }
+        };
+        
+        jest.spyOn(document, 'getElementById').mockReturnValue(mockElement as unknown as HTMLElement);
+
+        component.onMarkerClick('1');
+
+        expect(mockElement.scrollIntoView).toHaveBeenCalledWith({
+          behavior: 'smooth',
+          block: 'center'
+        });
+        
+        jest.restoreAllMocks();
+      });
+
+      it('should add and remove highlight class', fakeAsync(() => {
+        const mockElement = {
+          scrollIntoView: jest.fn(),
+          classList: {
+            add: jest.fn(),
+            remove: jest.fn(),
+            contains: jest.fn()
+          }
+        };
+        
+        jest.spyOn(document, 'getElementById').mockReturnValue(mockElement as unknown as HTMLElement);
+
+        component.onMarkerClick('1');
+
+        // Verify class is added immediately
+        expect(mockElement.classList.add).toHaveBeenCalledWith('highlight');
+        
+        // Fast-forward time by 2 seconds
+        tick(2000);
+        
+        // Verify class is removed after 2 seconds
+        expect(mockElement.classList.remove).toHaveBeenCalledWith('highlight');
+        
+        jest.restoreAllMocks();
+      }));
+
+      it('should handle missing element gracefully', () => {
+        jest.spyOn(document, 'getElementById').mockReturnValue(null);
+        expect(() => component.onMarkerClick('nonexistent')).not.toThrow();
+        jest.restoreAllMocks();
+      });
+    });
+
+    describe('calculateDistance', () => {
+      it('should calculate distance between two points correctly', () => {
+        // Brussels to Antwerp (approximately 45 km)
+        const distance = component['calculateDistance'](50.8476, 4.3572, 51.2194, 4.4025);
+        expect(distance).toBeGreaterThan(40);
+        expect(distance).toBeLessThan(50);
+      });
+
+      it('should return 0 for same coordinates', () => {
+        const distance = component['calculateDistance'](50.8476, 4.3572, 50.8476, 4.3572);
+        expect(distance).toBe(0);
+      });
+
+      it('should work with negative coordinates', () => {
+        const distance = component['calculateDistance'](40.7128, -74.0060, 34.0522, -118.2437);
+        // New York to Los Angeles (approximately 3935 km)
+        expect(distance).toBeGreaterThan(3900);
+        expect(distance).toBeLessThan(4000);
+      });
+
+      it('should handle equator crossing', () => {
+        const distance = component['calculateDistance'](10, 0, -10, 0);
+        expect(distance).toBeGreaterThan(2200);
+        expect(distance).toBeLessThan(2300);
+      });
+    });
+
+    describe('getAmenityIcon', () => {
+      it('should return WiFi icon HTML', () => {
+        const html = component['getAmenityIcon']('WiFi');
+        expect(html).toContain('amenity-icon');
+        expect(html).toContain('WiFi');
+        expect(html).toContain('<svg');
+      });
+
+      it('should return Tables icon HTML', () => {
+        const html = component['getAmenityIcon']('Tables');
+        expect(html).toContain('amenity-icon');
+        expect(html).toContain('Tables');
+      });
+
+      it('should return Food icon HTML', () => {
+        const html = component['getAmenityIcon']('Food');
+        expect(html).toContain('amenity-icon');
+        expect(html).toContain('Food');
+      });
+
+      it('should return Drinks icon HTML', () => {
+        const html = component['getAmenityIcon']('Drinks');
+        expect(html).toContain('amenity-icon');
+        expect(html).toContain('Drinks');
+      });
+
+      it('should return Parking icon HTML', () => {
+        const html = component['getAmenityIcon']('Parking');
+        expect(html).toContain('amenity-icon');
+        expect(html).toContain('Parking');
+      });
+
+      it('should return generic HTML for unknown amenity', () => {
+        const html = component['getAmenityIcon']('Unknown');
+        expect(html).toContain('amenity-icon');
+        expect(html).toContain('Unknown');
+        expect(html).not.toContain('<svg');
+      });
+    });
+  });
+
+  describe('Geolocation', () => {
+    let mockGeolocation: {
+      getCurrentPosition: jest.Mock;
+    };
+
+    beforeEach(() => {
+      // Mock initMap to prevent Leaflet initialization
+      jest.spyOn(component as any, 'initMap').mockImplementation(() => {});
+      
+      jest.spyOn(locationsService, 'getLocations').mockReturnValue(of(mockLocations));
+      
+      mockGeolocation = {
+        getCurrentPosition: jest.fn()
+      };
+      
+      Object.defineProperty(global.navigator, 'geolocation', {
+        value: mockGeolocation,
+        writable: true,
+        configurable: true
+      });
+      
+      fixture.detectChanges();
+    });
+
+    describe('getUserLocation', () => {
+      it('should set error if geolocation not supported', () => {
+        Object.defineProperty(global.navigator, 'geolocation', {
+          value: undefined,
+          writable: true,
+          configurable: true
+        });
+
+        component.getUserLocation();
+
+        expect(component.geolocationError).toBe('La géolocalisation n\'est pas supportée par votre navigateur');
+      });
+
+      it('should set geolocating to true when called', () => {
+        component.getUserLocation();
+        expect(component.geolocating).toBe(true);
+      });
+
+      it('should handle successful geolocation', fakeAsync(() => {
+        const mockPosition = {
+          coords: {
+            latitude: 50.8476,
+            longitude: 4.3572,
+            accuracy: 10,
+            altitude: null,
+            altitudeAccuracy: null,
+            heading: null,
+            speed: null
+          },
+          timestamp: Date.now()
+        };
+
+        mockGeolocation.getCurrentPosition.mockImplementation((success) => {
+          success(mockPosition);
+        });
+
+        component.getUserLocation();
+        
+        // Fast-forward timers
+        tick(100);
+
+        expect(component.userPosition).toEqual({
+          lat: 50.8476,
+          lon: 4.3572
+        });
+        expect(component.geolocating).toBe(false);
+        expect(component.geolocationError).toBeNull();
+      }));
+
+      it('should handle PERMISSION_DENIED error', fakeAsync(() => {
+        const mockError = {
+          code: 1, // PERMISSION_DENIED
+          message: 'User denied geolocation',
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3
+        };
+
+        mockGeolocation.getCurrentPosition.mockImplementation((success, error) => {
+          error(mockError);
+        });
+
+        component.getUserLocation();
+        tick(100);
+
+        expect(component.geolocating).toBe(false);
+        expect(component.geolocationError).toBe('Permission de géolocalisation refusée');
+      }));
+
+      it('should handle POSITION_UNAVAILABLE error', fakeAsync(() => {
+        const mockError = {
+          code: 2, // POSITION_UNAVAILABLE
+          message: 'Position unavailable',
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3
+        };
+
+        mockGeolocation.getCurrentPosition.mockImplementation((success, error) => {
+          error(mockError);
+        });
+
+        component.getUserLocation();
+        tick(100);
+
+        expect(component.geolocating).toBe(false);
+        expect(component.geolocationError).toBe('Position non disponible');
+      }));
+
+      it('should handle TIMEOUT error', fakeAsync(() => {
+        const mockError = {
+          code: 3, // TIMEOUT
+          message: 'Timeout',
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3
+        };
+
+        mockGeolocation.getCurrentPosition.mockImplementation((success, error) => {
+          error(mockError);
+        });
+
+        component.getUserLocation();
+        tick(100);
+
+        expect(component.geolocating).toBe(false);
+        expect(component.geolocationError).toBe('Délai de géolocalisation dépassé');
+      }));
+
+      it('should handle unknown error', fakeAsync(() => {
+        const mockError = {
+          code: 999, // Unknown
+          message: 'Unknown error',
+          PERMISSION_DENIED: 1,
+          POSITION_UNAVAILABLE: 2,
+          TIMEOUT: 3
+        };
+
+        mockGeolocation.getCurrentPosition.mockImplementation((success, error) => {
+          error(mockError);
+        });
+
+        component.getUserLocation();
+        tick(100);
+
+        expect(component.geolocating).toBe(false);
+        expect(component.geolocationError).toBe('Erreur de géolocalisation inconnue');
+      }));
+
+      it('should request high accuracy position', () => {
+        component.getUserLocation();
+
+        expect(mockGeolocation.getCurrentPosition).toHaveBeenCalledWith(
+          expect.any(Function),
+          expect.any(Function),
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          }
+        );
       });
     });
   });
