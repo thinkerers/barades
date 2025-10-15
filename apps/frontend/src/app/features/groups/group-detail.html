@@ -1,0 +1,186 @@
+<div class="group-detail-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="spinner"></div>
+    <p>Chargement des détails du groupe...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !loading" class="error-state">
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <p>{{ error }}</p>
+    <button (click)="goBack()" class="btn btn--secondary">Retour aux groupes</button>
+  </div>
+
+  <!-- Group Details -->
+  <div *ngIf="group && !loading" class="group-detail">
+    <!-- Header -->
+    <header class="group-detail__header">
+      <button (click)="goBack()" class="back-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Retour
+      </button>
+
+      <div class="group-detail__title-section">
+        <h1 class="group-detail__title">{{ group.name }}</h1>
+        <span class="playstyle-badge" [ngClass]="'playstyle--' + getPlaystyleColor(group.playstyle)">
+          {{ getPlaystyleLabel(group.playstyle) }}
+        </span>
+      </div>
+
+      <div class="group-detail__meta">
+        <span class="status-badge" [ngClass]="{ 
+          'status--recruiting': group.isRecruiting && !isFull(),
+          'status--full': isFull(),
+          'status--private': !group.isRecruiting
+        }">
+          <span *ngIf="group.isRecruiting && !isFull()">Recrutement ouvert</span>
+          <span *ngIf="isFull()">Groupe complet</span>
+          <span *ngIf="!group.isRecruiting">Groupe privé</span>
+        </span>
+
+        <span class="meta-item" *ngIf="group.creator">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Créé par <strong>{{ group.creator.username }}</strong>
+        </span>
+      </div>
+    </header>
+
+    <!-- Description -->
+    <section class="group-detail__section">
+      <h2>Description</h2>
+      <p class="description">{{ group.description }}</p>
+    </section>
+
+    <!-- Members Section -->
+    <section class="group-detail__section">
+      <div class="section-header">
+        <h2>
+          Membres
+          <span class="count-badge">
+            {{ getMemberCount() }}
+            <span *ngIf="group.maxMembers">/ {{ group.maxMembers }}</span>
+          </span>
+        </h2>
+        
+        <div class="section-actions">
+          <button 
+            *ngIf="canJoin()" 
+            (click)="joinGroup()" 
+            class="btn btn--primary btn--small"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <line x1="20" y1="8" x2="20" y2="14"></line>
+              <line x1="23" y1="11" x2="17" y2="11"></line>
+            </svg>
+            Rejoindre
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="group.members && group.members.length > 0" class="members-grid">
+        <div *ngFor="let member of group.members" class="member-card">
+          <img 
+            *ngIf="member.avatar" 
+            [src]="member.avatar" 
+            [alt]="member.username"
+            class="member-card__avatar"
+          />
+          <div *ngIf="!member.avatar" class="member-card__avatar member-card__avatar--placeholder">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="member-card__info">
+            <span class="member-card__name">{{ member.username }}</span>
+            <span class="member-card__joined">Membre depuis {{ formatDate(member.joinedAt) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!group.members || group.members.length === 0" class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <p>Aucun membre pour le moment</p>
+      </div>
+    </section>
+
+    <!-- Sessions Section -->
+    <section class="group-detail__section">
+      <div class="section-header">
+        <h2>
+          Sessions à venir
+          <span class="count-badge" *ngIf="group.sessions">
+            {{ group.sessions.length }}
+          </span>
+        </h2>
+      </div>
+
+      <div *ngIf="group.sessions && group.sessions.length > 0" class="sessions-list">
+        <a 
+          *ngFor="let session of group.sessions" 
+          [routerLink]="['/sessions', session.id]"
+          class="session-card"
+        >
+          <div class="session-card__header">
+            <h3 class="session-card__title">{{ session.title }}</h3>
+            <span class="session-card__participants" *ngIf="session._count">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              {{ session._count.reservations }}
+            </span>
+          </div>
+
+          <div class="session-card__details">
+            <span class="session-card__date">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              {{ formatDateTime(session.scheduledFor) }}
+            </span>
+
+            <span class="session-card__location">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              {{ session.location.name }}
+            </span>
+          </div>
+        </a>
+      </div>
+
+      <div *ngIf="!group.sessions || group.sessions.length === 0" class="empty-state">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <p>Aucune session planifiée</p>
+      </div>
+    </section>
+  </div>
+</div>

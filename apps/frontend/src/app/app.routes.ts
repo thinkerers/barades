@@ -4,6 +4,7 @@ import { HomePage } from './features/home/home-page';
 import { SessionsListPage } from './features/sessions/sessions-list';
 import { LocationsListComponent } from './features/locations/locations-list';
 import { GroupsListComponent } from './features/groups/groups-list';
+import { GroupDetailComponent } from './features/groups/group-detail';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 
@@ -37,6 +38,10 @@ export const appRoutes: Route[] = [
 			{
 				path: 'groups',
 				component: GroupsListComponent,
+			},
+			{
+				path: 'groups/:id',
+				component: GroupDetailComponent,
 			},
 		],
 	},
