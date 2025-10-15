@@ -8,6 +8,7 @@ import { LocationsModule } from '../locations/locations.module';
 import { GroupsModule } from '../groups/groups.module';
 import { PollsModule } from '../polls/polls.module';
 import { AuthModule } from '../auth/auth.module';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AuthModule } from '../auth/auth.module';
     LocationsModule,
     GroupsModule,
     PollsModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
