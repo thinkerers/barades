@@ -1,6 +1,9 @@
 -- ============================================
 -- Row Level Security Setup for Barades
 -- ============================================
+-- STATUS: Exécuté le 15/10/2025 sur la base de production
+-- Ce fichier est conservé comme documentation et pour référence future
+-- 
 -- Architecture: Frontend (Angular) → Backend (NestJS) → Supabase
 -- - Frontend NEVER accesses Supabase directly (all requests via NestJS API)
 -- - Backend uses service_role key which bypasses RLS by design
