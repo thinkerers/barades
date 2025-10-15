@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Emails Barades</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .container {
+      background: white;
+      max-width: 600px;
+      width: 100%;
+      border-radius: 15px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+    }
+    
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 32px;
+    }
+    
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    
+    label {
+      display: block;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      color: #333;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 30px;
+    }
+    
+    button {
+      padding: 15px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    .btn-confirmation {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .btn-host {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+    
+    .btn-reminder {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .btn-all {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      grid-column: 1 / -1;
+    }
+    
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 8px;
+      display: none;
+      animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .result.success {
+      background: #e8f5e9;
+      border-left: 4px solid #4caf50;
+    }
+    
+    .result.error {
+      background: #ffebee;
+      border-left: 4px solid #f44336;
+    }
+    
+    .result.loading {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+    }
+    
+    .result-title {
+      font-weight: 600;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+    
+    .result.success .result-title {
+      color: #2e7d32;
+    }
+    
+    .result.error .result-title {
+      color: #c62828;
+    }
+    
+    .result.loading .result-title {
+      color: #1565c0;
+    }
+    
+    pre {
+      background: rgba(0,0,0,0.05);
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top: 3px solid white;
+      width: 16px;
+      height: 16px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .info-box {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin-bottom: 30px;
+      border-radius: 5px;
+    }
+    
+    .info-box p {
+      color: #856404;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    
+    .info-box strong {
+      display: block;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎲 Barades Email Test</h1>
+    <p class="subtitle">Interface de test pour les emails transactionnels</p>
+    
+    <div class="info-box">
+      <p>
+        <strong>⚠️ Prérequis :</strong>
+        Backend en cours d'exécution sur <code>http://localhost:3000</code><br>
+        Clé API Resend configurée dans <code>apps/backend/.env</code>
+      </p>
+    </div>
+    
+    <form id="testForm">
+      <label for="email">📧 Votre adresse email</label>
+      <input 
+        type="email" 
+        id="email" 
+        required 
+        placeholder="votre@email.com"
+        autocomplete="email"
+      >
+      
+      <label for="name">👤 Votre nom (optionnel)</label>
+      <input 
+        type="text" 
+        id="name" 
+        placeholder="Prénom Nom"
+        autocomplete="name"
+      >
+      
+      <div class="button-group">
+        <button type="button" class="btn-confirmation" onclick="sendEmail('confirmation')">
+          <span>✉️</span>
+          <span>Confirmation</span>
+        </button>
+        
+        <button type="button" class="btn-host" onclick="sendEmail('host-notification')">
+          <span>📬</span>
+          <span>Notification Hôte</span>
+        </button>
+        
+        <button type="button" class="btn-reminder" onclick="sendEmail('reminder')">
+          <span>⏰</span>
+          <span>Rappel</span>
+        </button>
+        
+        <button type="button" class="btn-all" onclick="sendEmail('all')">
+          <span>🚀</span>
+          <span>Envoyer les 3 emails</span>
+        </button>
+      </div>
+    </form>
+    
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    async function sendEmail(type) {
+      const email = document.getElementById('email').value;
+      const name = document.getElementById('name').value;
+      const result = document.getElementById('result');
+      
+      if (!email) {
+        alert('⚠️ Veuillez entrer votre adresse email');
+        return;
+      }
+      
+      // Show loading state
+      result.className = 'result loading';
+      result.style.display = 'block';
+      result.innerHTML = `
+        <div class="result-title" style="display: flex; align-items: center; gap: 10px;">
+          <div class="spinner"></div>
+          Envoi en cours...
+        </div>
+        <p>Type : <strong>${formatType(type)}</strong></p>
+        <p>Destinataire : <strong>${email}</strong></p>
+      `;
+      
+      try {
+        const response = await fetch(`http://localhost:3000/email/test/${type}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            recipientEmail: email, 
+            recipientName: name || undefined 
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          result.className = 'result success';
+          result.innerHTML = `
+            <div class="result-title">✅ ${data.message}</div>
+            <p style="margin-top: 10px; color: #2e7d32;">
+              Vérifiez votre boîte email (et les spams si besoin).
+            </p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+        } else {
+          result.className = 'result error';
+          result.innerHTML = `
+            <div class="result-title">❌ Erreur lors de l'envoi</div>
+            <p style="color: #c62828; margin-top: 10px;">${data.message}</p>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          `;
+        }
+      } catch (error) {
+        result.className = 'result error';
+        result.innerHTML = `
+          <div class="result-title">❌ Erreur de connexion</div>
+          <p style="color: #c62828; margin-top: 10px;">
+            ${error.message}
+          </p>
+          <p style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 5px;">
+            <strong>Vérifiez que :</strong><br>
+            • Le backend est démarré : <code>npx nx serve backend</code><br>
+            • Il écoute sur <code>http://localhost:3000</code><br>
+            • La clé RESEND_API_KEY est configurée dans .env
+          </p>
+        `;
+      }
+    }
+    
+    function formatType(type) {
+      const types = {
+        'confirmation': '✉️ Email de confirmation',
+        'host-notification': '📬 Notification à l\'hôte',
+        'reminder': '⏰ Rappel de session',
+        'all': '🚀 Les 3 types d\'emails'
+      };
+      return types[type] || type;
+    }
+    
+    // Auto-focus sur le champ email au chargement
+    document.getElementById('email').focus();
+  </script>
+</body>
+</html>
