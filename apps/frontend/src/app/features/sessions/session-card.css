@@ -1,0 +1,227 @@
+/* Session Card */
+.session-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid transparent;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+}
+
+.session-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+}
+
+/* Color variants */
+.session-card--red {
+  border-left-color: #e53e3e;
+}
+
+.session-card--green {
+  border-left-color: #38a169;
+}
+
+.session-card--purple {
+  border-left-color: #805ad5;
+}
+
+.session-card--blue {
+  border-left-color: #3182ce;
+}
+
+.session-card--gray {
+  border-left-color: #718096;
+}
+
+/* Tag indicator */
+.session-card__tag {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.tag--red {
+  background-color: #e53e3e;
+}
+
+.tag--green {
+  background-color: #38a169;
+}
+
+.tag--purple {
+  background-color: #805ad5;
+}
+
+.tag--blue {
+  background-color: #3182ce;
+}
+
+.tag--gray {
+  background-color: #718096;
+}
+
+/* Header */
+.session-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-right: 2rem; /* Space for tag */
+}
+
+.session-card__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.session-card__game {
+  display: inline-block;
+  background: #edf2f7;
+  color: #2d3748;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  width: fit-content;
+}
+
+/* Status Badge */
+.session-card__status {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  width: fit-content;
+}
+
+.status--available {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+.status--limited {
+  background: #feebc8;
+  color: #7c2d12;
+}
+
+.status--full {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+/* Details */
+.session-card__details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.session-card__detail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #4a5568;
+  font-size: 0.875rem;
+}
+
+.session-card__detail--players {
+  font-weight: 500;
+  color: #2d3748;
+}
+
+.session-card__detail .icon {
+  flex-shrink: 0;
+  color: #718096;
+}
+
+/* Description */
+.session-card__description {
+  color: #4a5568;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+/* Actions */
+.session-card__actions {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+  margin-top: auto;
+}
+
+.session-card__actions .button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.button--primary {
+  background: #4f46e5;
+  color: white;
+}
+
+.button--primary:hover:not(:disabled) {
+  background: #4338ca;
+}
+
+.button--primary:disabled {
+  background: #cbd5e0;
+  color: #a0aec0;
+  cursor: not-allowed;
+}
+
+.button--secondary {
+  background: white;
+  color: #4f46e5;
+  border: 1px solid #4f46e5;
+}
+
+.button--secondary:hover {
+  background: #eef2ff;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .session-card {
+    padding: 1rem;
+  }
+
+  .session-card__actions {
+    flex-direction: column;
+  }
+
+  .session-card__actions .button {
+    width: 100%;
+  }
+}
