@@ -274,9 +274,12 @@ getUserLocation(): void {
           [this.userPosition.lat, this.userPosition.lon],
           {
             icon: L.icon({
-              iconUrl: 'assets/user-location.png',
-              iconSize: [32, 32],
-              iconAnchor: [16, 32]
+              iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+              shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+              popupAnchor: [1, -34],
+              shadowSize: [41, 41]
             })
           }
         ).addTo(this.map);
@@ -497,35 +500,34 @@ findNearestLocation(): void {
     return;
   }
 
-  let nearestLocation: Location | null = null;
-  let minDistance = Infinity;
+  // Build array with distances
+  const locationsWithDistance = this.locations
+    .filter(loc => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0))
+    .map(location => ({
+      location,
+      distance: this.calculateDistance(
+        this.userPosition!.lat,
+        this.userPosition!.lon,
+        location.lat,
+        location.lon
+      )
+    }))
+    .sort((a, b) => a.distance - b.distance);
 
-  // Calculate distance to each location
-  this.locations.forEach(location => {
-    // Skip online locations
-    if (location.type === 'PRIVATE' && location.lat === 0 && location.lon === 0) {
-      return;
-    }
-
-    const distance = this.calculateDistance(
-      this.userPosition!.lat,
-      this.userPosition!.lon,
-      location.lat,
-      location.lon
-    );
-
-    if (distance < minDistance) {
-      minDistance = distance;
-      nearestLocation = location;
-    }
-  });
-
-  if (nearestLocation) {
-    // Zoom to nearest location
-    this.onLocationClick(nearestLocation.id);
+  if (locationsWithDistance.length > 0) {
+    const nearest = locationsWithDistance[0];
     
-    // Show distance in popup or notification
-    this.nearestDistance = Math.round(minDistance * 10) / 10; // Round to 1 decimal
+    // Create bounds including user position and nearest location
+    const bounds = L.latLngBounds([
+      [this.userPosition.lat, this.userPosition.lon],
+      [nearest.location.lat, nearest.location.lon]
+    ]);
+    
+    // Fit map to show both points
+    this.map?.fitBounds(bounds, { padding: [50, 50] });
+    
+    // Select the nearest location
+    this.selectedLocationId = nearest.location.id;
   }
 }
 ```
@@ -539,10 +541,6 @@ findNearestLocation(): void {
 >
   🎯 Lieu le plus proche
 </button>
-
-<div *ngIf="nearestDistance" class="distance-info">
-  📏 {{ nearestDistance }} km
-</div>
 ```
 
 **Tests** (5 tests) :

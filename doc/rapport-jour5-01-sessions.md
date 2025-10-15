@@ -44,9 +44,9 @@ export class SessionsListComponent implements OnInit {
 
   // Filters
   searchTerm = '';
-  selectedType = '';
-  selectedGame = '';
-  showAvailableOnly = false;
+  sessionType: 'all' | 'online' | 'onsite' = 'all';
+  selectedGameSystem = '';
+  onlyAvailable = false;
 
   constructor(private sessionsService: SessionsService) {}
 
@@ -71,25 +71,25 @@ export class SessionsListComponent implements OnInit {
 
   applyFilters(): void {
     this.filteredSessions = this.sessions.filter(session => {
-      // 1. Search by name
+      // 1. Search by title
       const matchesSearch = !this.searchTerm.trim() || 
-        session.name.toLowerCase().includes(this.searchTerm.trim().toLowerCase());
+        session.title.toLowerCase().includes(this.searchTerm.trim().toLowerCase());
       
-      // 2. Filter by type (online/table)
+      // 2. Filter by type (online/onsite)
       const matchesType = 
-        this.selectedType === '' ||
-        (this.selectedType === 'online' && !session.locationId) ||
-        (this.selectedType === 'table' && session.locationId !== null);
+        this.sessionType === 'all' ||
+        (this.sessionType === 'online' && session.online) ||
+        (this.sessionType === 'onsite' && !session.online);
       
       // 3. Filter by game system
       const matchesGame = 
-        this.selectedGame === '' || 
-        session.gameSystem === this.selectedGame;
+        this.selectedGameSystem === '' || 
+        session.game === this.selectedGameSystem;
       
       // 4. Filter by availability
       const matchesAvailability = 
-        !this.showAvailableOnly || 
-        (session.maxPlayers - session.currentPlayers > 0);
+        !this.onlyAvailable || 
+        (session.playersMax - session.playersCurrent > 0);
       
       return matchesSearch && matchesType && matchesGame && matchesAvailability;
     });
@@ -97,18 +97,18 @@ export class SessionsListComponent implements OnInit {
 
   resetFilters(): void {
     this.searchTerm = '';
-    this.selectedType = '';
-    this.selectedGame = '';
-    this.showAvailableOnly = false;
+    this.sessionType = 'all';
+    this.selectedGameSystem = '';
+    this.onlyAvailable = false;
     this.applyFilters();
   }
 
   getActiveFiltersCount(): number {
     let count = 0;
     if (this.searchTerm.trim()) count++;
-    if (this.selectedType) count++;
-    if (this.selectedGame) count++;
-    if (this.showAvailableOnly) count++;
+    if (this.sessionType !== 'all') count++;
+    if (this.selectedGameSystem) count++;
+    if (this.onlyAvailable) count++;
     return count;
   }
 }
@@ -142,13 +142,14 @@ export class SessionsListComponent implements OnInit {
 - ✅ Trim automatique (espaces ignorés)
 - ✅ Filtre en temps réel (input event)
 - ✅ Placeholder descriptif
+- ✅ Recherche sur `session.title`
 
 **Tests** (5 tests) :
 ```typescript
-it('should filter by name', () => {
+it('should filter by title', () => {
   component.searchTerm = 'Donjon';
   component.applyFilters();
-  expect(component.filteredSessions[0].name).toContain('Donjon');
+  expect(component.filteredSessions[0].title).toContain('Donjon');
 });
 
 it('should be case-insensitive', () => {
@@ -176,29 +177,29 @@ it('should trim whitespace', () => {
     <label class="radio-label">
       <input 
         type="radio" 
-        [(ngModel)]="selectedType" 
-        value="" 
+        [(ngModel)]="sessionType" 
+        value="all" 
         (change)="applyFilters()"
       />
-      <span>Tous</span>
+      <span>📋 Tous</span>
     </label>
     <label class="radio-label">
       <input 
         type="radio" 
-        [(ngModel)]="selectedType" 
+        [(ngModel)]="sessionType" 
         value="online" 
         (change)="applyFilters()"
       />
-      <span>En ligne</span>
+      <span>💻 En ligne</span>
     </label>
     <label class="radio-label">
       <input 
         type="radio" 
-        [(ngModel)]="selectedType" 
-        value="table" 
+        [(ngModel)]="sessionType" 
+        value="onsite" 
         (change)="applyFilters()"
       />
-      <span>Sur table</span>
+      <span>🎲 Sur table</span>
     </label>
   </div>
 </div>
@@ -207,23 +208,23 @@ it('should trim whitespace', () => {
 **Logique** :
 ```typescript
 const matchesType = 
-  this.selectedType === '' ||
-  (this.selectedType === 'online' && !session.locationId) ||
-  (this.selectedType === 'table' && session.locationId !== null);
+  this.sessionType === 'all' ||
+  (this.sessionType === 'online' && session.online) ||
+  (this.sessionType === 'onsite' && !session.online);
 ```
 
 **Tests** (3 tests) :
 ```typescript
 it('should filter online sessions', () => {
-  component.selectedType = 'online';
+  component.sessionType = 'online';
   component.applyFilters();
-  expect(component.filteredSessions.every(s => !s.locationId)).toBe(true);
+  expect(component.filteredSessions.every(s => s.online)).toBe(true);
 });
 
-it('should filter table sessions', () => {
-  component.selectedType = 'table';
+it('should filter onsite sessions', () => {
+  component.sessionType = 'onsite';
   component.applyFilters();
-  expect(component.filteredSessions.every(s => s.locationId !== null)).toBe(true);
+  expect(component.filteredSessions.every(s => !s.online)).toBe(true);
 });
 ```
 
@@ -237,7 +238,7 @@ it('should filter table sessions', () => {
   <label for="game" class="filter-label">🎲 Système de jeu</label>
   <select 
     id="game" 
-    [(ngModel)]="selectedGame" 
+    [(ngModel)]="selectedGameSystem" 
     (change)="applyFilters()"
     class="filter-select"
   >
@@ -278,9 +279,9 @@ it('should filter table sessions', () => {
 **Tests** (3 tests) :
 ```typescript
 it('should filter by game system', () => {
-  component.selectedGame = 'D&D 5e';
+  component.selectedGameSystem = 'D&D 5e';
   component.applyFilters();
-  expect(component.filteredSessions.every(s => s.gameSystem === 'D&D 5e')).toBe(true);
+  expect(component.filteredSessions.every(s => s.game === 'D&D 5e')).toBe(true);
 });
 ```
 
@@ -294,7 +295,7 @@ it('should filter by game system', () => {
   <label class="checkbox-label">
     <input 
       type="checkbox" 
-      [(ngModel)]="showAvailableOnly" 
+      [(ngModel)]="onlyAvailable" 
       (change)="applyFilters()"
     />
     <span>Places disponibles seulement</span>
@@ -305,17 +306,17 @@ it('should filter by game system', () => {
 **Logique** :
 ```typescript
 const matchesAvailability = 
-  !this.showAvailableOnly || 
-  (session.maxPlayers - session.currentPlayers > 0);
+  !this.onlyAvailable || 
+  (session.playersMax - session.playersCurrent > 0);
 ```
 
 **Tests** (2 tests) :
 ```typescript
 it('should show only available sessions', () => {
-  component.showAvailableOnly = true;
+  component.onlyAvailable = true;
   component.applyFilters();
   component.filteredSessions.forEach(s => {
-    expect(s.maxPlayers - s.currentPlayers).toBeGreaterThan(0);
+    expect(s.playersMax - s.playersCurrent).toBeGreaterThan(0);
   });
 });
 ```
@@ -439,15 +440,13 @@ export class SessionCardComponent {
 
   getTagColorClass(tag: string): string {
     const colorMap: Record<string, string> = {
-      'BLUE': 'bg-blue-100 text-blue-800 border-blue-200',
-      'GREEN': 'bg-green-100 text-green-800 border-green-200',
-      'PURPLE': 'bg-purple-100 text-purple-800 border-purple-200',
-      'RED': 'bg-red-100 text-red-800 border-red-200',
-      'YELLOW': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      'PINK': 'bg-pink-100 text-pink-800 border-pink-200',
-      'GRAY': 'bg-gray-100 text-gray-800 border-gray-200'
+      'BLUE': 'tag--blue',
+      'GREEN': 'tag--green',
+      'PURPLE': 'tag--purple',
+      'RED': 'tag--red',
+      'YELLOW': 'tag--yellow'
     };
-    return colorMap[tag] || 'bg-gray-100 text-gray-800 border-gray-200';
+    return colorMap[tag] || 'tag--blue';
   }
 
   getLevelLabel(level: SessionLevel): string {
@@ -471,18 +470,18 @@ export class SessionCardComponent {
   }
 
   getAvailableSpots(): number {
-    return this.session.maxPlayers - this.session.currentPlayers;
+    return this.session.playersMax - this.session.playersCurrent;
   }
 
   isFull(): boolean {
-    return this.session.currentPlayers >= this.session.maxPlayers;
+    return this.session.playersCurrent >= this.session.playersMax;
   }
 
   getStatusClass(): string {
     if (this.isFull()) {
-      return 'bg-red-100 text-red-800 border-red-200';
+      return 'tag--red';
     }
-    return 'bg-green-100 text-green-800 border-green-200';
+    return 'tag--green';
   }
 }
 ```
@@ -513,7 +512,7 @@ export class SessionCardComponent {
     <div class="info-row">
       <span class="info-icon">🎲</span>
       <span class="info-label">Système:</span>
-      <span class="info-value">{{ session.gameSystem }}</span>
+      <span class="info-value">{{ session.game }}</span>
     </div>
 
     <!-- Level -->
@@ -723,7 +722,7 @@ describe('SessionCardComponent', () => {
 ```typescript
 it('should return correct color class for BLUE tag', () => {
   expect(component.getTagColorClass('BLUE'))
-    .toBe('bg-blue-100 text-blue-800 border-blue-200');
+    .toBe('tag--blue');
 });
 
 it('should format date correctly', () => {
