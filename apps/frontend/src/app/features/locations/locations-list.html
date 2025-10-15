@@ -23,6 +23,94 @@
 
   <!-- Map and List - Always rendered but hidden during loading -->
   <div class="content-wrapper" [class.hidden]="loading || error">
+    <!-- Filters Panel -->
+    <div class="filters-panel">
+      <h3>🔍 Filtres</h3>
+      
+      <!-- Search Bar -->
+      <div class="filter-group">
+        <label for="search">Recherche</label>
+        <input 
+          type="text" 
+          id="search" 
+          [(ngModel)]="searchTerm" 
+          (input)="applyFilters()"
+          placeholder="Nom, adresse, ville..."
+          class="search-input"
+        />
+      </div>
+
+      <!-- Location Type Filter -->
+      <div class="filter-group">
+        <label for="type-filter">Type de lieu</label>
+        <select 
+          id="type-filter" 
+          [(ngModel)]="selectedType" 
+          (change)="applyFilters()"
+          class="type-select"
+        >
+          <option value="">Tous les types</option>
+          <option value="GAME_STORE">Boutique de jeux</option>
+          <option value="CAFE">Café</option>
+          <option value="BAR">Bar</option>
+          <option value="COMMUNITY_CENTER">Centre communautaire</option>
+          <option value="OTHER">Autre</option>
+        </select>
+      </div>
+
+      <!-- Amenities Filter -->
+      <div class="filter-group">
+        <div class="filter-label">Équipements</div>
+        <div class="amenities-checkboxes">
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="filters.wifi" 
+              (change)="applyFilters()"
+            />
+            <span>📶 WiFi</span>
+          </label>
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="filters.tables" 
+              (change)="applyFilters()"
+            />
+            <span>🪑 Tables de jeu</span>
+          </label>
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="filters.food" 
+              (change)="applyFilters()"
+            />
+            <span>🍔 Nourriture</span>
+          </label>
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="filters.drinks" 
+              (change)="applyFilters()"
+            />
+            <span>☕ Boissons</span>
+          </label>
+          <label class="checkbox-label">
+            <input 
+              type="checkbox" 
+              [(ngModel)]="filters.parking" 
+              (change)="applyFilters()"
+            />
+            <span>🅿️ Parking</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Reset Filters Button -->
+      <button (click)="resetFilters()" class="reset-button">
+        🔄 Réinitialiser les filtres
+      </button>
+    </div>
+
     <!-- Map Container -->
     <div class="map-container">
       <div id="map" class="map"></div>
@@ -30,10 +118,10 @@
 
     <!-- Locations List -->
     <div class="locations-list">
-      <h2>Liste des lieux ({{ locations.length }})</h2>
+      <h2>Liste des lieux ({{ filteredLocations.length }} / {{ locations.length }})</h2>
       
       <div class="location-cards">
-        <div *ngFor="let location of locations" class="location-card">
+        <div *ngFor="let location of filteredLocations" class="location-card">
           <div class="location-header">
             <h3>{{ location.name }}</h3>
             <span class="location-type">{{ getLocationTypeLabel(location.type) }}</span>

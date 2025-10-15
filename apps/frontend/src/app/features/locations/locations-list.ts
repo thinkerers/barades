@@ -1,12 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
 import { LocationsService, Location } from '../../core/services/locations.service';
 
 @Component({
   selector: 'app-locations-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './locations-list.html',
   styleUrl: './locations-list.css'
 })
@@ -14,8 +15,20 @@ export class LocationsListComponent implements OnInit {
   private locationsService = inject(LocationsService);
   
   locations: Location[] = [];
+  filteredLocations: Location[] = [];
   loading = true;
   error: string | null = null;
+  
+  // Filter properties
+  searchTerm = '';
+  selectedType = '';
+  filters = {
+    wifi: false,
+    tables: false,
+    food: false,
+    drinks: false,
+    parking: false
+  };
   
   private map: L.Map | null = null;
   private markers: L.Marker[] = [];
@@ -39,7 +52,11 @@ export class LocationsListComponent implements OnInit {
     this.locationsService.getLocations().subscribe({
       next: (data) => {
         console.log('[LocationsList] Locations loaded:', data.length, 'locations');
-        this.locations = data;
+        // Filter out online/private locations with no coordinates
+        this.locations = data.filter(loc => 
+          !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0)
+        );
+        this.filteredLocations = [...this.locations]; // Initialize filtered list
         this.loading = false;
         
         // CRITICAL: Wait for Angular to remove the 'hidden' class, then force map resize
@@ -263,5 +280,129 @@ export class LocationsListComponent implements OnInit {
 
   retry(): void {
     this.loadLocations();
+  }
+
+  /**
+   * Apply all filters to the locations list and update markers
+   */
+  applyFilters(): void {
+    console.log('[LocationsList] Applying filters...', {
+      searchTerm: this.searchTerm,
+      selectedType: this.selectedType,
+      filters: this.filters
+    });
+
+    this.filteredLocations = this.locations.filter(location => {
+      // Search filter (name, address, city)
+      if (this.searchTerm) {
+        const term = this.searchTerm.toLowerCase();
+        const matchesSearch = 
+          location.name.toLowerCase().includes(term) ||
+          (location.address && location.address.toLowerCase().includes(term)) ||
+          location.city.toLowerCase().includes(term);
+        
+        if (!matchesSearch) return false;
+      }
+
+      // Type filter
+      if (this.selectedType && location.type !== this.selectedType) {
+        return false;
+      }
+
+      // Amenities filters
+      const selectedAmenities = Object.entries(this.filters)
+        .filter(([, checked]) => checked)
+        .map(([amenity]) => this.getAmenityName(amenity));
+
+      if (selectedAmenities.length > 0) {
+        const hasAllAmenities = selectedAmenities.every(amenity =>
+          location.amenities.some(a => a.toLowerCase().includes(amenity.toLowerCase()))
+        );
+        if (!hasAllAmenities) return false;
+      }
+
+      return true;
+    });
+
+    console.log('[LocationsList] Filtered locations:', this.filteredLocations.length, '/', this.locations.length);
+    
+    // Update markers on map
+    this.updateMarkers();
+  }
+
+  /**
+   * Reset all filters to default values
+   */
+  resetFilters(): void {
+    this.searchTerm = '';
+    this.selectedType = '';
+    this.filters = {
+      wifi: false,
+      tables: false,
+      food: false,
+      drinks: false,
+      parking: false
+    };
+    this.applyFilters();
+  }
+
+  /**
+   * Get the count of active filters
+   */
+  getActiveFiltersCount(): number {
+    let count = 0;
+    
+    if (this.searchTerm) count++;
+    if (this.selectedType) count++;
+    
+    // Count active amenity filters
+    count += Object.values(this.filters).filter(checked => checked).length;
+    
+    return count;
+  }
+
+  /**
+   * Map filter key to amenity name (as stored in database)
+   */
+  getAmenityName(filterKey: string): string {
+    const amenityMap: Record<string, string> = {
+      wifi: 'WiFi',
+      tables: 'Gaming Tables',
+      food: 'Food',
+      drinks: 'Drinks',
+      parking: 'Parking'
+    };
+    return amenityMap[filterKey] || filterKey;
+  }
+
+  /**
+   * Update markers on the map based on filtered locations
+   */
+  private updateMarkers(): void {
+    if (!this.map) return;
+
+    // Clear existing markers
+    this.markers.forEach(marker => marker.remove());
+    this.markers = [];
+
+    // Add markers only for filtered locations
+    this.filteredLocations.forEach(location => {
+      // Skip online locations
+      if (location.type === 'PRIVATE' && location.lat === 0 && location.lon === 0) {
+        return;
+      }
+
+      const icon = this.getLocationIcon(location.type);
+
+      if (this.map) {
+        const marker = L.marker([location.lat, location.lon], { icon })
+          .addTo(this.map)
+          .bindPopup(this.createPopupContent(location));
+
+        this.markers.push(marker);
+      }
+    });
+
+    console.log('[LocationsList] Markers updated:', this.markers.length);
   }
 }
