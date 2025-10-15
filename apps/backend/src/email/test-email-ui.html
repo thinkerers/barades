@@ -289,7 +289,7 @@
       `;
       
       try {
-        const response = await fetch(`http://localhost:3000/email/test/${type}`, {
+        const response = await fetch(`http://localhost:3000/api/email/test/${type}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 

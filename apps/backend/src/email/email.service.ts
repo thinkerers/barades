@@ -43,7 +43,7 @@ export class EmailService {
       }).format(data.sessionDate);
 
       await this.resend.emails.send({
-        from: 'Barades <noreply@barades.app>',
+        from: 'Barades <noreply@send.barades.com>', // Domaine vérifié ✅
         to: data.userEmail,
         subject: `✅ Réservation confirmée - ${data.sessionTitle}`,
         html: this.getReservationConfirmationTemplate(data, formattedDate),
@@ -73,7 +73,7 @@ export class EmailService {
       }).format(data.sessionDate);
 
       await this.resend.emails.send({
-        from: 'Barades <noreply@barades.app>',
+        from: 'Barades <noreply@send.barades.com>', // Domaine vérifié ✅
         to: data.hostEmail,
         subject: `📬 Nouveau participant - ${data.sessionTitle}`,
         html: this.getHostNotificationTemplate(data, formattedDate),
@@ -103,7 +103,7 @@ export class EmailService {
       }).format(data.sessionDate);
 
       await this.resend.emails.send({
-        from: 'Barades <noreply@barades.app>',
+        from: 'Barades <noreply@send.barades.com>', // Domaine vérifié ✅
         to: data.userEmail,
         subject: `⏰ Rappel - Session demain : ${data.sessionTitle}`,
         html: this.getSessionReminderTemplate(data, formattedDate),
