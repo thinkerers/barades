@@ -16,6 +16,10 @@
 To run the dev servers for your apps, use:
 
 ```sh
+# Run both frontend and backend in parallel (recommended)
+npx nx dev
+
+# Or run them separately:
 # Frontend Angular app (served on http://localhost:4200)
 npx nx serve frontend
 

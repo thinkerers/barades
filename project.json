@@ -1,22 +1,18 @@
 {
-  "$schema": "./node_modules/nx/schemas/project-schema.json",
-  "name": "workspace",
+  "name": "barades",
+  "$schema": "node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "root": ".",
   "targets": {
     "dev": {
-      "executor": "@nx/workspace:run-commands",
+      "executor": "nx:run-commands",
       "options": {
-        "parallel": true,
         "commands": [
-          {
-            "command": "nx serve frontend"
-          },
-          {
-            "command": "nx serve backend"
-          }
-        ]
-      }
+          "nx serve backend",
+          "nx serve frontend"
+        ],
+        "parallel": true
+      },
+      "description": "Run both frontend and backend in parallel"
     }
   }
 }
