@@ -19,6 +19,8 @@
   },
   "nxCloudId": "68d709b723ed6608f3102b33",
   "defaultProject": "workspace",
+  "parallel": 3,
+  "cacheDirectory": ".nx/cache",
   "targetDefaults": {
     "@angular/build:application": {
       "cache": true,
@@ -47,8 +49,33 @@
         }
       }
     },
+    "@nx/playwright:playwright": {
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "options": {
+        "reporter": "html"
+      },
+      "configurations": {
+        "ci": {
+          "reporter": "github"
+        }
+      }
+    },
     "build-storybook": {
       "cache": true
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "cache": true
+    },
+    "test": {
+      "cache": true,
+      "inputs": ["default", "^production"]
+    },
+    "e2e": {
+      "cache": true,
+      "inputs": ["default", "^production"],
+      "outputs": ["{workspaceRoot}/dist/.playwright/{projectName}"]
     }
   },
   "plugins": [
