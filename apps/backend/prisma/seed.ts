@@ -423,9 +423,9 @@ async function main() {
       title: 'Best date for next one-shot campaign?',
       dates: ['2025-10-25', '2025-10-26', '2025-11-01'],
       votes: {
-        '2025-10-25': [alice.id, carol.id],
-        '2025-10-26': [alice.id, eve.id],
-        '2025-11-01': [carol.id],
+        [alice.id]: '2025-10-26',
+        [carol.id]: '2025-10-25',
+        [eve.id]: '2025-10-26',
       },
     },
   });
