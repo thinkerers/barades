@@ -1,13 +1,14 @@
 <article 
   class="group-card"
   [class]="'group-card--' + getPlaystyleColor(group.playstyle)"
+  [attr.data-testid]="'group-card-' + group.id"
 >
   <!-- Playstyle Tag -->
   <div class="group-card__tag" [ngClass]="'tag--' + getPlaystyleColor(group.playstyle)"></div>
 
   <!-- Header -->
   <header class="group-card__header">
-    <h3 class="group-card__title">{{ group.name }}</h3>
+    <h3 class="group-card__title" data-testid="group-card-title">{{ group.name }}</h3>
     <div class="group-card__badges">
       <span class="group-card__playstyle" [ngClass]="'playstyle--' + getPlaystyleColor(group.playstyle)">
         {{ getPlaystyleLabel(group.playstyle) }}

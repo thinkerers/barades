@@ -1,16 +1,16 @@
 <div class="login-container">
-  <mat-card class="login-card">
+  <mat-card class="login-card" data-testid="login-card">
     <mat-card-header>
-      <mat-card-title>Connexion</mat-card-title>
+      <mat-card-title data-testid="login-title">Connexion</mat-card-title>
       <mat-card-subtitle>Bar à Dés</mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" data-testid="login-form">
         <!-- Username -->
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Nom d'utilisateur</mat-label>
-          <input matInput formControlName="username" placeholder="alice_dm" autocomplete="username">
+          <input matInput formControlName="username" placeholder="alice_dm" autocomplete="username" data-testid="username-input">
           @if (loginForm.get('username')?.hasError('required') && loginForm.get('username')?.touched) {
             <mat-error>Le nom d'utilisateur est requis</mat-error>
           }
@@ -19,7 +19,7 @@
         <!-- Password -->
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Mot de passe</mat-label>
-          <input matInput type="password" formControlName="password" placeholder="••••••••••••" autocomplete="current-password">
+          <input matInput type="password" formControlName="password" placeholder="••••••••••••" autocomplete="current-password" data-testid="password-input">
           @if (loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched) {
             <mat-error>Le mot de passe est requis</mat-error>
           }
@@ -27,13 +27,13 @@
 
         <!-- Error message -->
         @if (errorMessage) {
-          <div class="error-message">
+          <div class="error-message" data-testid="error-message">
             {{ errorMessage }}
           </div>
         }
 
         <!-- Submit button -->
-        <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || isLoading" class="full-width submit-button">
+        <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || isLoading" class="full-width submit-button" data-testid="login-submit-button">
           @if (isLoading) {
             <mat-spinner diameter="20"></mat-spinner>
           } @else {
