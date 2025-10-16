@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -13,7 +13,7 @@ import { findClosestMatches } from '../../shared/utils/levenshtein';
   templateUrl: './session-create.html',
   styleUrls: ['./session-create.css']
 })
-export class SessionCreateComponent {
+export class SessionCreateComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly sessionsService = inject(SessionsService);
@@ -51,9 +51,6 @@ export class SessionCreateComponent {
       return;
     }
 
-    // Charger les jeux existants pour l'autocomplétion
-    this.loadExistingGames();
-
     this.sessionForm = this.fb.group({
       game: ['', [Validators.required, Validators.minLength(2)]],
       title: ['', [Validators.required, Validators.minLength(5)]],
@@ -69,6 +66,11 @@ export class SessionCreateComponent {
     this.sessionForm.get('game')?.valueChanges.subscribe(value => {
       this.checkGameSuggestions(value);
     });
+  }
+
+  ngOnInit(): void {
+    // Charger les jeux existants pour l'autocomplétion et les suggestions
+    this.loadExistingGames();
   }
 
   loadExistingGames(): void {
@@ -94,8 +96,13 @@ export class SessionCreateComponent {
       return;
     }
 
+    console.log('🔍 Vérification suggestions pour:', value);
+    console.log('📚 Jeux existants:', this.existingGames);
+
     // Trouver les jeux similaires avec seuil de 0.6 (60% de similarité)
     this.gameSuggestions = findClosestMatches(value, this.existingGames, 0.6, 3);
+    
+    console.log('💡 Suggestions trouvées:', this.gameSuggestions);
   }
 
   /**
@@ -131,8 +138,7 @@ export class SessionCreateComponent {
     const sessionData = {
       ...formValue,
       date: new Date(formValue.date).toISOString(),
-      hostId: currentUser.id,
-      playersCurrent: 0
+      hostId: currentUser.id
     };
 
     this.sessionsService.createSession(sessionData).subscribe({

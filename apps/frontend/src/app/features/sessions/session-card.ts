@@ -1,7 +1,10 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Session } from '../../core/services/sessions.service';
+import { ReservationsService } from '../../core/services/reservations.service';
+import { AuthService } from '../../core/services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-session-card',
@@ -12,6 +15,13 @@ import { Session } from '../../core/services/sessions.service';
 })
 export class SessionCardComponent {
   @Input({ required: true }) session!: Session;
+
+  private reservationsService = inject(ReservationsService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+
+  loading = false;
+  error: string | null = null;
 
   getTagColorClass(color: string): string {
     const colorMap: Record<string, string> = {
@@ -59,5 +69,44 @@ export class SessionCardComponent {
     if (available === 0) return 'status--full';
     if (available <= 2) return 'status--limited';
     return 'status--available';
+  }
+
+  onReserve(): void {
+    // Vérifier si l'utilisateur est connecté
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) {
+      // Rediriger vers la page de connexion
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: `/sessions/${this.session.id}` }
+      });
+      return;
+    }
+
+    // Vérifier si la session est complète
+    if (this.isFull()) {
+      this.error = 'Cette session est complète';
+      return;
+    }
+
+    this.loading = true;
+    this.error = null;
+
+    this.reservationsService.createReservation(this.session.id, currentUser.id)
+      .subscribe({
+        next: (reservation) => {
+          console.log('Réservation créée:', reservation);
+          // Mettre à jour le compteur local
+          this.session.playersCurrent++;
+          this.loading = false;
+          // TODO: Afficher un message de succès (toast/snackbar)
+          alert('✅ Réservation confirmée ! Vous avez reçu un email de confirmation.');
+        },
+        error: (err) => {
+          console.error('Erreur lors de la réservation:', err);
+          this.error = err.error?.message || 'Erreur lors de la réservation';
+          this.loading = false;
+          alert(`❌ ${this.error}`);
+        }
+      });
   }
 }

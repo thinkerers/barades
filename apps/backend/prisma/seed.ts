@@ -181,7 +181,7 @@ async function main() {
 
   const dndSession = await prisma.session.create({
     data: {
-      game: 'D&D 5e',
+      game: 'Dungeons & Dragons 5e',
       title: 'The Lost Mines of Phandelver - Session 3',
       description: 'Continuing our epic adventure! We left off at the entrance of the goblin cave. New players welcome if you can catch up quickly.',
       date: new Date('2025-10-20T19:00:00Z'),

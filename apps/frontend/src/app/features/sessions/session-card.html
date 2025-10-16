@@ -80,9 +80,11 @@
     <button 
       type="button" 
       class="button button--primary"
-      [disabled]="isFull()"
+      [disabled]="isFull() || loading"
+      (click)="onReserve()"
     >
-      {{ isFull() ? 'Complet' : 'Réserver ma place' }}
+      <span *ngIf="loading">Réservation...</span>
+      <span *ngIf="!loading">{{ isFull() ? 'Complet' : 'Réserver ma place' }}</span>
     </button>
     <a 
       [routerLink]="['/sessions', session.id]"

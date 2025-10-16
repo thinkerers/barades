@@ -98,5 +98,29 @@ describe('Levenshtein Distance', () => {
         expect(match.similarity).toBeGreaterThanOrEqual(0.8);
       });
     });
+
+    it('should detect "dungeon and dragon" as similar to "Dungeons & Dragons 5e"', () => {
+      const games = ['Dungeons & Dragons 5e', 'Pathfinder 2e', 'Call of Cthulhu'];
+      const matches = findClosestMatches('dungeon and dragon', games, 0.6);
+      console.log('Test "dungeon and dragon":', matches);
+      expect(matches.length).toBeGreaterThan(0);
+      expect(matches[0].value).toBe('Dungeons & Dragons 5e');
+    });
+
+    it('should detect "Dungeon & Dragins" as similar to "Dungeons & Dragons 5e"', () => {
+      const games = ['Dungeons & Dragons 5e', 'Pathfinder 2e', 'Call of Cthulhu'];
+      const matches = findClosestMatches('Dungeon & Dragins', games, 0.6);
+      console.log('Test "Dungeon & Dragins":', matches);
+      expect(matches.length).toBeGreaterThan(0);
+      expect(matches[0].value).toBe('Dungeons & Dragons 5e');
+    });
+
+    it('should detect "pathafinder" as similar to "Pathfinder 2e"', () => {
+      const games = ['Dungeons & Dragons 5e', 'Pathfinder 2e', 'Call of Cthulhu'];
+      const matches = findClosestMatches('pathafinder', games, 0.6);
+      console.log('Test "pathafinder":', matches);
+      expect(matches.length).toBeGreaterThan(0);
+      expect(matches[0].value).toBe('Pathfinder 2e');
+    });
   });
 });
