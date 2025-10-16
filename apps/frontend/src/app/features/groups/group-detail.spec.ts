@@ -9,7 +9,7 @@ import { PollsService } from '../../core/services/polls.service';
 import { AuthService } from '../../core/services/auth.service';
 
 describe('GroupDetailComponent', () => {
-  let component: ComponentFixture<GroupDetailComponent>;
+  let component: GroupDetailComponent;
   let fixture: ComponentFixture<GroupDetailComponent>;
   let groupsService: GroupsService;
   let pollsService: PollsService;
