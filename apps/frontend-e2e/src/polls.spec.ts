@@ -1,16 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/auth.fixture';
 
 test.describe('Poll Creation and Management', () => {
-  test.beforeEach(async ({ page }) => {
-    // Login as alice_dm before each test
-    await page.goto('/login');
-    await page.getByPlaceholder('alice_dm').fill('alice_dm');
-    await page.getByPlaceholder('••••••••••••').fill('password123');
-    await page.getByRole('button', { name: 'Se connecter' }).click();
-    await expect(page).toHaveURL('/');
-  });
-
-  test('should allow alice_dm to create a poll in Brussels Adventurers Guild', async ({ page }) => {
+  test('should allow alice_dm to create a poll in Brussels Adventurers Guild', async ({ authenticatedPage: page }) => {
     // Navigate to groups
     await page.goto('/groups');
     
@@ -50,15 +41,9 @@ test.describe('Poll Creation and Management', () => {
     await expect(page.locator('.poll-display h3')).toContainText('Gloomhaven');
   });
 
-  test('should prevent bob_boardgamer from accessing Elite Strategy Players', async ({ page }) => {
-    // Logout alice
-    await page.evaluate(() => localStorage.clear());
-    
+  test('should prevent bob_boardgamer from accessing Elite Strategy Players', async ({ page, loginAs }) => {
     // Login as bob_boardgamer (not a member of Elite Strategy Players)
-    await page.goto('/login');
-    await page.getByPlaceholder('alice_dm').fill('bob_boardgamer');
-    await page.getByPlaceholder('••••••••••••').fill('password123');
-    await page.getByRole('button', { name: 'Se connecter' }).click();
+    await loginAs(page, 'bob_boardgamer');
     await expect(page).toHaveURL('/');
     
     // Navigate to groups
@@ -68,7 +53,7 @@ test.describe('Poll Creation and Management', () => {
     await expect(page.getByText('Elite Strategy Players')).toBeHidden();
   });
 
-  test('should show poll creation button only for group members', async ({ page }) => {
+  test('should show poll creation button only for group members', async ({ authenticatedPage: page, loginAs }) => {
     // Navigate to Elite Strategy Players (alice is a member, no poll yet)
     await page.goto('/groups');
     
@@ -82,12 +67,8 @@ test.describe('Poll Creation and Management', () => {
     await expect(page.locator('.poll-widget')).toBeVisible();
     await expect(page.getByRole('button', { name: /créer un sondage/i })).toBeVisible();
     
-    // Logout and login as dave_poker (not a member of Elite Strategy Players)
-    await page.evaluate(() => localStorage.clear());
-    await page.goto('/login');
-    await page.getByPlaceholder('alice_dm').fill('dave_poker');
-    await page.getByPlaceholder('••••••••••••').fill('password123');
-    await page.getByRole('button', { name: 'Se connecter' }).click();
+    // Login as dave_poker (not a member of Elite Strategy Players)
+    await loginAs(page, 'dave_poker');
     await expect(page).toHaveURL('/');
     
     // Navigate to Elite Strategy Players (private group)
@@ -97,7 +78,7 @@ test.describe('Poll Creation and Management', () => {
     await expect(page.getByText('Elite Strategy Players')).toBeHidden();
   });
 
-  test('should display existing poll in group', async ({ page }) => {
+  test('should display existing poll in group', async ({ authenticatedPage: page }) => {
     // Navigate to Brussels Adventurers Guild (has a seed poll)
     await page.goto('/groups');
     
@@ -113,7 +94,7 @@ test.describe('Poll Creation and Management', () => {
     await expect(page.locator('.poll-display h3')).toContainText(/best date/i);
   });
 
-  test('should show vote counts for poll dates', async ({ page }) => {
+  test('should show vote counts for poll dates', async ({ authenticatedPage: page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
     
@@ -134,7 +115,7 @@ test.describe('Poll Creation and Management', () => {
     await expect(pollSection.locator('.poll-display__stats')).toContainText(/vote/i);
   });
 
-  test('should validate poll form fields', async ({ page }) => {
+  test('should validate poll form fields', async ({ authenticatedPage: page }) => {
     // Navigate to Elite Strategy Players (no existing poll, alice is member)
     await page.goto('/groups');
     
@@ -163,7 +144,7 @@ test.describe('Poll Creation and Management', () => {
     await expect(submitButton).toBeEnabled();
   });
 
-  test('should allow member to create multiple polls in same group', async ({ page }) => {
+  test('should allow member to create multiple polls in same group', async ({ authenticatedPage: page }) => {
     // Navigate to Elite Strategy Players (no poll yet)
     await page.goto('/groups');
     

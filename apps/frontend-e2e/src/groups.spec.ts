@@ -1,16 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/auth.fixture';
 
 test.describe('Groups Navigation', () => {
-  test.beforeEach(async ({ page }) => {
-    // Login before each test
-    await page.goto('/login');
-    await page.getByPlaceholder('alice_dm').fill('alice_dm');
-    await page.getByPlaceholder('••••••••••••').fill('password123');
-    await page.getByRole('button', { name: 'Se connecter' }).click();
-    await expect(page).toHaveURL('/');
-  });
-
-  test('should display groups list page', async ({ page }) => {
+  test('should display groups list page', async ({ authenticatedPage: page }) => {
     await page.goto('/groups');
     
     // Check that groups heading is visible
@@ -20,7 +11,7 @@ test.describe('Groups Navigation', () => {
     await expect(page.locator('.group-card').first()).toBeVisible();
   });
 
-  test('should display public groups for alice_dm', async ({ page }) => {
+  test('should display public groups for alice_dm', async ({ authenticatedPage: page }) => {
     await page.goto('/groups');
     
     // Alice should see public groups
@@ -31,15 +22,9 @@ test.describe('Groups Navigation', () => {
     await expect(page.getByText('Elite Strategy Players')).toBeVisible();
   });
 
-  test('should hide private groups for non-members', async ({ page }) => {
-    // Logout alice
-    await page.evaluate(() => localStorage.clear());
-    
+  test('should hide private groups for non-members', async ({ page, loginAs }) => {
     // Login as bob_boardgamer (not a member of Elite Strategy Players)
-    await page.goto('/login');
-    await page.getByPlaceholder('alice_dm').fill('bob_boardgamer');
-    await page.getByPlaceholder('••••••••••••').fill('password123');
-    await page.getByRole('button', { name: 'Se connecter' }).click();
+    await loginAs(page, 'bob_boardgamer');
     await expect(page).toHaveURL('/');
     
     await page.goto('/groups');
@@ -52,7 +37,7 @@ test.describe('Groups Navigation', () => {
     await expect(page.getByText('Elite Strategy Players')).toBeHidden();
   });
 
-  test('should navigate to group detail page', async ({ page }) => {
+  test('should navigate to group detail page', async ({ authenticatedPage: page }) => {
     await page.goto('/groups');
     
     // Click on a group card button (not the card itself, but the "Voir les détails" button)
@@ -66,7 +51,7 @@ test.describe('Groups Navigation', () => {
     await expect(page.locator('.group-detail__title')).toBeVisible();
   });
 
-  test('should display group details correctly', async ({ page }) => {
+  test('should display group details correctly', async ({ authenticatedPage: page }) => {
     await page.goto('/groups');
     await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     
@@ -81,7 +66,7 @@ test.describe('Groups Navigation', () => {
     await expect(page.locator('.playstyle-badge')).toBeVisible();
   });
 
-  test('should display member count and creator info', async ({ page }) => {
+  test('should display member count and creator info', async ({ authenticatedPage: page }) => {
     await page.goto('/groups');
     await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     
@@ -99,7 +84,7 @@ test.describe('Groups Navigation', () => {
     await expect(page.locator('.member-card', { hasText: 'alice_dm' })).toBeVisible();
   });
 
-  test('should show recruiting badge when group is recruiting', async ({ page }) => {
+  test('should show recruiting badge when group is recruiting', async ({ authenticatedPage: page }) => {
     await page.goto('/groups');
     
     // Wait for groups to load
@@ -110,7 +95,7 @@ test.describe('Groups Navigation', () => {
     await expect(page.getByText(/rejoindre|recrutement/i).first()).toBeVisible();
   });
 
-  test('should filter groups by playstyle', async ({ page }) => {
+  test('should filter groups by playstyle', async ({ authenticatedPage: page }) => {
     await page.goto('/groups');
     
     // Check that different playstyles are visible
@@ -118,7 +103,7 @@ test.describe('Groups Navigation', () => {
     await expect(page.getByText(/Décontracté/i).first()).toBeVisible();
   });
 
-  test('should navigate back to groups list from detail page', async ({ page }) => {
+  test('should navigate back to groups list from detail page', async ({ authenticatedPage: page }) => {
     await page.goto('/groups');
     await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     

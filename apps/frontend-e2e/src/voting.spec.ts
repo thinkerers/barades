@@ -1,16 +1,7 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/auth.fixture';
 
 test.describe('Poll Voting', () => {
-  test.beforeEach(async ({ page }) => {
-    // Login as alice_dm before each test
-    await page.goto('/login');
-    await page.getByPlaceholder('alice_dm').fill('alice_dm');
-    await page.getByPlaceholder('••••••••••••').fill('password123');
-    await page.getByRole('button', { name: 'Se connecter' }).click();
-    await expect(page).toHaveURL('/');
-  });
-
-  test('should allow member to vote on poll date', async ({ page }) => {
+  test('should allow member to vote on poll date', async ({ authenticatedPage: page }) => {
     // Navigate to Brussels Adventurers Guild (has existing poll)
     await page.goto('/groups');
     
@@ -33,7 +24,7 @@ test.describe('Poll Voting', () => {
     await expect(pollDisplay).toBeVisible();
   });
 
-  test('should allow member to remove their vote', async ({ page }) => {
+  test('should allow member to remove their vote', async ({ authenticatedPage: page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
     
@@ -59,7 +50,7 @@ test.describe('Poll Voting', () => {
     await expect(pollDisplay).toBeVisible();
   });
 
-  test('should show which dates current user voted for', async ({ page }) => {
+  test('should show which dates current user voted for', async ({ authenticatedPage: page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
     
@@ -82,7 +73,7 @@ test.describe('Poll Voting', () => {
     await expect(pollDisplay.locator('.poll-option--selected')).toBeVisible();
   });
 
-  test('should display best date (most votes)', async ({ page }) => {
+  test('should display best date (most votes)', async ({ authenticatedPage: page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
     
@@ -100,13 +91,9 @@ test.describe('Poll Voting', () => {
     await expect(pollDisplay.locator('.poll-option--best')).toBeVisible();
   });
 
-  test('should prevent non-member from voting', async ({ page }) => {
-    // Logout alice and login as dave_poker (not a member of Brussels Adventurers Guild)
-    await page.evaluate(() => localStorage.clear());
-    await page.goto('/login');
-    await page.getByPlaceholder('alice_dm').fill('dave_poker');
-    await page.getByPlaceholder('••••••••••••').fill('password123');
-    await page.getByRole('button', { name: 'Se connecter' }).click();
+  test('should prevent non-member from voting', async ({ page, loginAs }) => {
+    // Login as dave_poker (not a member of Brussels Adventurers Guild)
+    await loginAs(page, 'dave_poker');
     await expect(page).toHaveURL('/');
     
     // Navigate to Brussels Adventurers Guild (public group, can view but not vote)
@@ -125,7 +112,7 @@ test.describe('Poll Voting', () => {
     await expect(voteButtons.first()).toBeDisabled();
   });
 
-  test('should update vote counts in real-time', async ({ page }) => {
+  test('should update vote counts in real-time', async ({ authenticatedPage: page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
     
@@ -147,7 +134,7 @@ test.describe('Poll Voting', () => {
     await expect(pollDisplay.getByText(/\d+\s*vote/i)).toBeVisible();
   });
 
-  test('should allow voting on multiple dates in same poll', async ({ page }) => {
+  test('should allow voting on multiple dates in same poll', async ({ authenticatedPage: page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
     
@@ -170,7 +157,7 @@ test.describe('Poll Voting', () => {
     await expect(pollDisplay.locator('.poll-option--selected')).toBeVisible();
   });
 
-  test('should show vote details tooltip', async ({ page }) => {
+  test('should show vote details tooltip', async ({ authenticatedPage: page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
     
