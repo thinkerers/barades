@@ -3,6 +3,7 @@ import { AppLayout } from './core/layouts/app-layout';
 import { HomePage } from './features/home/home-page';
 import { SessionsListPage } from './features/sessions/sessions-list';
 import { SessionCreateComponent } from './features/sessions/session-create';
+import { SessionDetailComponent } from './features/sessions/session-detail';
 import { LocationsListComponent } from './features/locations/locations-list';
 import { GroupsListComponent } from './features/groups/groups-list';
 import { GroupDetailComponent } from './features/groups/group-detail';
@@ -35,6 +36,10 @@ export const appRoutes: Route[] = [
 			{
 				path: 'sessions/new',
 				component: SessionCreateComponent,
+			},
+			{
+				path: 'sessions/:id',
+				component: SessionDetailComponent,
 			},
 			{
 				path: 'locations',
