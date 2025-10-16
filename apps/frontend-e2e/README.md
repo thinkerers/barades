@@ -2,13 +2,18 @@
 
 ## 📝 Description
 
-Cette suite de tests E2E valide les fonctionnalités principales de l'application Barades :
+Cette suite de tests E2E valide les fonctionnalités principales de l'application Barades en utilisant les **bonnes pratiques 2025** :
+
+✅ **Sélecteurs accessibles** : `getByRole()`, `getByText()`, `getByLabel()`  
+✅ **Testing Library philosophy** : Tester comme un utilisateur réel  
+✅ **Auto-waiting** : Pas de `waitForTimeout()` manuel  
+✅ **Robustesse** : Éviter les sélecteurs CSS fragiles  
 
 ### Tests d'authentification (`auth.spec.ts`)
 - ✅ Affichage du formulaire de connexion
 - ✅ Connexion réussie avec credentials valides (alice_dm, bob_boardgamer)
 - ✅ Message d'erreur avec credentials invalides
-- ✅ Déconnexion et suppression du token
+- ✅ Déconnexion (via localStorage.clear() - TODO: ajouter bouton UI)
 - ✅ Redirection vers login pour routes protégées
 - ✅ Redirection vers returnUrl après login
 - ✅ Connexion avec différents utilisateurs
@@ -67,7 +72,13 @@ npx nx e2e frontend-e2e --grep="voting"
 
 ### Mode UI interactif (debug)
 ```bash
+cd apps/frontend-e2e
 npx playwright test --ui
+```
+
+### Mode headed (voir le navigateur)
+```bash
+npx playwright test --headed
 ```
 
 ### Voir le rapport HTML
@@ -75,7 +86,55 @@ npx playwright test --ui
 npx playwright show-report dist/.playwright/apps/frontend-e2e/playwright-report
 ```
 
-## 🔧 Configuration
+## 🎯 Bonnes Pratiques 2025
+
+### Hiérarchie des sélecteurs (par ordre de préférence)
+
+1. **`getByRole()`** - Meilleur (accessible, robuste)
+```typescript
+await page.getByRole('button', { name: 'Créer un sondage' });
+await page.getByRole('heading', { name: 'Brussels Adventurers Guild' });
+```
+
+2. **`getByLabel()`** - Bon pour les formulaires
+```typescript
+await page.getByLabel('Titre du sondage').fill('Mon sondage');
+```
+
+3. **`getByPlaceholder()`** - Acceptable
+```typescript
+await page.getByPlaceholder('alice_dm').fill('alice_dm');
+```
+
+4. **`getByText()`** - Pour le contenu
+```typescript
+await page.getByText('Brussels Adventurers Guild').click();
+```
+
+5. **Locators avec classes** - Si nécessaire pour composants spécifiques
+```typescript
+const pollDisplay = page.locator('.poll-display').first();
+```
+
+6. **`data-testid`** - **Dernier recours** uniquement
+```typescript
+// ❌ Éviter autant que possible
+await page.getByTestId('some-id');
+```
+
+### Pourquoi cette approche ?
+
+- ✅ **Accessibilité** : Les tests valident que l'UI est utilisable par tous
+- ✅ **Robustesse** : Résistant aux changements de style CSS
+- ✅ **Lisibilité** : Le code de test ressemble à l'usage réel
+- ✅ **Maintenance** : Moins de tests cassés lors de refactoring UI
+
+## 📚 Ressources
+
+- [Documentation Playwright](https://playwright.dev/)
+- [Nx Playwright Plugin](https://nx.dev/nx-api/playwright)
+- [Testing Library Guiding Principles](https://testing-library.com/docs/guiding-principles/)
+- [Rapports de test](./doc/TESTS_MANUELS.md)
 
 Les tests démarrent automatiquement :
 - **Backend** sur `http://localhost:3000` (API NestJS)
@@ -138,8 +197,5 @@ Cette commande :
 - Génère des rapports HTML
 - Capture des screenshots en cas d'échec
 
-## 🔗 Ressources
 
-- [Documentation Playwright](https://playwright.dev/)
-- [Nx Playwright Plugin](https://nx.dev/nx-api/playwright)
-- [Rapports de test](./doc/TESTS_MANUELS.md)
+## � Configuration
