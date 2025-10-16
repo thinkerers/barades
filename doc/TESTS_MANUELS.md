@@ -9,8 +9,8 @@
 
 ### Terminal 1 - Backend
 ```bash
-cd /home/theop/barades
-npx nx serve backend
+# cd /home/theop/barades
+# npx nx serve backend
 ```
 **Attendez**: `Nest application successfully started` sur port 3000
 
@@ -66,20 +66,32 @@ npx nx serve frontend
 ### Test Réservation (IMPORTANT !)
 1. Être connecté
 2. Trouver session avec places disponibles (playersCurrent < playersMax)
-3. Cliquer "Réserver ma place"
-4. ✅ Vérifier:
+3. ✅ Vérifier: Bouton "Réserver ma place" visible (bleu)
+4. Cliquer "Réserver ma place"
+5. ✅ Vérifier:
    - Bouton devient "Réservation..."
    - Alert succès "Réservation confirmée"
    - Compteur places +1
-5. **Vérifier Email** (console backend):
+   - **Badge bleu "✓ Inscrit" apparaît** à côté du statut
+   - **Bouton devient vert "✓ Déjà inscrit"** (désactivé)
+6. **Vérifier Email** (console backend):
    - Chercher "✅ Email sent successfully" dans logs
    - Vérifier 2 emails envoyés (confirmation + notification hôte)
-6. Essayer de réserver à nouveau
-7. ✅ Vérifier: Erreur "Vous avez déjà réservé"
+7. Essayer de cliquer à nouveau sur le bouton
+8. ✅ Vérifier: Bouton reste désactivé (pas d'action possible)
 
 ### Test Session Pleine
 1. Trouver session avec playersCurrent === playersMax
-2. ✅ Vérifier: Bouton "Complet" désactivé
+2. ✅ Vérifier: 
+   - Badge "Complet" rouge
+   - Bouton "Complet" désactivé (grisé)
+
+### Test Badge Inscription Persistant
+1. Recharger la page (F5)
+2. ✅ Vérifier:
+   - Sessions déjà réservées affichent badge "✓ Inscrit"
+   - Bouton reste vert "✓ Déjà inscrit"
+   - État persiste après rechargement
 
 ---
 
@@ -191,6 +203,9 @@ npx nx serve frontend
 - [ ] ✅ Liste sessions avec filtres
 - [ ] ✅ Autocomplete Levenshtein suggère corrections
 - [ ] ✅ Réservation session envoie emails
+- [ ] ✅ Badge "✓ Inscrit" apparaît après réservation
+- [ ] ✅ Bouton devient vert "✓ Déjà inscrit" après réservation
+- [ ] ✅ Badge inscription persiste après rechargement
 - [ ] ✅ Session pleine → bouton désactivé
 - [ ] ✅ Carte Leaflet avec markers
 - [ ] ✅ Géolocalisation fonctionne

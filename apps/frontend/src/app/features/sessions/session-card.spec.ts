@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SessionCardComponent } from './session-card';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Session } from '../../core/services/sessions.service';
+import { Reservation } from '../../core/services/reservations.service';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { AuthService } from '../../core/services/auth.service';
@@ -61,6 +62,10 @@ describe('SessionCardComponent', () => {
     fixture = TestBed.createComponent(SessionCardComponent);
     component = fixture.componentInstance;
     component.session = { ...mockSession };
+    
+    // Mock the reservations service
+    jest.spyOn(component['reservationsService'], 'getReservations').mockReturnValue(of([]));
+    
     fixture.detectChanges();
   });
 
@@ -332,6 +337,97 @@ describe('SessionCardComponent', () => {
       fixture.detectChanges();
       const card = fixture.nativeElement.querySelector('.session-card');
       expect(card.classList.contains('session-card--blue')).toBe(true);
+    });
+  });
+
+  describe('Registration Status', () => {
+    it('should check registration status on init', () => {
+      const spy = jest.spyOn(component['reservationsService'], 'getReservations');
+      component.ngOnInit();
+      expect(spy).toHaveBeenCalledWith('user-1');
+    });
+
+    it('should set isRegistered to false when user has no reservations', () => {
+      jest.spyOn(component['reservationsService'], 'getReservations').mockReturnValue(of([]));
+      component.checkIfRegistered();
+      expect(component.isRegistered).toBe(false);
+    });
+
+    it('should set isRegistered to true when user has reservation for this session', () => {
+      const mockReservations: Reservation[] = [
+        { id: 'res-1', sessionId: '1', userId: 'user-1', status: 'CONFIRMED', createdAt: '2025-10-01T00:00:00.000Z' }
+      ];
+      jest.spyOn(component['reservationsService'], 'getReservations').mockReturnValue(of(mockReservations));
+      component.checkIfRegistered();
+      expect(component.isRegistered).toBe(true);
+    });
+
+    it('should set isRegistered to false when user has reservations for other sessions', () => {
+      const mockReservations: Reservation[] = [
+        { id: 'res-1', sessionId: '2', userId: 'user-1', status: 'CONFIRMED', createdAt: '2025-10-01T00:00:00.000Z' },
+        { id: 'res-2', sessionId: '3', userId: 'user-1', status: 'CONFIRMED', createdAt: '2025-10-02T00:00:00.000Z' }
+      ];
+      jest.spyOn(component['reservationsService'], 'getReservations').mockReturnValue(of(mockReservations));
+      component.checkIfRegistered();
+      expect(component.isRegistered).toBe(false);
+    });
+
+    it('should set isRegistered to false when user is not authenticated', () => {
+      mockAuthService.getCurrentUser.mockReturnValue(null);
+      component.checkIfRegistered();
+      expect(component.isRegistered).toBe(false);
+    });
+
+    it('should display "Inscrit" badge when user is registered', () => {
+      component.isRegistered = true;
+      fixture.detectChanges();
+      const badge = fixture.nativeElement.querySelector('.session-card__registered');
+      expect(badge).toBeTruthy();
+      expect(badge.textContent).toContain('✓ Inscrit');
+    });
+
+    it('should not display "Inscrit" badge when user is not registered', () => {
+      component.isRegistered = false;
+      fixture.detectChanges();
+      const badge = fixture.nativeElement.querySelector('.session-card__registered');
+      expect(badge).toBeFalsy();
+    });
+
+    it('should show "Déjà inscrit" button text when registered', () => {
+      component.isRegistered = true;
+      fixture.detectChanges();
+      const button = fixture.nativeElement.querySelector('.button--primary');
+      expect(button.textContent).toContain('✓ Déjà inscrit');
+    });
+
+    it('should disable button when user is already registered', () => {
+      component.isRegistered = true;
+      fixture.detectChanges();
+      const button = fixture.nativeElement.querySelector('.button--primary');
+      expect(button.disabled).toBe(true);
+    });
+
+    it('should apply success class to button when registered', () => {
+      component.isRegistered = true;
+      fixture.detectChanges();
+      const button = fixture.nativeElement.querySelector('.button--primary');
+      expect(button.classList.contains('button--success')).toBe(true);
+    });
+
+    it('should update isRegistered to true after successful reservation', () => {
+      const mockReservation: Reservation = { 
+        id: 'res-new', 
+        sessionId: '1', 
+        userId: 'user-1', 
+        status: 'CONFIRMED', 
+        createdAt: '2025-10-16T00:00:00.000Z' 
+      };
+      jest.spyOn(component['reservationsService'], 'createReservation').mockReturnValue(of(mockReservation));
+      
+      component.isRegistered = false;
+      component.onReserve();
+      
+      expect(component.isRegistered).toBe(true);
     });
   });
 });
