@@ -50,6 +50,10 @@ describe('SessionCardComponent', () => {
   };
 
   beforeEach(async () => {
+    // Reset mocks before each test
+    mockAuthService.getCurrentUser.mockReturnValue({ id: 'user-1', username: 'TestUser' });
+    mockAuthService.isAuthenticated.mockReturnValue(true);
+    
     await TestBed.configureTestingModule({
       imports: [SessionCardComponent, RouterTestingModule],
       providers: [
@@ -337,6 +341,28 @@ describe('SessionCardComponent', () => {
       fixture.detectChanges();
       const card = fixture.nativeElement.querySelector('.session-card');
       expect(card.classList.contains('session-card--blue')).toBe(true);
+    });
+  });
+
+  describe('Authentication Redirect', () => {
+    it('should redirect to login when user is not authenticated', () => {
+      mockAuthService.getCurrentUser.mockReturnValue(null);
+      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      
+      component.onReserve();
+      
+      expect(navigateSpy).toHaveBeenCalledWith(['/login'], {
+        queryParams: { returnUrl: '/sessions' }
+      });
+    });
+
+    it('should not create reservation when user is not authenticated', () => {
+      mockAuthService.getCurrentUser.mockReturnValue(null);
+      const createSpy = jest.spyOn(component['reservationsService'], 'createReservation');
+      
+      component.onReserve();
+      
+      expect(createSpy).not.toHaveBeenCalled();
     });
   });
 

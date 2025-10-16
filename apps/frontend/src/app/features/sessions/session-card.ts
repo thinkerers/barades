@@ -103,8 +103,8 @@ export class SessionCardComponent implements OnInit {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
       // Rediriger vers la page de connexion
-      this.router.navigate(['/auth/login'], {
-        queryParams: { returnUrl: `/sessions/${this.session.id}` }
+      this.router.navigate(['/login'], {
+        queryParams: { returnUrl: `/sessions` }
       });
       return;
     }

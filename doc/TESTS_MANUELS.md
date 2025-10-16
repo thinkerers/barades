@@ -170,9 +170,14 @@ npx nx serve frontend
 ## ✅ TESTS EDGE CASES (Bonus - 5 min)
 
 ### Session Non Authentifié
-1. Se déconnecter
-2. Essayer de réserver session
-3. ✅ Vérifier: Redirection vers /auth/login
+1. Se déconnecter (ou naviguer en mode incognito)
+2. Aller sur "Sessions" (accessible sans auth)
+3. Cliquer sur "Réserver ma place" sur une session disponible
+4. ✅ Vérifier: 
+   - Redirection automatique vers `/login`
+   - URL contient `?returnUrl=/sessions`
+5. Se connecter avec un compte existant
+6. ✅ Vérifier: Retour automatique vers la page sessions
 
 ### Responsive Mobile
 1. Ouvrir DevTools (F12)
