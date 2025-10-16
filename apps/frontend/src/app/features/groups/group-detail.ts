@@ -3,12 +3,16 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { GroupsService, Group } from '../../core/services/groups.service';
 import { PollsService, Poll } from '../../core/services/polls.service';
+import { AuthService } from '../../core/services/auth.service';
 import { PollWidgetComponent } from './poll-widget';
 
 interface GroupMember {
-  id: string;
-  username: string;
-  avatar: string | null;
+  userId: string;
+  user: {
+    id: string;
+    username: string;
+    avatar: string | null;
+  };
   joinedAt: string;
 }
 
@@ -42,16 +46,20 @@ export class GroupDetailComponent implements OnInit {
   private router = inject(Router);
   private groupsService = inject(GroupsService);
   private pollsService = inject(PollsService);
+  private authService = inject(AuthService);
 
   group: GroupDetail | null = null;
   polls: Poll[] = [];
   activePoll: Poll | null = null;
   loading = true;
   error: string | null = null;
-  currentUserId = 'user-1'; // TODO: Get from auth service
+  currentUserId: string | null = null;
   isMember = false;
 
   ngOnInit(): void {
+    // Récupérer l'utilisateur connecté
+    this.currentUserId = this.authService.getCurrentUserId();
+    
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadGroup(id);
@@ -69,8 +77,8 @@ export class GroupDetailComponent implements OnInit {
     this.groupsService.getGroup(id).subscribe({
       next: (data) => {
         this.group = data as GroupDetail;
-        // Vérifier si l'utilisateur est membre
-        this.isMember = this.group.members?.some(m => m.id === this.currentUserId) || false;
+        // Vérifier si l'utilisateur est membre (comparer avec userId)
+        this.isMember = this.group.members?.some(m => m.userId === this.currentUserId) || false;
         this.loading = false;
       },
       error: (err) => {

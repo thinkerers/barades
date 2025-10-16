@@ -106,19 +106,19 @@
       <div *ngIf="group.members && group.members.length > 0" class="members-grid">
         <div *ngFor="let member of group.members" class="member-card">
           <img 
-            *ngIf="member.avatar" 
-            [src]="member.avatar" 
-            [alt]="member.username"
+            *ngIf="member.user.avatar" 
+            [src]="member.user.avatar" 
+            [alt]="member.user.username"
             class="member-card__avatar"
           />
-          <div *ngIf="!member.avatar" class="member-card__avatar member-card__avatar--placeholder">
+          <div *ngIf="!member.user.avatar" class="member-card__avatar member-card__avatar--placeholder">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
           </div>
           <div class="member-card__info">
-            <span class="member-card__name">{{ member.username }}</span>
+            <span class="member-card__name">{{ member.user.username }}</span>
             <span class="member-card__joined">Membre depuis {{ formatDate(member.joinedAt) }}</span>
           </div>
         </div>
