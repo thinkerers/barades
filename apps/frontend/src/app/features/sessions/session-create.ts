@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { SessionsService } from '../../core/services/sessions.service';
 import { AuthService } from '../../core/services/auth.service';
+import { findClosestMatches } from '../../shared/utils/levenshtein';
 
 @Component({
   selector: 'app-session-create',
@@ -24,6 +25,9 @@ export class SessionCreateComponent {
   
   // Liste des jeux existants pour l'autocomplétion
   existingGames: string[] = [];
+  
+  // Suggestions de correction pour le jeu
+  gameSuggestions: Array<{ value: string; similarity: number }> = [];
   
   levels = [
     { value: 'BEGINNER', label: 'Débutant' },
@@ -60,6 +64,11 @@ export class SessionCreateComponent {
       playersMax: [4, [Validators.required, Validators.min(2), Validators.max(12)]],
       tagColor: ['BLUE', Validators.required]
     });
+
+    // Écouter les changements du champ "game" pour détecter les fautes
+    this.sessionForm.get('game')?.valueChanges.subscribe(value => {
+      this.checkGameSuggestions(value);
+    });
   }
 
   loadExistingGames(): void {
@@ -73,6 +82,28 @@ export class SessionCreateComponent {
         // Continuer même si le chargement échoue
       }
     });
+  }
+
+  /**
+   * Vérifie si le jeu saisi est proche d'un jeu existant
+   * et propose des suggestions si nécessaire
+   */
+  checkGameSuggestions(value: string): void {
+    if (!value || value.trim().length < 3) {
+      this.gameSuggestions = [];
+      return;
+    }
+
+    // Trouver les jeux similaires avec seuil de 0.6 (60% de similarité)
+    this.gameSuggestions = findClosestMatches(value, this.existingGames, 0.6, 3);
+  }
+
+  /**
+   * Applique une suggestion au champ "game"
+   */
+  applySuggestion(game: string): void {
+    this.sessionForm.patchValue({ game });
+    this.gameSuggestions = [];
   }
 
   onSubmit(): void {

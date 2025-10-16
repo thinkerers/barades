@@ -32,7 +32,26 @@
         <datalist id="game-list">
           <option *ngFor="let game of existingGames" [value]="game">{{ game }}</option>
         </datalist>
-        <span class="help-text" *ngIf="existingGames.length > 0">
+        
+        <!-- Suggestions de correction -->
+        <div *ngIf="gameSuggestions.length > 0" class="suggestions-box">
+          <div class="suggestions-header">
+            💡 Tu voulais peut-être dire :
+          </div>
+          <div class="suggestions-list">
+            <button
+              *ngFor="let suggestion of gameSuggestions"
+              type="button"
+              class="suggestion-item"
+              (click)="applySuggestion(suggestion.value)"
+            >
+              <span class="suggestion-name">{{ suggestion.value }}</span>
+              <span class="suggestion-score">{{ (suggestion.similarity * 100) | number:'1.0-0' }}% similaire</span>
+            </button>
+          </div>
+        </div>
+        
+        <span class="help-text" *ngIf="existingGames.length > 0 && gameSuggestions.length === 0">
           💡 Suggestions basées sur les jeux existants
         </span>
         <span class="error-text" *ngIf="sessionForm.get('game')?.touched && sessionForm.get('game')?.invalid">
