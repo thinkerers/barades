@@ -14,6 +14,9 @@ describe('GroupCardComponent', () => {
     playstyle: 'STORY_DRIVEN',
     isRecruiting: true,
     maxMembers: 6,
+    creatorId: '1',
+    createdAt: new Date('2025-01-01T00:00:00Z'),
+    updatedAt: new Date('2025-01-01T00:00:00Z'),
     creator: {
       id: '1',
       username: 'john_doe',
