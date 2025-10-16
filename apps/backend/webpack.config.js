@@ -8,6 +8,19 @@ module.exports = {
       devtoolModuleFilenameTemplate: '[absolute-resource-path]',
     }),
   },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        enforce: 'pre',
+        use: ['source-map-loader'],
+        exclude: [
+          /node_modules\/@prisma/,
+          /generated\/prisma/,
+        ],
+      },
+    ],
+  },
   plugins: [
     new NxAppWebpackPlugin({
       target: 'node',
