@@ -1,9 +1,7 @@
 import { test, expect } from './fixtures/auth.fixture';
 
 test.describe('Poll Voting (with fixtures)', () => {
-  test('should allow member to vote on poll date', async ({ authenticatedPage }) => {
-    const { page } = authenticatedPage;
-
+  test('should allow member to vote on poll date', async ({ authenticatedPage: page }) => {
     // Navigate to Brussels Adventurers Guild (has existing poll)
     await page.goto('/groups');
     
@@ -23,16 +21,16 @@ test.describe('Poll Voting (with fixtures)', () => {
     await expect(pollDisplay).toBeVisible();
   });
 
-  test('should allow switching users', async ({ authenticatedPage }) => {
-    const { page, logout, loginAs } = authenticatedPage;
-
-    // Already logged in as alice_dm
+  test('should allow switching users', async ({ page, logout, loginAs }) => {
+    // Already logged in as alice_dm (default from beforeEach)
+    // First manually login as alice
+    await loginAs(page, 'alice_dm');
     await page.goto('/groups');
     await expect(page.getByText('Brussels Adventurers Guild')).toBeVisible();
 
     // Logout and login as bob_boardgamer
-    await logout();
-    await loginAs('bob_boardgamer');
+    await logout(page);
+    await loginAs(page, 'bob_boardgamer');
 
     await page.goto('/groups');
     await expect(page.getByText('Brussels Adventurers Guild')).toBeVisible();

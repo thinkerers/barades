@@ -72,11 +72,14 @@ export const test = base.extend<AuthFixtures>({
     await logoutUser(page);
   },
   
-  loginAs: async (_context, use) => {
+  // Helper functions don't need context
+  // eslint-disable-next-line no-empty-pattern
+  loginAs: async ({}, use) => {
     await use(loginUser);
   },
   
-  logout: async (_context, use) => {
+  // eslint-disable-next-line no-empty-pattern
+  logout: async ({}, use) => {
     await use(logoutUser);
   },
 });
