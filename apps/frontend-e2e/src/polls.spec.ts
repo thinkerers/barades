@@ -16,7 +16,8 @@ test.describe('Poll Creation and Management', () => {
     
     // Brussels Adventurers Guild already has a poll from seed data
     // We need to go to Elite Strategy Players instead (alice is member, no poll)
-    await page.getByRole('link', { name: 'Voir les détails' }).nth(1).click(); // Second group
+    const eliteCard = page.locator('.group-card', { hasText: 'Elite Strategy Players' });
+    await eliteCard.getByRole('link', { name: 'Voir les détails' }).click();
     
     // Wait for group detail page to load
     await expect(page.locator('.group-detail__title')).toBeVisible();
@@ -70,7 +71,9 @@ test.describe('Poll Creation and Management', () => {
   test('should show poll creation button only for group members', async ({ page }) => {
     // Navigate to Elite Strategy Players (alice is a member, no poll yet)
     await page.goto('/groups');
-    await page.getByRole('link', { name: 'Voir les détails' }).nth(1).click(); // Second group
+    
+    const eliteCard = page.locator('.group-card', { hasText: 'Elite Strategy Players' });
+    await eliteCard.getByRole('link', { name: 'Voir les détails' }).click();
     
     // Wait for page to load
     await expect(page.locator('.group-detail__title')).toBeVisible();
@@ -97,7 +100,10 @@ test.describe('Poll Creation and Management', () => {
   test('should display existing poll in group', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild (has a seed poll)
     await page.goto('/groups');
-    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
+    
+    const brusselsCard = page.locator('.group-card', { hasText: 'Brussels Adventurers Guild' });
+    await brusselsCard.getByRole('link', { name: 'Voir les détails' }).click();
+    
     await expect(page).toHaveURL(/\/groups\/.+/);
     
     // Wait for poll-widget to load
@@ -110,10 +116,15 @@ test.describe('Poll Creation and Management', () => {
   test('should show vote counts for poll dates', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
-    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
+    
+    const brusselsCard = page.locator('.group-card', { hasText: 'Brussels Adventurers Guild' });
+    await brusselsCard.getByRole('link', { name: 'Voir les détails' }).click();
     
     // Wait for page to load
     await expect(page.locator('.group-detail__title')).toBeVisible();
+    
+    // Wait for poll to load
+    await expect(page.locator('.poll-display').first()).toBeVisible();
     
     // Wait for poll to load
     const pollSection = page.locator('.poll-display').first();
@@ -126,7 +137,9 @@ test.describe('Poll Creation and Management', () => {
   test('should validate poll form fields', async ({ page }) => {
     // Navigate to Elite Strategy Players (no existing poll, alice is member)
     await page.goto('/groups');
-    await page.getByRole('link', { name: 'Voir les détails' }).nth(1).click(); // Second group
+    
+    const eliteCard = page.locator('.group-card', { hasText: 'Elite Strategy Players' });
+    await eliteCard.getByRole('link', { name: 'Voir les détails' }).click();
     
     // Click create poll button
     await page.getByRole('button', { name: /créer un sondage/i }).click();
@@ -153,7 +166,9 @@ test.describe('Poll Creation and Management', () => {
   test('should allow member to create multiple polls in same group', async ({ page }) => {
     // Navigate to Elite Strategy Players (no poll yet)
     await page.goto('/groups');
-    await page.getByRole('link', { name: 'Voir les détails' }).nth(1).click();
+    
+    const eliteCard = page.locator('.group-card', { hasText: 'Elite Strategy Players' });
+    await eliteCard.getByRole('link', { name: 'Voir les détails' }).click();
     
     // Create first poll
     await page.getByRole('button', { name: /créer un sondage/i }).click();
