@@ -93,6 +93,27 @@ npx nx serve frontend
    - Bouton reste vert "✓ Déjà inscrit"
    - État persiste après rechargement
 
+### Test Page Détail Session
+1. Sur la liste des sessions, cliquer sur "Voir détails" (bouton à droite)
+2. ✅ Vérifier affichage complet:
+   - Titre session + jeu avec icône 🎲
+   - Badges: Places disponibles + Badge "✓ Inscrit" si inscrit
+   - Description complète (bloc séparé)
+   - Grille d'infos: Date formatée, Format (En ligne/Présentiel), Joueurs (X/Y), Niveau
+   - Carte organisateur avec avatar + nom + rôle
+   - Carte lieu avec nom + ville + type
+   - Liste participants avec avatars (si inscriptions)
+3. ✅ Vérifier sidebar réservation (droite):
+   - Titre "Réservation"
+   - Compteur places restantes
+   - Bouton "Réserver ma place" (ou "✓ Déjà inscrit" si déjà inscrit)
+   - Message info email confirmation
+4. Tester réservation depuis page détail:
+   - Cliquer "Réserver ma place"
+   - ✅ Vérifier: Alert succès + badge "✓ Inscrit" apparaît + bouton vert
+5. Cliquer "Retour aux sessions"
+6. ✅ Vérifier: Retour à la liste
+
 ---
 
 ## ✅ SCÉNARIO 3: CARTE INTERACTIVE (5 min)
@@ -175,9 +196,9 @@ npx nx serve frontend
 3. Cliquer sur "Réserver ma place" sur une session disponible
 4. ✅ Vérifier: 
    - Redirection automatique vers `/login`
-   - URL contient `?returnUrl=/sessions`
+   - URL contient `?returnUrl=/sessions` (depuis liste) ou `?returnUrl=/sessions/:id` (depuis détail)
 5. Se connecter avec un compte existant
-6. ✅ Vérifier: Retour automatique vers la page sessions
+6. ✅ Vérifier: Retour automatique vers la page d'origine (liste ou détail)
 
 ### Responsive Mobile
 1. Ouvrir DevTools (F12)
@@ -212,6 +233,9 @@ npx nx serve frontend
 - [ ] ✅ Bouton devient vert "✓ Déjà inscrit" après réservation
 - [ ] ✅ Badge inscription persiste après rechargement
 - [ ] ✅ Session pleine → bouton désactivé
+- [ ] ✅ Page détail session affiche toutes les infos
+- [ ] ✅ Réservation fonctionne depuis page détail
+- [ ] ✅ Navigation "Voir détails" ↔ "Retour" fonctionne
 - [ ] ✅ Carte Leaflet avec markers
 - [ ] ✅ Géolocalisation fonctionne
 - [ ] ✅ Sync liste ↔ carte
