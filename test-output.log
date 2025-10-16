@@ -1,0 +1,784 @@
+
+ NX   Running target e2e for project frontend-e2e and 3 tasks it depends on:
+
+
+
+> nx run frontend:serve:development
+
+
+> nx run backend:build  [existing outputs match the cache, left as is]
+
+
+> nx run backend:serve:development
+
+
+> nx run frontend-e2e:e2e --reporter=line
+
+> playwright test --reporter=line
+
+[33m❯[39m Building...
+[2m> [22m[2mnx run[22m backend:build:development  [2m[local cache][22m
+[2m> [22mwebpack-cli build --node-env=development
+chunk (runtime: main) [1m[32mmain.js[39m[22m (main) 377 KiB [1m[33m[entry][39m[22m [1m[32m[rendered][39m[22m
+[1m[33mWARNING[39m[22m in [1m./generated/prisma/runtime/library.js[39m[22m
+[1mModule Warning (from ../../node_modules/source-map-loader/dist/cjs.js):
+[1m[31mFailed[39m[22m[1m to parse source map from '/home/theop/barades/apps/backend/generated/prisma/runtime/library.js.map' file: [1m[31mError[39m[22m[1m: ENOENT: no such file or directory, open '/home/theop/barades/apps/backend/generated/prisma/runtime/library.js.map'[39m[22m
+webpack compiled with [1m[33m1 warning[39m[22m (96f3ca3e15031c88)
+[0m[7m[1m[32m NX [39m[22m[27m[0m  [32mSuccessfully ran target [1mbuild[22m for project backend[39m
+[2mNx read the output from the cache instead of running the command for 1 out of 1 tasks.[22m
+[1m[31mDebugger listening on ws://localhost:9229/0eea479d-b837-4e19-9867-23a162199c37[39m[22m
+[1m[31mFor help, see: https://nodejs.org/en/docs/inspector[39m[22m
+[1m[31m[39m[22m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +31ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mEmailModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mLocationsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPollsModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mReservationsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSessionsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mGroupsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAppController {/api}:[39m[38;5;3m +4ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api, GET} route[39m[38;5;3m +3ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/auth}:[39m[38;5;3m +1ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/signup, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/login, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSessionsController {/api/sessions}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/sessions, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/sessions, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/sessions/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/sessions/:id, PATCH} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/sessions/:id, DELETE} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mLocationsController {/api/locations}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/locations, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/locations, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/locations/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/locations/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/locations/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mGroupsController {/api/groups}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/groups, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/groups, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/groups/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/groups/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/groups/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPollsController {/api/polls}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/polls, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/polls, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/polls/:id, GET} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/polls/:id/vote, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/polls/:id/vote/:userId, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/polls/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mEmailController {/api/email}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/email/test/confirmation, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/email/test/host-notification, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/email/test/reminder, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/email/test/all, POST} route[39m[38;5;3m +1ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mReservationsController {/api/reservations}:[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/reservations, POST} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/reservations, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/reservations/:id, GET} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/reservations/:id, PATCH} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:10 PM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/reservations/:id, DELETE} route[39m[38;5;3m +0ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:11 PM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +297ms[39m
+[32m[Nest] 271281  - [39m10/16/2025, 7:43:11 PM [32m    LOG[39m [32m🚀 Application is running on: http://localhost:3000/api[39m
+[32m✔[39m Building...
+[37m[1mInitial chunk files[22m[2m | [22m[1mNames[22m        [2m | [22m [1mRaw size[22m[39m
+[37m[32mmain.js[39m[37m            [2m | [22m[2mmain[22m         [2m | [22m[36m490.43 kB[39m[37m[2m | [22m[39m
+[37m[32mstyles.css[39m[37m         [2m | [22m[2mstyles[22m       [2m | [22m [36m20.78 kB[39m[37m[2m | [22m[39m
+[37m[32mpolyfills.js[39m[37m       [2m | [22m[2mpolyfills[22m    [2m | [22m [36m95 bytes[39m[37m[2m | [22m[39m
+[37m[39m
+[37m[1m [22m                  [2m | [22m[1mInitial total[22m[2m | [22m[1m511.30 kB[22m[39m
+[37m[39m
+[37mApplication bundle generation complete. [3.637 seconds][39m
+[37m[39m
+[37mWatch mode enabled. Watching for file changes...[39m
+[37mNOTE: Raw file sizes do not reflect development server per-request transformations.[39m
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m4200[22m/[39m
+[2m[32m  ➜[39m[22m[2m  press [22m[1mh + enter[22m[2m to show help[22m
+
+[2mRunning [22m31[2m tests using [22m14[2m workers[22m
+
+[1A[2K[1/31] [chromium] › src/auth.spec.ts:53:7 › Authentication › should successfully logout
+[1A[2K[2/31] [chromium] › src/auth.spec.ts:8:7 › Authentication › should display login page with form elements
+[1A[2K[3/31] [chromium] › src/auth.spec.ts:18:7 › Authentication › should successfully login with valid credentials
+[1A[2K[4/31] [chromium] › src/auth.spec.ts:99:7 › Authentication › should login as different users
+[1A[2K[5/31] [chromium] › src/auth.spec.ts:36:7 › Authentication › should show error message with invalid credentials
+[1A[2K[6/31] [chromium] › src/groups.spec.ts:83:7 › Groups Navigation › should display member count and creator info
+[1A[2K[7/31] [chromium] › src/groups.spec.ts:13:7 › Groups Navigation › should display groups list page
+[1A[2K[8/31] [chromium] › src/groups.spec.ts:23:7 › Groups Navigation › should display public groups for alice_dm
+[1A[2K[9/31] [chromium] › src/groups.spec.ts:34:7 › Groups Navigation › should hide private groups for non-members
+[1A[2K[10/31] [chromium] › src/groups.spec.ts:97:7 › Groups Navigation › should show recruiting badge when group is recruiting
+[1A[2K[11/31] [chromium] › src/auth.spec.ts:83:7 › Authentication › should redirect to returnUrl after login
+[1A[2K[12/31] [chromium] › src/auth.spec.ts:75:7 › Authentication › should redirect to login when accessing protected route without auth
+[1A[2K[13/31] [chromium] › src/groups.spec.ts:55:7 › Groups Navigation › should navigate to group detail page
+[1A[2K[14/31] [chromium] › src/groups.spec.ts:68:7 › Groups Navigation › should display group details correctly
+[1A[2K[15/31] [chromium] › src/groups.spec.ts:104:7 › Groups Navigation › should filter groups by playstyle
+[1A[2K[16/31] [chromium] › src/groups.spec.ts:112:7 › Groups Navigation › should navigate back to groups list from detail page
+[1A[2K[31m  1) [chromium] › src/auth.spec.ts:8:7 › Authentication › should display login page with form elements [39m
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  getByRole('heading', { name: 'Connexion' })
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('heading', { name: 'Connexion' })[22m
+
+
+    [0m [90m 10 |[39m     
+     [90m 11 |[39m     [90m// Check that login form is visible[39m
+    [31m[1m>[22m[39m[90m 12 |[39m     [36mawait[39m expect(page[33m.[39mgetByRole([32m'heading'[39m[33m,[39m { name[33m:[39m [32m'Connexion'[39m }))[33m.[39mtoBeVisible()[33m;[39m
+     [90m    |[39m                                                                    [31m[1m^[22m[39m
+     [90m 13 |[39m     [36mawait[39m expect(page[33m.[39mgetByPlaceholder([32m'alice_dm'[39m))[33m.[39mtoBeVisible()[33m;[39m
+     [90m 14 |[39m     [36mawait[39m expect(page[33m.[39mgetByPlaceholder([32m'••••••••••••'[39m))[33m.[39mtoBeVisible()[33m;[39m
+     [90m 15 |[39m     [36mawait[39m expect(page[33m.[39mgetByRole([32m'button'[39m[33m,[39m { name[33m:[39m [32m'Se connecter'[39m }))[33m.[39mtoBeVisible()[33m;[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/auth.spec.ts:12:68[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/auth-Authentication-should-dd17d-gin-page-with-form-elements-chromium/error-context.md[22m
+
+
+[1A[2K[31m  2) [chromium] › src/groups.spec.ts:23:7 › Groups Navigation › should display public groups for alice_dm [39m
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveURL[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Expected string: [32m"http://localhost:4200/"[39m
+    Received string: [31m"http://localhost:4200/[7mlogin[27m"[39m
+    Timeout: 5000ms
+
+    Call log:
+    [2m  - Expect "toHaveURL" with timeout 5000ms[22m
+    [2m    8 × unexpected value "http://localhost:4200/login"[22m
+
+
+    [0m [90m  8 |[39m     [36mawait[39m page[33m.[39mgetByPlaceholder([32m'••••••••••••'[39m)[33m.[39mfill([32m'password123'[39m)[33m;[39m
+     [90m  9 |[39m     [36mawait[39m page[33m.[39mgetByRole([32m'button'[39m[33m,[39m { name[33m:[39m [32m'Se connecter'[39m })[33m.[39mclick()[33m;[39m
+    [31m[1m>[22m[39m[90m 10 |[39m     [36mawait[39m expect(page)[33m.[39mtoHaveURL([32m'/'[39m)[33m;[39m
+     [90m    |[39m                        [31m[1m^[22m[39m
+     [90m 11 |[39m   })[33m;[39m
+     [90m 12 |[39m
+     [90m 13 |[39m   test([32m'should display groups list page'[39m[33m,[39m [36masync[39m ({ page }) [33m=>[39m {[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/groups.spec.ts:10:24[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/groups-Groups-Navigation-s-b4ffd--public-groups-for-alice-dm-chromium/error-context.md[22m
+
+
+[1A[2K[31m  3) [chromium] › src/groups.spec.ts:13:7 › Groups Navigation › should display groups list page [2m────[22m[39m
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveURL[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Expected string: [32m"http://localhost:4200/"[39m
+    Received string: [31m"http://localhost:4200/[7mlogin[27m"[39m
+    Timeout: 5000ms
+
+    Call log:
+    [2m  - Expect "toHaveURL" with timeout 5000ms[22m
+    [2m    8 × unexpected value "http://localhost:4200/login"[22m
+
+
+    [0m [90m  8 |[39m     [36mawait[39m page[33m.[39mgetByPlaceholder([32m'••••••••••••'[39m)[33m.[39mfill([32m'password123'[39m)[33m;[39m
+     [90m  9 |[39m     [36mawait[39m page[33m.[39mgetByRole([32m'button'[39m[33m,[39m { name[33m:[39m [32m'Se connecter'[39m })[33m.[39mclick()[33m;[39m
+    [31m[1m>[22m[39m[90m 10 |[39m     [36mawait[39m expect(page)[33m.[39mtoHaveURL([32m'/'[39m)[33m;[39m
+     [90m    |[39m                        [31m[1m^[22m[39m
+     [90m 11 |[39m   })[33m;[39m
+     [90m 12 |[39m
+     [90m 13 |[39m   test([32m'should display groups list page'[39m[33m,[39m [36masync[39m ({ page }) [33m=>[39m {[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/groups.spec.ts:10:24[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/groups-Groups-Navigation-should-display-groups-list-page-chromium/error-context.md[22m
+
+
+[1A[2K[31m  4) [chromium] › src/auth.spec.ts:83:7 › Authentication › should redirect to returnUrl after login [39m
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveURL[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Expected pattern: [32m/\/login/[39m
+    Received string:  [31m"http://localhost:4200/groups"[39m
+    Timeout: 5000ms
+
+    Call log:
+    [2m  - Expect "toHaveURL" with timeout 5000ms[22m
+    [2m    8 × unexpected value "http://localhost:4200/groups"[22m
+
+
+    [0m [90m 86 |[39m     
+     [90m 87 |[39m     [90m// Should redirect to login[39m
+    [31m[1m>[22m[39m[90m 88 |[39m     [36mawait[39m expect(page)[33m.[39mtoHaveURL([35m/\/login/[39m)[33m;[39m
+     [90m    |[39m                        [31m[1m^[22m[39m
+     [90m 89 |[39m     
+     [90m 90 |[39m     [90m// Login[39m
+     [90m 91 |[39m     [36mawait[39m page[33m.[39mgetByPlaceholder([32m'alice_dm'[39m)[33m.[39mfill([32m'alice_dm'[39m)[33m;[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/auth.spec.ts:88:24[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/auth-Authentication-should-redirect-to-returnUrl-after-login-chromium/error-context.md[22m
+
+
+[1A[2K[17/31] [chromium] › src/polls.spec.ts:105:7 › Poll Creation and Management › should show vote counts for poll dates
+[1A[2K[18/31] [chromium] › src/polls.spec.ts:118:7 › Poll Creation and Management › should validate poll form fields
+[1A[2K[31m  5) [chromium] › src/auth.spec.ts:75:7 › Authentication › should redirect to login when accessing protected route without auth [39m
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveURL[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Expected pattern: [32m/\/login/[39m
+    Received string:  [31m"http://localhost:4200/groups/some-group-id"[39m
+    Timeout: 5000ms
+
+    Call log:
+    [2m  - Expect "toHaveURL" with timeout 5000ms[22m
+    [2m    8 × unexpected value "http://localhost:4200/groups/some-group-id"[22m
+
+
+    [0m [90m 78 |[39m     
+     [90m 79 |[39m     [90m// Should redirect to login with returnUrl[39m
+    [31m[1m>[22m[39m[90m 80 |[39m     [36mawait[39m expect(page)[33m.[39mtoHaveURL([35m/\/login/[39m)[33m;[39m
+     [90m    |[39m                        [31m[1m^[22m[39m
+     [90m 81 |[39m   })[33m;[39m
+     [90m 82 |[39m
+     [90m 83 |[39m   test([32m'should redirect to returnUrl after login'[39m[33m,[39m [36masync[39m ({ page }) [33m=>[39m {[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/auth.spec.ts:80:24[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/auth-Authentication-should-04efa-rotected-route-without-auth-chromium/error-context.md[22m
+
+
+[1A[2K[31m  6) [chromium] › src/groups.spec.ts:104:7 › Groups Navigation › should filter groups by playstyle [2m─[22m[39m
+
+    Error: expect.toBeVisible: Error: strict mode violation: getByText(/Décontracté|CASUAL/i) resolved to 2 elements:
+        1) <h3 class="group-card__title" _ngcontent-ng-c2015262706="">Casual Board Gamers</h3> aka getByRole('heading', { name: 'Casual Board Gamers' })
+        2) <span _ngcontent-ng-c2015262706="" class="group-card__playstyle playstyle--green"> Décontracté </span> aka getByText('Décontracté')
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByText(/Décontracté|CASUAL/i)[22m
+
+
+    [0m [90m 107 |[39m     [90m// Check that different playstyles are visible[39m
+     [90m 108 |[39m     [36mawait[39m expect(page[33m.[39mgetByText([35m/Narratif|STORY_DRIVEN/i[39m))[33m.[39mtoBeVisible()[33m;[39m
+    [31m[1m>[22m[39m[90m 109 |[39m     [36mawait[39m expect(page[33m.[39mgetByText([35m/Décontracté|CASUAL/i[39m))[33m.[39mtoBeVisible()[33m;[39m
+     [90m     |[39m                                                         [31m[1m^[22m[39m
+     [90m 110 |[39m   })[33m;[39m
+     [90m 111 |[39m
+     [90m 112 |[39m   test([32m'should navigate back to groups list from detail page'[39m[33m,[39m [36masync[39m ({ page }) [33m=>[39m {[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/groups.spec.ts:109:57[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/groups-Groups-Navigation-should-filter-groups-by-playstyle-chromium/error-context.md[22m
+
+
+[1A[2K[19/31] [chromium] › src/polls.spec.ts:51:7 › Poll Creation and Management › should prevent bob_boardgamer from accessing Elite Strategy Players
+[1A[2K[20/31] [chromium] › src/polls.spec.ts:93:7 › Poll Creation and Management › should display existing poll in group
+[1A[2K[21/31] [chromium] › src/polls.spec.ts:13:7 › Poll Creation and Management › should allow alice_dm to create a poll in Elite Strategy Players
+[1A[2K[22/31] [chromium] › src/polls.spec.ts:69:7 › Poll Creation and Management › should show poll creation button only for group members
+[1A[2K[23/31] [chromium] › src/voting.spec.ts:33:7 › Poll Voting › should allow member to remove their vote
+[1A[2K[24/31] [chromium] › src/polls.spec.ts:131:7 › Poll Creation and Management › should allow member to create multiple polls in same group
+[1A[2K[25/31] [chromium] › src/voting.spec.ts:13:7 › Poll Voting › should allow member to vote on poll date
+[1A[2K[26/31] [chromium] › src/voting.spec.ts:54:7 › Poll Voting › should show which dates current user voted for
+[1A[2K[31m  7) [chromium] › src/groups.spec.ts:97:7 › Groups Navigation › should show recruiting badge when group is recruiting [39m
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  getByText(/recrutement|recruiting/i).first()
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByText(/recrutement|recruiting/i).first()[22m
+
+
+    [0m [90m  99 |[39m     
+     [90m 100 |[39m     [90m// Look for recruiting indicator text[39m
+    [31m[1m>[22m[39m[90m 101 |[39m     [36mawait[39m expect(page[33m.[39mgetByText([35m/recrutement|recruiting/i[39m)[33m.[39mfirst())[33m.[39mtoBeVisible()[33m;[39m
+     [90m     |[39m                                                                     [31m[1m^[22m[39m
+     [90m 102 |[39m   })[33m;[39m
+     [90m 103 |[39m
+     [90m 104 |[39m   test([32m'should filter groups by playstyle'[39m[33m,[39m [36masync[39m ({ page }) [33m=>[39m {[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/groups.spec.ts:101:69[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/groups-Groups-Navigation-s-5437a-ge-when-group-is-recruiting-chromium/error-context.md[22m
+
+
+[1A[2K[31m  8) [chromium] › src/groups.spec.ts:83:7 › Groups Navigation › should display member count and creator info [39m
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  getByRole('heading', { name: /Membres/i })
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('heading', { name: /Membres/i })[22m
+
+
+    [0m [90m 89 |[39m     
+     [90m 90 |[39m     [90m// Check for members section heading[39m
+    [31m[1m>[22m[39m[90m 91 |[39m     [36mawait[39m expect(page[33m.[39mgetByRole([32m'heading'[39m[33m,[39m { name[33m:[39m [35m/Membres/i[39m }))[33m.[39mtoBeVisible()[33m;[39m
+     [90m    |[39m                                                                   [31m[1m^[22m[39m
+     [90m 92 |[39m     
+     [90m 93 |[39m     [90m// Check creator (alice_dm created Brussels Adventurers Guild)[39m
+     [90m 94 |[39m     [36mawait[39m expect(page[33m.[39mgetByText([32m'alice_dm'[39m))[33m.[39mtoBeVisible()[33m;[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/groups.spec.ts:91:67[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/groups-Groups-Navigation-s-b1913-mber-count-and-creator-info-chromium/error-context.md[22m
+
+
+[1A[2K[31m  9) [chromium] › src/groups.spec.ts:68:7 › Groups Navigation › should display group details correctly [39m
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  locator('.group-detail')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('.group-detail')[22m
+
+
+    [0m [90m 75 |[39m     [90m// Check group information is displayed (games listed in description or info)[39m
+     [90m 76 |[39m     [36mconst[39m detailSection [33m=[39m page[33m.[39mlocator([32m'.group-detail'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 77 |[39m     [36mawait[39m expect(detailSection)[33m.[39mtoBeVisible()[33m;[39m
+     [90m    |[39m                                 [31m[1m^[22m[39m
+     [90m 78 |[39m     
+     [90m 79 |[39m     [90m// Verify playstyle is shown (Narratif for STORY_DRIVEN)[39m
+     [90m 80 |[39m     [36mawait[39m expect(page[33m.[39mgetByText([35m/Narratif|Story/i[39m))[33m.[39mtoBeVisible()[33m;[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/groups.spec.ts:77:33[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/groups-Groups-Navigation-s-2f3dd-lay-group-details-correctly-chromium/error-context.md[22m
+
+
+[1A[2K[27/31] [chromium] › src/voting.spec.ts:72:7 › Poll Voting › should display best date (most votes)
+[1A[2K[28/31] [chromium] › src/voting.spec.ts:85:7 › Poll Voting › should prevent non-member from voting
+[1A[2K[31m  10) [chromium] › src/groups.spec.ts:55:7 › Groups Navigation › should navigate to group detail page [39m
+
+    Error: [2mexpect([22m[31mpage[39m[2m).[22mtoHaveURL[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Expected pattern: [32m/\/groups\/.+/[39m
+    Received string:  [31m"http://localhost:4200/groups"[39m
+    Timeout: 5000ms
+
+    Call log:
+    [2m  - Expect "toHaveURL" with timeout 5000ms[22m
+    [2m    9 × unexpected value "http://localhost:4200/groups"[22m
+
+
+    [0m [90m 60 |[39m     
+     [90m 61 |[39m     [90m// Should navigate to group detail page[39m
+    [31m[1m>[22m[39m[90m 62 |[39m     [36mawait[39m expect(page)[33m.[39mtoHaveURL([35m/\/groups\/.+/[39m)[33m;[39m
+     [90m    |[39m                        [31m[1m^[22m[39m
+     [90m 63 |[39m     
+     [90m 64 |[39m     [90m// Should display group name in heading[39m
+     [90m 65 |[39m     [36mawait[39m expect(page[33m.[39mgetByRole([32m'heading'[39m[33m,[39m { name[33m:[39m [32m'Brussels Adventurers Guild'[39m }))[33m.[39mtoBeVisible()[33m;[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/groups.spec.ts:62:24[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/groups-Groups-Navigation-s-facf0-vigate-to-group-detail-page-chromium/error-context.md[22m
+
+
+[1A[2K[29/31] [chromium] › src/voting.spec.ts:104:7 › Poll Voting › should update vote counts in real-time
+[1A[2K[31m  11) [chromium] › src/polls.spec.ts:105:7 › Poll Creation and Management › should show vote counts for poll dates [39m
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  locator('.poll-display').first().getByText(/\d+\s*vote/i)
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('.poll-display').first().getByText(/\d+\s*vote/i)[22m
+
+
+    [0m [90m 113 |[39m     [90m// Poll should show vote counts (look for text like "2 votes")[39m
+     [90m 114 |[39m     [36mconst[39m pollSection [33m=[39m page[33m.[39mlocator([32m'.poll-display'[39m)[33m.[39mfirst()[33m;[39m
+    [31m[1m>[22m[39m[90m 115 |[39m     [36mawait[39m expect(pollSection[33m.[39mgetByText([35m/\d+\s*vote/i[39m))[33m.[39mtoBeVisible()[33m;[39m
+     [90m     |[39m                                                        [31m[1m^[22m[39m
+     [90m 116 |[39m   })[33m;[39m
+     [90m 117 |[39m
+     [90m 118 |[39m   test([32m'should validate poll form fields'[39m[33m,[39m [36masync[39m ({ page }) [33m=>[39m {[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/polls.spec.ts:115:56[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/polls-Poll-Creation-and-Ma-6c883--vote-counts-for-poll-dates-chromium/error-context.md[22m
+
+
+[1A[2K[30/31] [chromium] › src/voting.spec.ts:121:7 › Poll Voting › should allow voting on multiple dates in same poll
+[1A[2K[31/31] [chromium] › src/voting.spec.ts:139:7 › Poll Voting › should show vote details tooltip
+[1A[2K[31m  12) [chromium] › src/polls.spec.ts:93:7 › Poll Creation and Management › should display existing poll in group [39m
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  getByText(/best date for next one-shot/i)
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByText(/best date for next one-shot/i)[22m
+
+
+    [0m [90m 100 |[39m     
+     [90m 101 |[39m     [90m// Check for existing poll from seed data (title contains "best date")[39m
+    [31m[1m>[22m[39m[90m 102 |[39m     [36mawait[39m expect(page[33m.[39mgetByText([35m/best date for next one-shot/i[39m))[33m.[39mtoBeVisible()[33m;[39m
+     [90m     |[39m                                                                  [31m[1m^[22m[39m
+     [90m 103 |[39m   })[33m;[39m
+     [90m 104 |[39m
+     [90m 105 |[39m   test([32m'should show vote counts for poll dates'[39m[33m,[39m [36masync[39m ({ page }) [33m=>[39m {[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/polls.spec.ts:102:66[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/polls-Poll-Creation-and-Ma-a540b-play-existing-poll-in-group-chromium/error-context.md[22m
+
+
+[1A[2K[31m  13) [chromium] › src/polls.spec.ts:69:7 › Poll Creation and Management › should show poll creation button only for group members [39m
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  getByRole('button', { name: /créer un sondage/i })
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('button', { name: /créer un sondage/i })[22m
+
+
+    [0m [90m 73 |[39m     
+     [90m 74 |[39m     [90m// Should see create poll button[39m
+    [31m[1m>[22m[39m[90m 75 |[39m     [36mawait[39m expect(page[33m.[39mgetByRole([32m'button'[39m[33m,[39m { name[33m:[39m [35m/créer un sondage/i[39m }))[33m.[39mtoBeVisible()[33m;[39m
+     [90m    |[39m                                                                           [31m[1m^[22m[39m
+     [90m 76 |[39m     
+     [90m 77 |[39m     [90m// Logout and login as dave_poker (not a member of Brussels Adventurers Guild)[39m
+     [90m 78 |[39m     [36mawait[39m page[33m.[39mevaluate(() [33m=>[39m localStorage[33m.[39mclear())[33m;[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/polls.spec.ts:75:75[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/polls-Poll-Creation-and-Ma-dfad6-tton-only-for-group-members-chromium/error-context.md[22m
+
+
+[1A[2K[31m  14) [chromium] › src/polls.spec.ts:13:7 › Poll Creation and Management › should allow alice_dm to create a poll in Elite Strategy Players [39m
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  getByRole('heading', { name: /sondage/i })
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByRole('heading', { name: /sondage/i })[22m
+
+
+    [0m [90m 22 |[39m     
+     [90m 23 |[39m     [90m// Find poll widget section[39m
+    [31m[1m>[22m[39m[90m 24 |[39m     [36mawait[39m expect(page[33m.[39mgetByRole([32m'heading'[39m[33m,[39m { name[33m:[39m [35m/sondage/i[39m }))[33m.[39mtoBeVisible()[33m;[39m
+     [90m    |[39m                                                                   [31m[1m^[22m[39m
+     [90m 25 |[39m     
+     [90m 26 |[39m     [90m// Click the create poll button (text: "Créer un sondage")[39m
+     [90m 27 |[39m     [36mawait[39m page[33m.[39mgetByRole([32m'button'[39m[33m,[39m { name[33m:[39m [35m/créer un sondage/i[39m })[33m.[39mclick()[33m;[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/polls.spec.ts:24:67[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/polls-Poll-Creation-and-Ma-b7861-l-in-Elite-Strategy-Players-chromium/error-context.md[22m
+
+
+[1A[2K[31m  15) [chromium] › src/voting.spec.ts:13:7 › Poll Voting › should allow member to vote on poll date [39m
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  locator('.poll-display').first()
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('.poll-display').first()[22m
+
+
+    [0m [90m 21 |[39m     [90m// Find the poll display section[39m
+     [90m 22 |[39m     [36mconst[39m pollDisplay [33m=[39m page[33m.[39mlocator([32m'.poll-display'[39m)[33m.[39mfirst()[33m;[39m
+    [31m[1m>[22m[39m[90m 23 |[39m     [36mawait[39m expect(pollDisplay)[33m.[39mtoBeVisible()[33m;[39m
+     [90m    |[39m                               [31m[1m^[22m[39m
+     [90m 24 |[39m     
+     [90m 25 |[39m     [90m// Click on a poll option button to vote[39m
+     [90m 26 |[39m     [36mconst[39m voteButtons [33m=[39m pollDisplay[33m.[39mlocator([32m'.poll-option__button'[39m)[33m;[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/voting.spec.ts:23:31[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/voting-Poll-Voting-should-allow-member-to-vote-on-poll-date-chromium/error-context.md[22m
+
+
+[1A[2K[31m  16) [chromium] › src/voting.spec.ts:72:7 › Poll Voting › should display best date (most votes) [2m───[22m[39m
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  locator('.poll-display').first().locator('.poll-option--best')
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('.poll-display').first().locator('.poll-option--best')[22m
+
+
+    [0m [90m 80 |[39m     
+     [90m 81 |[39m     [90m// Check for "best" indicator (poll-option--best class)[39m
+    [31m[1m>[22m[39m[90m 82 |[39m     [36mawait[39m expect(pollDisplay[33m.[39mlocator([32m'.poll-option--best'[39m))[33m.[39mtoBeVisible()[33m;[39m
+     [90m    |[39m                                                             [31m[1m^[22m[39m
+     [90m 83 |[39m   })[33m;[39m
+     [90m 84 |[39m
+     [90m 85 |[39m   test([32m'should prevent non-member from voting'[39m[33m,[39m [36masync[39m ({ page }) [33m=>[39m {[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/voting.spec.ts:82:61[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/voting-Poll-Voting-should-display-best-date-most-votes--chromium/error-context.md[22m
+
+
+[1A[2K[31m  17) [chromium] › src/voting.spec.ts:85:7 › Poll Voting › should prevent non-member from voting [2m───[22m[39m
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  getByText(/vous devez être membre.*pour voter/i)
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for getByText(/vous devez être membre.*pour voter/i)[22m
+
+
+    [0m [90m  99 |[39m     
+     [90m 100 |[39m     [90m// Should see info message about needing to be a member[39m
+    [31m[1m>[22m[39m[90m 101 |[39m     [36mawait[39m expect(page[33m.[39mgetByText([35m/vous devez être membre.*pour voter/i[39m))[33m.[39mtoBeVisible()[33m;[39m
+     [90m     |[39m                                                                         [31m[1m^[22m[39m
+     [90m 102 |[39m   })[33m;[39m
+     [90m 103 |[39m
+     [90m 104 |[39m   test([32m'should update vote counts in real-time'[39m[33m,[39m [36masync[39m ({ page }) [33m=>[39m {[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/voting.spec.ts:101:73[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/voting-Poll-Voting-should-prevent-non-member-from-voting-chromium/error-context.md[22m
+
+
+[1A[2K[31m  18) [chromium] › src/voting.spec.ts:139:7 › Poll Voting › should show vote details tooltip [2m───────[22m[39m
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m()[22m failed
+
+    Locator:  locator('.poll-display').first()
+    Expected: visible
+    Received: <element(s) not found>
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('.poll-display').first()[22m
+
+
+    [0m [90m 145 |[39m     
+     [90m 146 |[39m     [36mconst[39m pollDisplay [33m=[39m page[33m.[39mlocator([32m'.poll-display'[39m)[33m.[39mfirst()[33m;[39m
+    [31m[1m>[22m[39m[90m 147 |[39m     [36mawait[39m expect(pollDisplay)[33m.[39mtoBeVisible()[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 148 |[39m     
+     [90m 149 |[39m     [90m// Hover over a poll option to see vote details[39m
+     [90m 150 |[39m     [36mconst[39m pollOption [33m=[39m pollDisplay[33m.[39mlocator([32m'.poll-option'[39m)[33m.[39mfirst()[33m;[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/voting.spec.ts:147:31[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/voting-Poll-Voting-should-show-vote-details-tooltip-chromium/error-context.md[22m
+
+
+[1A[2K[31m  19) [chromium] › src/groups.spec.ts:112:7 › Groups Navigation › should navigate back to groups list from detail page [39m
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('button', { name: /retour/i })[22m
+
+
+    [0m [90m 118 |[39m     
+     [90m 119 |[39m     [90m// Click back button with "Retour" text[39m
+    [31m[1m>[22m[39m[90m 120 |[39m     [36mawait[39m page[33m.[39mgetByRole([32m'button'[39m[33m,[39m { name[33m:[39m [35m/retour/i[39m })[33m.[39mclick()[33m;[39m
+     [90m     |[39m                                                         [31m[1m^[22m[39m
+     [90m 121 |[39m     
+     [90m 122 |[39m     [90m// Should be back on groups list[39m
+     [90m 123 |[39m     [36mawait[39m expect(page)[33m.[39mtoHaveURL([32m'/groups'[39m)[33m;[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/groups.spec.ts:120:57[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/groups-Groups-Navigation-s-3537d-roups-list-from-detail-page-chromium/error-context.md[22m
+
+
+[1A[2K[31m  20) [chromium] › src/polls.spec.ts:118:7 › Poll Creation and Management › should validate poll form fields [39m
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('button', { name: /créer un sondage/i })[22m
+
+
+    [0m [90m 122 |[39m     
+     [90m 123 |[39m     [90m// Click create poll button[39m
+    [31m[1m>[22m[39m[90m 124 |[39m     [36mawait[39m page[33m.[39mgetByRole([32m'button'[39m[33m,[39m { name[33m:[39m [35m/créer un sondage/i[39m })[33m.[39mclick()[33m;[39m
+     [90m     |[39m                                                                   [31m[1m^[22m[39m
+     [90m 125 |[39m     
+     [90m 126 |[39m     [90m// Try to submit without filling fields - button should be disabled[39m
+     [90m 127 |[39m     [36mconst[39m submitButton [33m=[39m page[33m.[39mgetByRole([32m'button'[39m[33m,[39m { name[33m:[39m [35m/créer le sondage/i[39m })[33m;[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/polls.spec.ts:124:67[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/polls-Poll-Creation-and-Ma-a65fd-d-validate-poll-form-fields-chromium/error-context.md[22m
+
+
+[1A[2K[31m  21) [chromium] › src/voting.spec.ts:33:7 › Poll Voting › should allow member to remove their vote [39m
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.poll-display').first().locator('.poll-option__button').first()[22m
+
+
+    [0m [90m 42 |[39m     [90m// Vote on a date[39m
+     [90m 43 |[39m     [36mconst[39m voteButton [33m=[39m pollDisplay[33m.[39mlocator([32m'.poll-option__button'[39m)[33m.[39mfirst()[33m;[39m
+    [31m[1m>[22m[39m[90m 44 |[39m     [36mawait[39m voteButton[33m.[39mclick()[33m;[39m
+     [90m    |[39m                      [31m[1m^[22m[39m
+     [90m 45 |[39m     
+     [90m 46 |[39m     [90m// Click again to remove vote (if the UI supports toggle)[39m
+     [90m 47 |[39m     [90m// Or look for a remove vote button[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/voting.spec.ts:44:22[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/voting-Poll-Voting-should-allow-member-to-remove-their-vote-chromium/error-context.md[22m
+
+
+[1A[2K[31m  22) [chromium] › src/polls.spec.ts:131:7 › Poll Creation and Management › should allow member to create multiple polls in same group [39m
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for getByRole('button', { name: /créer un sondage/i })[22m
+
+
+    [0m [90m 135 |[39m     
+     [90m 136 |[39m     [90m// Create first poll[39m
+    [31m[1m>[22m[39m[90m 137 |[39m     [36mawait[39m page[33m.[39mgetByRole([32m'button'[39m[33m,[39m { name[33m:[39m [35m/créer un sondage/i[39m })[33m.[39mclick()[33m;[39m
+     [90m     |[39m                                                                   [31m[1m^[22m[39m
+     [90m 138 |[39m     [36mawait[39m page[33m.[39mlocator([32m'#poll-title'[39m)[33m.[39mfill([32m'Session Twilight Imperium ?'[39m)[33m;[39m
+     [90m 139 |[39m     [36mawait[39m page[33m.[39mlocator([32m'#date-input'[39m)[33m.[39mfill([32m'2025-11-10T19:00'[39m)[33m;[39m
+     [90m 140 |[39m     [36mawait[39m page[33m.[39mgetByRole([32m'button'[39m[33m,[39m { name[33m:[39m [35m/ajouter/i[39m })[33m.[39mclick()[33m;[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/polls.spec.ts:137:67[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/polls-Poll-Creation-and-Ma-fa7f1-ultiple-polls-in-same-group-chromium/error-context.md[22m
+
+
+[1A[2K[31m  23) [chromium] › src/voting.spec.ts:54:7 › Poll Voting › should show which dates current user voted for [39m
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.poll-display').first().locator('.poll-option__button').first()[22m
+
+
+    [0m [90m 63 |[39m     [90m// Vote on a date[39m
+     [90m 64 |[39m     [36mconst[39m voteButtons [33m=[39m pollDisplay[33m.[39mlocator([32m'.poll-option__button'[39m)[33m;[39m
+    [31m[1m>[22m[39m[90m 65 |[39m     [36mawait[39m voteButtons[33m.[39mfirst()[33m.[39mclick()[33m;[39m
+     [90m    |[39m                               [31m[1m^[22m[39m
+     [90m 66 |[39m     
+     [90m 67 |[39m     [90m// Check for visual indicator (selected class or checkmark)[39m
+     [90m 68 |[39m     [90m// The UI should show which option is selected[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/voting.spec.ts:65:31[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/voting-Poll-Voting-should--73ca5-ates-current-user-voted-for-chromium/error-context.md[22m
+
+
+[1A[2K[31m  24) [chromium] › src/voting.spec.ts:104:7 › Poll Voting › should update vote counts in real-time [2m─[22m[39m
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.poll-display').first().locator('.poll-option__button').first()[22m
+
+
+    [0m [90m 113 |[39m     [90m// Vote on a date[39m
+     [90m 114 |[39m     [36mconst[39m voteButton [33m=[39m pollDisplay[33m.[39mlocator([32m'.poll-option__button'[39m)[33m.[39mfirst()[33m;[39m
+    [31m[1m>[22m[39m[90m 115 |[39m     [36mawait[39m voteButton[33m.[39mclick()[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 116 |[39m     
+     [90m 117 |[39m     [90m// Vote count should be visible in poll stats[39m
+     [90m 118 |[39m     [36mawait[39m expect(pollDisplay[33m.[39mgetByText([35m/\d+\s*vote/i[39m))[33m.[39mtoBeVisible()[33m;[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/voting.spec.ts:115:22[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/voting-Poll-Voting-should-update-vote-counts-in-real-time-chromium/error-context.md[22m
+
+
+[1A[2K[31m  25) [chromium] › src/voting.spec.ts:121:7 › Poll Voting › should allow voting on multiple dates in same poll [39m
+
+    [31mTest timeout of 30000ms exceeded.[39m
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('.poll-display').first().locator('.poll-option__button').first()[22m
+
+
+    [0m [90m 131 |[39m     [90m// This test verifies that voting works, even if multiple votes aren't supported[39m
+     [90m 132 |[39m     [36mconst[39m voteButton [33m=[39m pollDisplay[33m.[39mlocator([32m'.poll-option__button'[39m)[33m.[39mfirst()[33m;[39m
+    [31m[1m>[22m[39m[90m 133 |[39m     [36mawait[39m voteButton[33m.[39mclick()[33m;[39m
+     [90m     |[39m                      [31m[1m^[22m[39m
+     [90m 134 |[39m     
+     [90m 135 |[39m     [90m// Verify vote was registered[39m
+     [90m 136 |[39m     [36mawait[39m expect(pollDisplay[33m.[39mlocator([32m'.poll-option--selected'[39m))[33m.[39mtoBeVisible()[33m;[39m[0m
+    [2m    at /home/theop/barades/apps/frontend-e2e/src/voting.spec.ts:133:22[22m
+
+[2m    Error Context: ../../dist/.playwright/apps/frontend-e2e/test-output/voting-Poll-Voting-should--cd42c-multiple-dates-in-same-poll-chromium/error-context.md[22m
+
+
+[1A[2K[31m  25 failed[39m
+[31m    [chromium] › src/auth.spec.ts:8:7 › Authentication › should display login page with form elements [39m
+[31m    [chromium] › src/auth.spec.ts:75:7 › Authentication › should redirect to login when accessing protected route without auth [39m
+[31m    [chromium] › src/auth.spec.ts:83:7 › Authentication › should redirect to returnUrl after login [2m─[22m[39m
+[31m    [chromium] › src/groups.spec.ts:13:7 › Groups Navigation › should display groups list page [2m─────[22m[39m
+[31m    [chromium] › src/groups.spec.ts:23:7 › Groups Navigation › should display public groups for alice_dm [39m
+[31m    [chromium] › src/groups.spec.ts:55:7 › Groups Navigation › should navigate to group detail page [39m
+[31m    [chromium] › src/groups.spec.ts:68:7 › Groups Navigation › should display group details correctly [39m
+[31m    [chromium] › src/groups.spec.ts:83:7 › Groups Navigation › should display member count and creator info [39m
+[31m    [chromium] › src/groups.spec.ts:97:7 › Groups Navigation › should show recruiting badge when group is recruiting [39m
+[31m    [chromium] › src/groups.spec.ts:104:7 › Groups Navigation › should filter groups by playstyle [2m──[22m[39m
+[31m    [chromium] › src/groups.spec.ts:112:7 › Groups Navigation › should navigate back to groups list from detail page [39m
+[31m    [chromium] › src/polls.spec.ts:13:7 › Poll Creation and Management › should allow alice_dm to create a poll in Elite Strategy Players [39m
+[31m    [chromium] › src/polls.spec.ts:69:7 › Poll Creation and Management › should show poll creation button only for group members [39m
+[31m    [chromium] › src/polls.spec.ts:93:7 › Poll Creation and Management › should display existing poll in group [39m
+[31m    [chromium] › src/polls.spec.ts:105:7 › Poll Creation and Management › should show vote counts for poll dates [39m
+[31m    [chromium] › src/polls.spec.ts:118:7 › Poll Creation and Management › should validate poll form fields [39m
+[31m    [chromium] › src/polls.spec.ts:131:7 › Poll Creation and Management › should allow member to create multiple polls in same group [39m
+[31m    [chromium] › src/voting.spec.ts:13:7 › Poll Voting › should allow member to vote on poll date [2m──[22m[39m
+[31m    [chromium] › src/voting.spec.ts:33:7 › Poll Voting › should allow member to remove their vote [2m──[22m[39m
+[31m    [chromium] › src/voting.spec.ts:54:7 › Poll Voting › should show which dates current user voted for [39m
+[31m    [chromium] › src/voting.spec.ts:72:7 › Poll Voting › should display best date (most votes) [2m─────[22m[39m
+[31m    [chromium] › src/voting.spec.ts:85:7 › Poll Voting › should prevent non-member from voting [2m─────[22m[39m
+[31m    [chromium] › src/voting.spec.ts:104:7 › Poll Voting › should update vote counts in real-time [2m───[22m[39m
+[31m    [chromium] › src/voting.spec.ts:121:7 › Poll Voting › should allow voting on multiple dates in same poll [39m
+[31m    [chromium] › src/voting.spec.ts:139:7 › Poll Voting › should show vote details tooltip [2m─────────[22m[39m
+[32m  6 passed[39m[2m (51.4s)[22m
+Warning: command "playwright test --reporter=line" exited with non-zero status code
+
+
+ NX   Running target e2e for project frontend-e2e and 3 tasks it depends on failed
+
+Failed tasks:
+
+- frontend-e2e:e2e
+
+Hint: run the command with --verbose for more details.
+
+[1m[31mWatch error: Daemon closed the connection[39m[22m
+View structured, searchable error logs at https://nx.app/runs/TmdVq6xbgL
+
