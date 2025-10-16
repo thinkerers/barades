@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePollDto } from './dto/create-poll.dto';
 import { VotePollDto } from './dto/vote-poll.dto';
@@ -11,7 +11,10 @@ interface PollVotes {
 export class PollsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createPollDto: CreatePollDto) {
+  async create(createPollDto: CreatePollDto, userId: string) {
+    // Vérifier que l'utilisateur est membre du groupe
+    await this.checkGroupMembership(userId, createPollDto.groupId);
+
     return this.prisma.poll.create({
       data: {
         title: createPollDto.title,
@@ -28,6 +31,21 @@ export class PollsService {
         },
       },
     });
+  }
+
+  private async checkGroupMembership(userId: string, groupId: string) {
+    const membership = await this.prisma.groupMember.findUnique({
+      where: {
+        userId_groupId: {
+          userId,
+          groupId,
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new ForbiddenException('Vous devez être membre du groupe pour effectuer cette action');
+    }
   }
 
   async findAll(groupId?: string) {
@@ -120,13 +138,24 @@ export class PollsService {
     };
   }
 
-  async vote(id: string, votePollDto: VotePollDto) {
+  async vote(id: string, votePollDto: VotePollDto, authenticatedUserId: string) {
     const poll = await this.prisma.poll.findUnique({
       where: { id },
+      include: {
+        group: true,
+      },
     });
 
     if (!poll) {
       throw new Error('Poll not found');
+    }
+
+    // Vérifier que l'utilisateur est membre du groupe
+    await this.checkGroupMembership(authenticatedUserId, poll.groupId);
+
+    // S'assurer que l'utilisateur vote pour lui-même
+    if (votePollDto.userId !== authenticatedUserId) {
+      throw new ForbiddenException('Vous ne pouvez voter que pour vous-même');
     }
 
     // Verify that the date choice is valid
@@ -146,13 +175,24 @@ export class PollsService {
     });
   }
 
-  async removeVote(id: string, userId: string) {
+  async removeVote(id: string, userId: string, authenticatedUserId: string) {
     const poll = await this.prisma.poll.findUnique({
       where: { id },
+      include: {
+        group: true,
+      },
     });
 
     if (!poll) {
       throw new Error('Poll not found');
+    }
+
+    // Vérifier que l'utilisateur est membre du groupe
+    await this.checkGroupMembership(authenticatedUserId, poll.groupId);
+
+    // S'assurer que l'utilisateur supprime son propre vote
+    if (userId !== authenticatedUserId) {
+      throw new ForbiddenException('Vous ne pouvez supprimer que votre propre vote');
     }
 
     const currentVotes = poll.votes as PollVotes || {};

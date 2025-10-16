@@ -2,6 +2,7 @@
   <!-- Create Poll Section -->
   <div class="poll-widget__header" *ngIf="!poll">
     <button 
+      *ngIf="isMember"
       (click)="toggleCreateForm()" 
       class="btn btn--primary btn--small"
       type="button"
@@ -12,6 +13,9 @@
       </svg>
       {{ showCreateForm ? 'Annuler' : 'Créer un sondage' }}
     </button>
+    <p *ngIf="!isMember" class="poll-widget__message">
+      Vous devez être membre du groupe pour créer un sondage
+    </p>
   </div>
 
   <!-- Create Poll Form -->
@@ -107,7 +111,8 @@
           (click)="vote(date)" 
           class="poll-option__button"
           type="button"
-          [disabled]="getUserVote() === date"
+          [disabled]="getUserVote() === date || !isMember"
+          [title]="!isMember ? 'Vous devez être membre du groupe pour voter' : ''"
         >
           <div class="poll-option__content">
             <div class="poll-option__date">
@@ -153,7 +158,7 @@
       </div>
     </div>
 
-    <div *ngIf="getUserVote()" class="poll-actions">
+    <div *ngIf="getUserVote() && isMember" class="poll-actions">
       <button 
         (click)="removeMyVote()" 
         class="btn btn--secondary btn--small"
@@ -161,6 +166,11 @@
       >
         Retirer mon vote
       </button>
+    </div>
+
+    <!-- Not a member message -->
+    <div *ngIf="!isMember && poll" class="poll-widget__message poll-widget__message--info">
+      ℹ️ Vous devez être membre du groupe pour voter sur ce sondage
     </div>
   </div>
 </div>

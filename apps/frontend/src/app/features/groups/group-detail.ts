@@ -49,6 +49,7 @@ export class GroupDetailComponent implements OnInit {
   loading = true;
   error: string | null = null;
   currentUserId = 'user-1'; // TODO: Get from auth service
+  isMember = false;
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
@@ -68,6 +69,8 @@ export class GroupDetailComponent implements OnInit {
     this.groupsService.getGroup(id).subscribe({
       next: (data) => {
         this.group = data as GroupDetail;
+        // Vérifier si l'utilisateur est membre
+        this.isMember = this.group.members?.some(m => m.id === this.currentUserId) || false;
         this.loading = false;
       },
       error: (err) => {

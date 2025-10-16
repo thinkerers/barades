@@ -16,6 +16,7 @@ export class PollWidgetComponent {
   @Input() poll: Poll | null = null;
   @Input() groupId = '';
   @Input() currentUserId = '';
+  @Input() isMember = false;
   @Output() pollCreated = new EventEmitter<Poll>();
   @Output() voted = new EventEmitter<void>();
 
@@ -67,7 +68,13 @@ export class PollWidgetComponent {
       },
       error: (err) => {
         console.error('Error creating poll:', err);
-        this.error = 'Erreur lors de la création du sondage';
+        if (err.status === 403) {
+          this.error = 'Vous devez être membre du groupe pour créer un sondage';
+        } else if (err.status === 401) {
+          this.error = 'Vous devez être connecté pour créer un sondage';
+        } else {
+          this.error = 'Erreur lors de la création du sondage';
+        }
         this.creating = false;
       }
     });
@@ -85,6 +92,13 @@ export class PollWidgetComponent {
       },
       error: (err) => {
         console.error('Error voting:', err);
+        if (err.status === 403) {
+          alert('Vous devez être membre du groupe pour voter');
+        } else if (err.status === 401) {
+          alert('Vous devez être connecté pour voter');
+        } else {
+          alert('Erreur lors du vote');
+        }
       }
     });
   }
@@ -98,6 +112,13 @@ export class PollWidgetComponent {
       },
       error: (err) => {
         console.error('Error removing vote:', err);
+        if (err.status === 403) {
+          alert('Vous devez être membre du groupe pour supprimer votre vote');
+        } else if (err.status === 401) {
+          alert('Vous devez être connecté pour supprimer votre vote');
+        } else {
+          alert('Erreur lors de la suppression du vote');
+        }
       }
     });
   }

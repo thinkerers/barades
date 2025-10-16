@@ -69,6 +69,7 @@
         [poll]="activePoll"
         [groupId]="group.id"
         [currentUserId]="currentUserId"
+        [isMember]="isMember"
         (pollCreated)="onPollCreated($event)"
         (voted)="onVoted()"
       ></app-poll-widget>

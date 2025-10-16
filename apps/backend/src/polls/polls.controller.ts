@@ -1,15 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Request } from '@nestjs/common';
 import { PollsService } from './polls.service';
 import { CreatePollDto } from './dto/create-poll.dto';
 import { VotePollDto } from './dto/vote-poll.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('polls')
 export class PollsController {
   constructor(private readonly pollsService: PollsService) {}
 
   @Post()
-  create(@Body() createPollDto: CreatePollDto) {
-    return this.pollsService.create(createPollDto);
+  @UseGuards(JwtAuthGuard)
+  create(@Request() req, @Body() createPollDto: CreatePollDto) {
+    return this.pollsService.create(createPollDto, req.user.id);
   }
 
   @Get()
@@ -23,13 +25,15 @@ export class PollsController {
   }
 
   @Patch(':id/vote')
-  vote(@Param('id') id: string, @Body() votePollDto: VotePollDto) {
-    return this.pollsService.vote(id, votePollDto);
+  @UseGuards(JwtAuthGuard)
+  vote(@Request() req, @Param('id') id: string, @Body() votePollDto: VotePollDto) {
+    return this.pollsService.vote(id, votePollDto, req.user.id);
   }
 
   @Delete(':id/vote/:userId')
-  removeVote(@Param('id') id: string, @Param('userId') userId: string) {
-    return this.pollsService.removeVote(id, userId);
+  @UseGuards(JwtAuthGuard)
+  removeVote(@Request() req, @Param('id') id: string, @Param('userId') userId: string) {
+    return this.pollsService.removeVote(id, userId, req.user.id);
   }
 
   @Delete(':id')
