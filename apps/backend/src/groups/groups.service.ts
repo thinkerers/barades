@@ -46,17 +46,21 @@ export class GroupsService {
     });
 
     // Si pas d'utilisateur connecté, ne montrer que les groupes publics
-    if (!userId) {
-      return groups.filter(group => group.isPublic);
-    }
+    const filteredGroups = !userId
+      ? groups.filter(group => group.isPublic)
+      : groups.filter(group => {
+          // Si utilisateur connecté, montrer :
+          // - Tous les groupes publics
+          // - Les groupes privés dont il est membre
+          if (group.isPublic) return true;
+          return group.members.some(member => member.userId === userId);
+        });
 
-    // Si utilisateur connecté, montrer :
-    // - Tous les groupes publics
-    // - Les groupes privés dont il est membre
-    return groups.filter(group => {
-      if (group.isPublic) return true;
-      return group.members.some(member => member.userId === userId);
-    });
+    // Map recruiting to isRecruiting for frontend consistency
+    return filteredGroups.map(group => ({
+      ...group,
+      isRecruiting: group.recruiting,
+    }));
   }
 
   async findOne(id: string, userId?: string) {
@@ -103,7 +107,11 @@ export class GroupsService {
       }
     }
 
-    return group;
+    // Map recruiting to isRecruiting for frontend consistency
+    return {
+      ...group,
+      isRecruiting: group.recruiting,
+    };
   }
 
   update(_id: string, _updateGroupDto: UpdateGroupDto) {
