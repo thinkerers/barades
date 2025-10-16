@@ -5,7 +5,7 @@
   "scripts": {},
   "private": true,
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx apps/backend/prisma/seed.ts"
   },
   "dependencies": {
     "@angular/animations": "^20.2.4",

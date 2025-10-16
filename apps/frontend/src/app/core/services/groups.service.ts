@@ -9,6 +9,7 @@ export interface Group {
   description: string;
   playstyle: 'COMPETITIVE' | 'CASUAL' | 'STORY_DRIVEN' | 'SANDBOX';
   isRecruiting: boolean;
+  isPublic: boolean;
   maxMembers: number | null;
   createdAt: string;
   updatedAt: string;

@@ -94,6 +94,7 @@ model Group {
   playstyle   Playstyle
   description String
   recruiting  Boolean       @default(true)
+  isPublic    Boolean       @default(true)
   avatar      String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt

@@ -140,13 +140,38 @@ npx nx serve frontend
 
 ---
 
-## ✅ SCÉNARIO 4: GROUPES & POLL (10 min)
+## ✅ SCÉNARIO 4: GROUPES & POLL (15 min)
 
 ### Test Liste Groupes
 1. Aller sur "Groupes" (menu)
 2. ✅ Vérifier: 2+ groupes affichés
 3. ✅ Vérifier badges playstyle (Tactique, Narratif, etc.)
 4. Cliquer sur un groupe
+
+### Test Visibilité Groupes (NOUVEAU)
+1. **Test sans être connecté** :
+   - ✅ Vérifier: Seulement 2 groupes publics visibles
+   - ✅ Vérifier: "Brussels Adventurers Guild" affiché
+   - ✅ Vérifier: "Casual Board Gamers" affiché
+   - ✅ Vérifier: "Elite Strategy Players" N'EST PAS visible
+
+2. **Test connecté comme Bob** :
+   - Se connecter (email: bob@barades.com, password: password123)
+   - Aller sur "Groupes"
+   - ✅ Vérifier: Toujours seulement 2 groupes publics
+   - ✅ Vérifier: "Elite Strategy Players" toujours invisible (Bob n'est pas membre)
+
+3. **Test connecté comme Alice** :
+   - Se déconnecter et se connecter (email: alice@barades.com, password: password123)
+   - Aller sur "Groupes"
+   - ✅ Vérifier: 3 groupes affichés
+   - ✅ Vérifier: "Elite Strategy Players" visible avec badge "🔒 Privé"
+
+4. **Test connecté comme Dave** :
+   - Se déconnecter et se connecter (email: dave@barades.com, password: password123)
+   - Aller sur "Groupes"
+   - ✅ Vérifier: 3 groupes affichés
+   - ✅ Vérifier: Badge "🔒 Privé" sur "Elite Strategy Players"
 
 ### Test Détail Groupe
 1. ✅ Vérifier affichage:

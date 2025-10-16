@@ -8,9 +8,14 @@
   <!-- Header -->
   <header class="group-card__header">
     <h3 class="group-card__title">{{ group.name }}</h3>
-    <span class="group-card__playstyle" [ngClass]="'playstyle--' + getPlaystyleColor(group.playstyle)">
-      {{ getPlaystyleLabel(group.playstyle) }}
-    </span>
+    <div class="group-card__badges">
+      <span class="group-card__playstyle" [ngClass]="'playstyle--' + getPlaystyleColor(group.playstyle)">
+        {{ getPlaystyleLabel(group.playstyle) }}
+      </span>
+      <span *ngIf="!group.isPublic" class="group-card__visibility">
+        🔒 Privé
+      </span>
+    </div>
   </header>
 
   <!-- Status Badge -->

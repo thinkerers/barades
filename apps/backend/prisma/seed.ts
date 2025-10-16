@@ -276,6 +276,7 @@ async function main() {
       playstyle: Playstyle.STORY_DRIVEN,
       description: 'A community of tabletop RPG enthusiasts in Brussels. We organize weekly sessions and one-shots. All experience levels welcome!',
       recruiting: true,
+      isPublic: true, // Public group - visible to everyone
       avatar: 'https://picsum.photos/seed/adventurers/200',
       creatorId: alice.id,
     },
@@ -289,12 +290,27 @@ async function main() {
       playstyle: Playstyle.CASUAL,
       description: 'Relaxed group for board game lovers. We meet every weekend to try new games and have fun. No competitive pressure!',
       recruiting: true,
+      isPublic: true, // Public group - visible to everyone
       avatar: 'https://picsum.photos/seed/boardgamers/200',
       creatorId: bob.id,
     },
   });
 
-  console.log(`✅ Created ${2} groups\n`);
+  const elitePlayersGroup = await prisma.group.create({
+    data: {
+      name: 'Elite Strategy Players',
+      games: ['Twilight Imperium', 'Gloomhaven', 'Mage Knight'],
+      location: 'Brussels',
+      playstyle: Playstyle.COMPETITIVE,
+      description: 'Private group for experienced players. Invitation only. We focus on complex strategy games and competitive play.',
+      recruiting: false,
+      isPublic: false, // Private group - only visible to members
+      avatar: 'https://picsum.photos/seed/elite/200',
+      creatorId: dave.id,
+    },
+  });
+
+  console.log(`✅ Created ${3} groups (2 public, 1 private)\n`);
 
   // ============================================
   // 6. Create Group Members
@@ -303,19 +319,23 @@ async function main() {
 
   await prisma.groupMember.createMany({
     data: [
-      // Brussels Adventurers Guild
+      // Brussels Adventurers Guild (public)
       { userId: alice.id, groupId: adventurersGroup.id, role: GroupRole.ADMIN },
       { userId: carol.id, groupId: adventurersGroup.id, role: GroupRole.MEMBER },
       { userId: eve.id, groupId: adventurersGroup.id, role: GroupRole.MEMBER },
 
-      // Casual Board Gamers
+      // Casual Board Gamers (public)
       { userId: bob.id, groupId: boardGamersGroup.id, role: GroupRole.ADMIN },
       { userId: carol.id, groupId: boardGamersGroup.id, role: GroupRole.MEMBER },
       { userId: dave.id, groupId: boardGamersGroup.id, role: GroupRole.MEMBER },
+
+      // Elite Strategy Players (private - only dave and alice are members)
+      { userId: dave.id, groupId: elitePlayersGroup.id, role: GroupRole.ADMIN },
+      { userId: alice.id, groupId: elitePlayersGroup.id, role: GroupRole.MEMBER },
     ],
   });
 
-  console.log(`✅ Created ${6} group memberships\n`);
+  console.log(`✅ Created ${8} group memberships\n`);
 
   // ============================================
   // 7. Create Reservations
@@ -423,8 +443,8 @@ async function main() {
    • ${5} Users (alice, bob, carol, dave, eve)
    • ${3} Locations (Brussels Game Store, Café Joystick, Online)
    • ${5} Sessions (D&D, Catan, Poker, Pathfinder, Wingspan)
-   • ${2} Groups (Adventurers Guild, Casual Board Gamers)
-   • ${6} Group Memberships
+   • ${3} Groups (2 public: Adventurers Guild, Casual Board Gamers | 1 private: Elite Strategy Players)
+   • ${8} Group Memberships
    • ${10} Reservations (mix of pending/confirmed)
    • ${1} Poll
 
@@ -434,6 +454,11 @@ async function main() {
    Email: carol@barades.com | Password: password123
    Email: dave@barades.com  | Password: password123
    Email: eve@barades.com   | Password: password123
+
+🔒 Private Group Access:
+   • "Elite Strategy Players" is PRIVATE - only visible to members (dave, alice)
+   • Login as bob/carol/eve to see that this group is hidden
+   • Login as alice/dave to access it
   `);
 }
 
