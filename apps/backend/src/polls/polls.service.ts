@@ -34,12 +34,10 @@ export class PollsService {
   }
 
   private async checkGroupMembership(userId: string, groupId: string) {
-    const membership = await this.prisma.groupMember.findUnique({
+    const membership = await this.prisma.groupMember.findFirst({
       where: {
-        userId_groupId: {
-          userId,
-          groupId,
-        },
+        userId,
+        groupId,
       },
     });
 
