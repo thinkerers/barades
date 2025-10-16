@@ -94,8 +94,9 @@ test.describe('Groups Navigation', () => {
     // Check for members section heading (more specific than /membre/i which matches multiple elements)
     await expect(page.getByRole('heading', { name: /membres/i })).toBeVisible();
     
-    // Check creator (alice_dm created Brussels Adventurers Guild)
-    await expect(page.getByText('alice_dm')).toBeVisible();
+    // Check creator (alice_dm) is listed in members section
+    // Note: alice_dm appears in top-bar too (logged in user), so scope to member-card
+    await expect(page.locator('.member-card', { hasText: 'alice_dm' })).toBeVisible();
   });
 
   test('should show recruiting badge when group is recruiting', async ({ page }) => {
