@@ -1,13 +1,12 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { SessionsService, Session } from '../../core/services/sessions.service';
 import { SessionCardComponent } from './session-card';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SessionCardComponent],
+  imports: [CommonModule, FormsModule, SessionCardComponent],
   selector: 'app-sessions-list',
   templateUrl: './sessions-list.html',
   styleUrl: './sessions-list.css',

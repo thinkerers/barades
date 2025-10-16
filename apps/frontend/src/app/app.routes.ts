@@ -2,6 +2,7 @@ import { Route } from '@angular/router';
 import { AppLayout } from './core/layouts/app-layout';
 import { HomePage } from './features/home/home-page';
 import { SessionsListPage } from './features/sessions/sessions-list';
+import { SessionCreateComponent } from './features/sessions/session-create';
 import { LocationsListComponent } from './features/locations/locations-list';
 import { GroupsListComponent } from './features/groups/groups-list';
 import { GroupDetailComponent } from './features/groups/group-detail';
@@ -30,6 +31,10 @@ export const appRoutes: Route[] = [
 			{
 				path: 'sessions',
 				component: SessionsListPage,
+			},
+			{
+				path: 'sessions/new',
+				component: SessionCreateComponent,
 			},
 			{
 				path: 'locations',

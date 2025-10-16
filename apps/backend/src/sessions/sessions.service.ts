@@ -7,9 +7,34 @@ import { PrismaService } from '../prisma/prisma.service';
 export class SessionsService {
   constructor(private prisma: PrismaService) {}
 
-  create(_createSessionDto: CreateSessionDto) {
-    // TODO: Implement with proper Zod validation
-    throw new Error('Method not implemented yet');
+  create(createSessionDto: CreateSessionDto) {
+    return this.prisma.session.create({
+      data: {
+        game: createSessionDto.game,
+        title: createSessionDto.title,
+        description: createSessionDto.description,
+        date: new Date(createSessionDto.date),
+        recurrenceRule: createSessionDto.recurrenceRule,
+        recurrenceEndDate: createSessionDto.recurrenceEndDate ? new Date(createSessionDto.recurrenceEndDate) : null,
+        online: createSessionDto.online,
+        level: createSessionDto.level,
+        playersMax: createSessionDto.playersMax,
+        playersCurrent: 0,
+        tagColor: createSessionDto.tagColor,
+        hostId: createSessionDto.hostId,
+        locationId: createSessionDto.locationId,
+      },
+      include: {
+        host: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
+        location: true,
+      },
+    });
   }
 
   findAll() {
