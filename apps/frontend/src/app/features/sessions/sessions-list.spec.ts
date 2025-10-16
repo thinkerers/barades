@@ -5,11 +5,19 @@ import { of, throwError } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { SessionCardComponent } from './session-card';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { AuthService } from '../../core/services/auth.service';
 
 describe('SessionsListPage', () => {
   let component: SessionsListPage;
   let fixture: ComponentFixture<SessionsListPage>;
   let mockSessionsService: jest.Mocked<SessionsService>;
+
+  const mockAuthService = {
+    getCurrentUser: jest.fn().mockReturnValue({ id: 'user-1', username: 'TestUser' }),
+    isAuthenticated: jest.fn().mockReturnValue(true)
+  };
 
   const mockSessions: Session[] = [
     {
@@ -137,7 +145,10 @@ describe('SessionsListPage', () => {
       imports: [SessionsListPage, SessionCardComponent, FormsModule],
       providers: [
         { provide: SessionsService, useValue: mockSessionsService },
-        provideRouter([])
+        { provide: AuthService, useValue: mockAuthService },
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting()
       ]
     }).compileComponents();
 
