@@ -13,10 +13,11 @@ describe('GroupCardComponent', () => {
     description: 'Groupe dédié aux campagnes épiques et narratives',
     playstyle: 'STORY_DRIVEN',
     isRecruiting: true,
+    isPublic: true,
     maxMembers: 6,
     creatorId: '1',
-    createdAt: new Date('2025-01-01T00:00:00Z'),
-    updatedAt: new Date('2025-01-01T00:00:00Z'),
+    createdAt: '2025-01-01T00:00:00.000Z',
+    updatedAt: '2025-01-01T00:00:00.000Z',
     creator: {
       id: '1',
       username: 'john_doe',
