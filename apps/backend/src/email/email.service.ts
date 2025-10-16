@@ -27,6 +27,15 @@ export class EmailService {
   }
 
   /**
+   * Retourne l'adresse email à utiliser comme expéditeur
+   * Utilise onboarding@resend.dev en développement si le domaine n'est pas vérifié
+   */
+  private getFromAddress(): string {
+    // Pour tester immédiatement avant que le DNS se propage
+    return process.env['RESEND_FROM_EMAIL'] || 'Barades <onboarding@resend.dev>';
+  }
+
+  /**
    * Envoie un email de confirmation de réservation au participant
    */
   async sendReservationConfirmation(data: ReservationEmailData): Promise<void> {
@@ -43,8 +52,8 @@ export class EmailService {
       }).format(data.sessionDate);
 
       await this.resend.emails.send({
-        from: 'Barades <noreply@send.barades.com>', // Domaine vérifié ✅
-        to: data.userEmail,
+        from: this.getFromAddress(),
+        to: [data.userEmail], // Tableau requis par Resend
         subject: `✅ Réservation confirmée - ${data.sessionTitle}`,
         html: this.getReservationConfirmationTemplate(data, formattedDate),
       });
@@ -73,8 +82,8 @@ export class EmailService {
       }).format(data.sessionDate);
 
       await this.resend.emails.send({
-        from: 'Barades <noreply@send.barades.com>', // Domaine vérifié ✅
-        to: data.hostEmail,
+        from: this.getFromAddress(),
+        to: [data.hostEmail], // Tableau requis par Resend
         subject: `📬 Nouveau participant - ${data.sessionTitle}`,
         html: this.getHostNotificationTemplate(data, formattedDate),
       });
@@ -103,8 +112,8 @@ export class EmailService {
       }).format(data.sessionDate);
 
       await this.resend.emails.send({
-        from: 'Barades <noreply@send.barades.com>', // Domaine vérifié ✅
-        to: data.userEmail,
+        from: this.getFromAddress(),
+        to: [data.userEmail], // Tableau requis par Resend
         subject: `⏰ Rappel - Session demain : ${data.sessionTitle}`,
         html: this.getSessionReminderTemplate(data, formattedDate),
       });
