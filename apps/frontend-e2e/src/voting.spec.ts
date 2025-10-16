@@ -13,12 +13,15 @@ test.describe('Poll Voting', () => {
   test('should allow member to vote on poll date', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild (has existing poll)
     await page.goto('/groups');
-    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
+    
+    // Find Brussels Adventurers Guild card specifically (has poll from seed data)
+    const brusselsCard = page.locator('.group-card', { hasText: 'Brussels Adventurers Guild' });
+    await brusselsCard.getByRole('link', { name: 'Voir les détails' }).click();
     
     // Wait for page to load
     await expect(page.locator('.group-detail__title')).toBeVisible();
     
-    // Find the poll display section
+    // Wait for poll to load
     const pollDisplay = page.locator('.poll-display').first();
     await expect(pollDisplay).toBeVisible();
     
@@ -33,9 +36,14 @@ test.describe('Poll Voting', () => {
   test('should allow member to remove their vote', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
-    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
+    
+    const brusselsCard = page.locator('.group-card', { hasText: 'Brussels Adventurers Guild' });
+    await brusselsCard.getByRole('link', { name: 'Voir les détails' }).click();
     
     await expect(page.locator('.group-detail__title')).toBeVisible();
+    
+    // Wait for poll to load
+    await expect(page.locator('.poll-display').first()).toBeVisible();
     
     const pollDisplay = page.locator('.poll-display').first();
     
@@ -54,9 +62,14 @@ test.describe('Poll Voting', () => {
   test('should show which dates current user voted for', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
-    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
+    
+    const brusselsCard = page.locator('.group-card', { hasText: 'Brussels Adventurers Guild' });
+    await brusselsCard.getByRole('link', { name: 'Voir les détails' }).click();
     
     await expect(page.locator('.group-detail__title')).toBeVisible();
+    
+    // Wait for poll to load
+    await expect(page.locator('.poll-display').first()).toBeVisible();
     
     const pollDisplay = page.locator('.poll-display').first();
     
@@ -72,9 +85,14 @@ test.describe('Poll Voting', () => {
   test('should display best date (most votes)', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
-    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
+    
+    const brusselsCard = page.locator('.group-card', { hasText: 'Brussels Adventurers Guild' });
+    await brusselsCard.getByRole('link', { name: 'Voir les détails' }).click();
     
     await expect(page.locator('.group-detail__title')).toBeVisible();
+    
+    // Wait for poll to load
+    await expect(page.locator('.poll-display').first()).toBeVisible();
     
     const pollDisplay = page.locator('.poll-display').first();
     
@@ -93,7 +111,9 @@ test.describe('Poll Voting', () => {
     
     // Navigate to Brussels Adventurers Guild (public group, can view but not vote)
     await page.goto('/groups');
-    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
+    
+    const brusselsCard = page.locator('.group-card', { hasText: 'Brussels Adventurers Guild' });
+    await brusselsCard.getByRole('link', { name: 'Voir les détails' }).click();
     
     await expect(page.locator('.group-detail__title')).toBeVisible();
     
@@ -108,9 +128,14 @@ test.describe('Poll Voting', () => {
   test('should update vote counts in real-time', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
-    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
+    
+    const brusselsCard = page.locator('.group-card', { hasText: 'Brussels Adventurers Guild' });
+    await brusselsCard.getByRole('link', { name: 'Voir les détails' }).click();
     
     await expect(page.locator('.group-detail__title')).toBeVisible();
+    
+    // Wait for poll to load
+    await expect(page.locator('.poll-display').first()).toBeVisible();
     
     const pollDisplay = page.locator('.poll-display').first();
     
