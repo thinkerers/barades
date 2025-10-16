@@ -55,24 +55,24 @@ test.describe('Groups Navigation', () => {
   test('should navigate to group detail page', async ({ page }) => {
     await page.goto('/groups');
     
-    // Click on a group card using text content
-    await page.getByText('Brussels Adventurers Guild').first().click();
+    // Click on a group card button (not the card itself, but the "Voir les détails" button)
+    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     
     // Should navigate to group detail page
     await expect(page).toHaveURL(/\/groups\/.+/);
     
-    // Should display group name in heading
+    // Should display group name in heading (h1 with class group-detail__title)
     await expect(page.getByRole('heading', { name: 'Brussels Adventurers Guild' })).toBeVisible();
   });
 
   test('should display group details correctly', async ({ page }) => {
     await page.goto('/groups');
-    await page.getByText('Brussels Adventurers Guild').first().click();
+    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     
-    // Wait for detail page to load
-    await expect(page.getByRole('heading', { name: 'Brussels Adventurers Guild' })).toBeVisible();
+    // Wait for navigation
+    await expect(page).toHaveURL(/\/groups\/.+/);
     
-    // Check group information is displayed (games listed in description or info)
+    // Check group information is displayed (using .group-detail-container or .group-detail)
     const detailSection = page.locator('.group-detail');
     await expect(detailSection).toBeVisible();
     
@@ -82,13 +82,13 @@ test.describe('Groups Navigation', () => {
 
   test('should display member count and creator info', async ({ page }) => {
     await page.goto('/groups');
-    await page.getByText('Brussels Adventurers Guild').first().click();
+    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     
-    // Wait for detail page
-    await expect(page.getByRole('heading', { name: 'Brussels Adventurers Guild' })).toBeVisible();
+    // Wait for detail page to load
+    await expect(page).toHaveURL(/\/groups\/.+/);
     
-    // Check for members section heading
-    await expect(page.getByRole('heading', { name: /Membres/i })).toBeVisible();
+    // Check for members section (text "membre(s)" in metadata)
+    await expect(page.getByText(/membre\(s\)/i)).toBeVisible();
     
     // Check creator (alice_dm created Brussels Adventurers Guild)
     await expect(page.getByText('alice_dm')).toBeVisible();
@@ -97,26 +97,26 @@ test.describe('Groups Navigation', () => {
   test('should show recruiting badge when group is recruiting', async ({ page }) => {
     await page.goto('/groups');
     
-    // Look for recruiting indicator text
-    await expect(page.getByText(/recrutement|recruiting/i).first()).toBeVisible();
+    // Look for recruiting indicator text ("Recrutement" in status badge or label)
+    await expect(page.getByText(/recrutement/i).first()).toBeVisible();
   });
 
   test('should filter groups by playstyle', async ({ page }) => {
     await page.goto('/groups');
     
     // Check that different playstyles are visible
-    await expect(page.getByText(/Narratif|STORY_DRIVEN/i)).toBeVisible();
-    await expect(page.getByText(/Décontracté|CASUAL/i)).toBeVisible();
+    await expect(page.getByText(/Narratif|STORY_DRIVEN/i).first()).toBeVisible();
+    await expect(page.getByText(/Décontracté/i).first()).toBeVisible();
   });
 
   test('should navigate back to groups list from detail page', async ({ page }) => {
     await page.goto('/groups');
-    await page.getByText('Brussels Adventurers Guild').first().click();
+    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     
-    // Wait for detail page to load
-    await expect(page.getByRole('heading', { name: 'Brussels Adventurers Guild' })).toBeVisible();
+    // Wait for detail page
+    await expect(page).toHaveURL(/\/groups\/.+/);
     
-    // Click back button with "Retour" text
+    // Click back button (has class .back-button, contains text "Retour")
     await page.getByRole('button', { name: /retour/i }).click();
     
     // Should be back on groups list

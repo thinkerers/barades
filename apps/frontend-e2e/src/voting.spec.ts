@@ -13,7 +13,7 @@ test.describe('Poll Voting', () => {
   test('should allow member to vote on poll date', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild (has existing poll)
     await page.goto('/groups');
-    await page.getByText('Brussels Adventurers Guild').first().click();
+    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     
     // Wait for page to load
     await expect(page.getByRole('heading', { name: 'Brussels Adventurers Guild' })).toBeVisible();
@@ -33,7 +33,7 @@ test.describe('Poll Voting', () => {
   test('should allow member to remove their vote', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
-    await page.getByText('Brussels Adventurers Guild').first().click();
+    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     
     await expect(page.getByRole('heading', { name: 'Brussels Adventurers Guild' })).toBeVisible();
     
@@ -54,7 +54,7 @@ test.describe('Poll Voting', () => {
   test('should show which dates current user voted for', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
-    await page.getByText('Brussels Adventurers Guild').first().click();
+    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     
     await expect(page.getByRole('heading', { name: 'Brussels Adventurers Guild' })).toBeVisible();
     
@@ -72,7 +72,7 @@ test.describe('Poll Voting', () => {
   test('should display best date (most votes)', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
-    await page.getByText('Brussels Adventurers Guild').first().click();
+    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     
     await expect(page.getByRole('heading', { name: 'Brussels Adventurers Guild' })).toBeVisible();
     
@@ -93,7 +93,7 @@ test.describe('Poll Voting', () => {
     
     // Navigate to Brussels Adventurers Guild (public group, can view but not vote)
     await page.goto('/groups');
-    await page.getByText('Brussels Adventurers Guild').first().click();
+    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     
     await expect(page.getByRole('heading', { name: 'Brussels Adventurers Guild' })).toBeVisible();
     
@@ -104,7 +104,7 @@ test.describe('Poll Voting', () => {
   test('should update vote counts in real-time', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
-    await page.getByText('Brussels Adventurers Guild').first().click();
+    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     
     await expect(page.getByRole('heading', { name: 'Brussels Adventurers Guild' })).toBeVisible();
     
@@ -121,7 +121,7 @@ test.describe('Poll Voting', () => {
   test('should allow voting on multiple dates in same poll', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
-    await page.getByText('Brussels Adventurers Guild').first().click();
+    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     
     await expect(page.getByRole('heading', { name: 'Brussels Adventurers Guild' })).toBeVisible();
     
@@ -139,7 +139,7 @@ test.describe('Poll Voting', () => {
   test('should show vote details tooltip', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
-    await page.getByText('Brussels Adventurers Guild').first().click();
+    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
     
     await expect(page.getByRole('heading', { name: 'Brussels Adventurers Guild' })).toBeVisible();
     
