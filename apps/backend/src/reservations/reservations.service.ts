@@ -3,7 +3,6 @@ import { CreateReservationDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService, ReservationEmailData } from '../email/email.service';
-import { ReservationStatus as PrismaReservationStatus } from '@prisma/client';
 
 @Injectable()
 export class ReservationsService {
@@ -23,7 +22,6 @@ export class ReservationsService {
       include: {
         host: true,
         location: true,
-        group: true,
         reservations: true,
       },
     });
@@ -58,7 +56,7 @@ export class ReservationsService {
         sessionId,
         userId,
         message,
-        status: PrismaReservationStatus.CONFIRMED,
+        status: 'CONFIRMED',
       },
       include: {
         user: {
@@ -75,7 +73,6 @@ export class ReservationsService {
           include: {
             host: true,
             location: true,
-            group: true,
           },
         },
       },
@@ -99,13 +96,13 @@ export class ReservationsService {
       sessionDate: session.date,
       locationName: session.location?.name || 'En ligne',
       locationAddress: session.location?.address 
-        ? `${session.location.address}, ${session.location.postalCode} ${session.location.city}` 
+        ? `${session.location.address}, ${session.location.city}` 
         : 'Session en ligne',
       hostName: session.host.firstName && session.host.lastName
         ? `${session.host.firstName} ${session.host.lastName}`
         : session.host.username,
       hostEmail: session.host.email,
-      groupName: session.group?.name || 'Barades',
+      groupName: 'Barades', // Pas de relation group dans le schéma actuel
     };
 
     // 8. Envoyer les emails (en parallèle, sans bloquer)
@@ -128,7 +125,6 @@ export class ReservationsService {
             include: {
               host: true,
               location: true,
-              group: true,
             },
           },
         },
@@ -178,7 +174,6 @@ export class ReservationsService {
           include: {
             host: true,
             location: true,
-            group: true,
           },
         },
       },
@@ -215,7 +210,7 @@ export class ReservationsService {
 
     // Décrémenter le nombre de joueurs
     await this.prisma.session.update({
-      where: { id: reservation.session.id },
+      where: { id: reservation.sessionId },
       data: {
         playersCurrent: { decrement: 1 },
       },
