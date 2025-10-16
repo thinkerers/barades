@@ -1,4 +1,4 @@
-import { Component, Input, inject } from '@angular/core';
+import { Component, Input, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Session } from '../../core/services/sessions.service';
@@ -13,7 +13,7 @@ import { Router } from '@angular/router';
   templateUrl: './session-card.html',
   styleUrl: './session-card.css',
 })
-export class SessionCardComponent {
+export class SessionCardComponent implements OnInit {
   @Input({ required: true }) session!: Session;
 
   private reservationsService = inject(ReservationsService);
@@ -22,6 +22,11 @@ export class SessionCardComponent {
 
   loading = false;
   error: string | null = null;
+  isRegistered = false;
+
+  ngOnInit(): void {
+    this.checkIfRegistered();
+  }
 
   getTagColorClass(color: string): string {
     const colorMap: Record<string, string> = {
@@ -71,6 +76,28 @@ export class SessionCardComponent {
     return 'status--available';
   }
 
+  /**
+   * Check if the current user is already registered for this session
+   */
+  checkIfRegistered(): void {
+    const currentUser = this.authService.getCurrentUser();
+    if (!currentUser) {
+      this.isRegistered = false;
+      return;
+    }
+
+    // Load user's reservations and check if one matches this session
+    this.reservationsService.getReservations(currentUser.id).subscribe({
+      next: (reservations) => {
+        this.isRegistered = reservations.some(r => r.sessionId === this.session.id);
+      },
+      error: (err) => {
+        console.error('Error checking registration status:', err);
+        this.isRegistered = false;
+      }
+    });
+  }
+
   onReserve(): void {
     // Vérifier si l'utilisateur est connecté
     const currentUser = this.authService.getCurrentUser();
@@ -95,8 +122,9 @@ export class SessionCardComponent {
       .subscribe({
         next: (reservation) => {
           console.log('Réservation créée:', reservation);
-          // Mettre à jour le compteur local
+          // Mettre à jour le compteur local et le statut d'inscription
           this.session.playersCurrent++;
+          this.isRegistered = true;
           this.loading = false;
           // TODO: Afficher un message de succès (toast/snackbar)
           alert('✅ Réservation confirmée ! Vous avez reçu un email de confirmation.');

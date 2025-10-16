@@ -11,10 +11,15 @@
     <span class="session-card__game">{{ session.game }}</span>
   </header>
 
-  <!-- Status Badge -->
-  <div class="session-card__status" [ngClass]="getStatusClass()">
-    <span *ngIf="!isFull()">{{ getAvailableSpots() }} place(s) disponible(s)</span>
-    <span *ngIf="isFull()">Complet</span>
+  <!-- Status Badges -->
+  <div class="session-card__badges">
+    <div class="session-card__status" [ngClass]="getStatusClass()">
+      <span *ngIf="!isFull()">{{ getAvailableSpots() }} place(s) disponible(s)</span>
+      <span *ngIf="isFull()">Complet</span>
+    </div>
+    <div class="session-card__registered" *ngIf="isRegistered">
+      ✓ Inscrit
+    </div>
   </div>
 
   <!-- Details -->
@@ -80,11 +85,13 @@
     <button 
       type="button" 
       class="button button--primary"
-      [disabled]="isFull() || loading"
+      [disabled]="isFull() || loading || isRegistered"
+      [class.button--success]="isRegistered"
       (click)="onReserve()"
     >
       <span *ngIf="loading">Réservation...</span>
-      <span *ngIf="!loading">{{ isFull() ? 'Complet' : 'Réserver ma place' }}</span>
+      <span *ngIf="!loading && isRegistered">✓ Déjà inscrit</span>
+      <span *ngIf="!loading && !isRegistered">{{ isFull() ? 'Complet' : 'Réserver ma place' }}</span>
     </button>
     <a 
       [routerLink]="['/sessions', session.id]"

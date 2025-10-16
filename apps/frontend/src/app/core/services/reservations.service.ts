@@ -45,8 +45,8 @@ export class ReservationsService {
   }
 
   getReservations(userId?: string): Observable<Reservation[]> {
-    const params = userId ? { userId } : {};
-    return this.http.get<Reservation[]>(this.apiUrl, { params });
+    const options = userId ? { params: { userId } } : {};
+    return this.http.get<Reservation[]>(this.apiUrl, options);
   }
 
   getReservation(id: string): Observable<Reservation> {

@@ -96,6 +96,14 @@
   width: fit-content;
 }
 
+/* Status Badges Container */
+.session-card__badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 /* Status Badge */
 .session-card__status {
   display: inline-block;
@@ -120,6 +128,19 @@
 .status--full {
   background: #fed7d7;
   color: #742a2a;
+}
+
+/* Registered Badge */
+.session-card__registered {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  background: #bee3f8;
+  color: #2c5282;
+  width: fit-content;
 }
 
 /* Details */
@@ -199,6 +220,16 @@
   background: #cbd5e0;
   color: #a0aec0;
   cursor: not-allowed;
+}
+
+.button--success {
+  background: #38a169 !important;
+  color: white !important;
+  cursor: default !important;
+}
+
+.button--success:hover {
+  background: #38a169 !important;
 }
 
 .button--secondary {
