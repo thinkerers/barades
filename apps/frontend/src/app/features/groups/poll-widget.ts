@@ -15,7 +15,7 @@ export class PollWidgetComponent {
 
   @Input() poll: Poll | null = null;
   @Input() groupId = '';
-  @Input() currentUserId = '';
+  @Input() currentUserId: string | null = null;
   @Input() isMember = false;
   @Output() pollCreated = new EventEmitter<Poll>();
   @Output() voted = new EventEmitter<void>();
@@ -81,7 +81,7 @@ export class PollWidgetComponent {
   }
 
   vote(dateChoice: string): void {
-    if (!this.poll) return;
+    if (!this.poll || !this.currentUserId) return;
 
     this.pollsService.vote(this.poll.id, {
       userId: this.currentUserId,
@@ -104,7 +104,7 @@ export class PollWidgetComponent {
   }
 
   removeMyVote(): void {
-    if (!this.poll) return;
+    if (!this.poll || !this.currentUserId) return;
 
     this.pollsService.removeVote(this.poll.id, this.currentUserId).subscribe({
       next: () => {
@@ -124,7 +124,7 @@ export class PollWidgetComponent {
   }
 
   getUserVote(): string | null {
-    if (!this.poll || !this.poll.votes) return null;
+    if (!this.poll || !this.poll.votes || !this.currentUserId) return null;
     return this.poll.votes[this.currentUserId] || null;
   }
 
