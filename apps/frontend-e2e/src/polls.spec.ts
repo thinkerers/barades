@@ -1,26 +1,32 @@
 import { test, expect } from './fixtures/auth.fixture';
+import { cleanupEliteStrategyPlayersPolls } from './helpers/api-cleanup';
 
 test.describe('Poll Creation and Management', () => {
+  test.beforeEach(async ({ authenticatedPage: page }) => {
+    // Clean up any existing polls in Elite Strategy Players to ensure deterministic tests
+    await cleanupEliteStrategyPlayersPolls(page);
+  });
+
   test('should allow alice_dm to create a poll in Brussels Adventurers Guild', async ({ authenticatedPage: page }) => {
     // Navigate to groups
     await page.goto('/groups');
     
     // Brussels Adventurers Guild already has a poll from seed data
-    // We need to go to Elite Strategy Players instead (alice is member, no poll)
+    // We need to go to Elite Strategy Players instead (alice is member, cleaned by beforeEach)
     const eliteCard = page.locator('.group-card', { hasText: 'Elite Strategy Players' });
     await eliteCard.getByRole('link', { name: 'Voir les détails' }).click();
     
     // Wait for group detail page to load
     await expect(page.locator('.group-detail__title')).toBeVisible();
     
-    // Wait for poll widget to load
-    await expect(page.locator('.poll-widget')).toBeVisible();
+    // Wait for poll widget to load using data-testid
+    await expect(page.getByTestId('poll-widget')).toBeVisible();
     
-    // Click the create poll button (text: "Créer un sondage")
-    await page.getByRole('button', { name: /créer un sondage/i }).click();
+    // Click the create poll button using data-testid
+    await page.getByTestId('create-poll-button').click();
     
-    // Fill in poll form - use the actual input id
-    await page.locator('#poll-title').fill('Meilleure date pour session Gloomhaven ?');
+    // Fill in poll form using data-testid
+    await page.getByTestId('poll-title-input').fill('Meilleure date pour session Gloomhaven ?');
     
     // Add first date using datetime-local input
     await page.locator('#date-input').fill('2025-10-30T19:00');
@@ -63,9 +69,9 @@ test.describe('Poll Creation and Management', () => {
     // Wait for page to load
     await expect(page.locator('.group-detail__title')).toBeVisible();
     
-    // Should see poll widget with create button
-    await expect(page.locator('.poll-widget')).toBeVisible();
-    await expect(page.getByRole('button', { name: /créer un sondage/i })).toBeVisible();
+    // Should see poll widget with create button using data-testid
+    await expect(page.getByTestId('poll-widget')).toBeVisible();
+    await expect(page.getByTestId('create-poll-button')).toBeVisible();
     
     // Login as dave_poker (not a member of Elite Strategy Players)
     await loginAs(page, 'dave_poker');
@@ -116,21 +122,21 @@ test.describe('Poll Creation and Management', () => {
   });
 
   test('should validate poll form fields', async ({ authenticatedPage: page }) => {
-    // Navigate to Elite Strategy Players (no existing poll, alice is member)
+    // Navigate to Elite Strategy Players (cleaned by beforeEach, alice is member)
     await page.goto('/groups');
     
     const eliteCard = page.locator('.group-card', { hasText: 'Elite Strategy Players' });
     await eliteCard.getByRole('link', { name: 'Voir les détails' }).click();
     
-    // Click create poll button
-    await page.getByRole('button', { name: /créer un sondage/i }).click();
+    // Click create poll button using data-testid
+    await page.getByTestId('create-poll-button').click();
     
     // Try to submit without filling fields - button should be disabled
     const submitButton = page.getByRole('button', { name: /créer le sondage/i });
     await expect(submitButton).toBeDisabled();
     
-    // Fill title but no dates - still disabled
-    await page.locator('#poll-title').fill('Test Poll');
+    // Fill title but no dates - still disabled using data-testid
+    await page.getByTestId('poll-title-input').fill('Test Poll');
     await expect(submitButton).toBeDisabled();
     
     // Add only one date - still disabled (needs minimum 2)
@@ -145,15 +151,15 @@ test.describe('Poll Creation and Management', () => {
   });
 
   test('should allow member to create multiple polls in same group', async ({ authenticatedPage: page }) => {
-    // Navigate to Elite Strategy Players (no poll yet)
+    // Navigate to Elite Strategy Players (cleaned by beforeEach)
     await page.goto('/groups');
     
     const eliteCard = page.locator('.group-card', { hasText: 'Elite Strategy Players' });
     await eliteCard.getByRole('link', { name: 'Voir les détails' }).click();
     
-    // Create first poll
-    await page.getByRole('button', { name: /créer un sondage/i }).click();
-    await page.locator('#poll-title').fill('Session Twilight Imperium ?');
+    // Create first poll using data-testid
+    await page.getByTestId('create-poll-button').click();
+    await page.getByTestId('poll-title-input').fill('Session Twilight Imperium ?');
     await page.locator('#date-input').fill('2025-11-10T19:00');
     await page.getByRole('button', { name: /ajouter/i }).click();
     await page.locator('#date-input').fill('2025-11-11T19:00');

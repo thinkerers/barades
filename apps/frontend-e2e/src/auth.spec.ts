@@ -4,22 +4,23 @@ test.describe('Authentication', () => {
   test('should display login page with form elements', async ({ page }) => {
     await page.goto('/login');
     
-    // Check that login form is visible (Material UI uses mat-card-title, not heading)
-    await expect(page.getByText('Connexion')).toBeVisible();
-    await expect(page.getByPlaceholder('alice_dm')).toBeVisible();
-    await expect(page.getByPlaceholder('••••••••••••')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Se connecter' })).toBeVisible();
+    // Use data-testid for stable selectors
+    await expect(page.getByTestId('login-card')).toBeVisible();
+    await expect(page.getByTestId('login-title')).toBeVisible();
+    await expect(page.getByTestId('username-input')).toBeVisible();
+    await expect(page.getByTestId('password-input')).toBeVisible();
+    await expect(page.getByTestId('login-submit-button')).toBeVisible();
   });
 
   test('should successfully login with valid credentials', async ({ page }) => {
     await page.goto('/login');
     
-    // Fill in login form
-    await page.getByPlaceholder('alice_dm').fill('alice_dm');
-    await page.getByPlaceholder('••••••••••••').fill('password123');
+    // Fill in login form using data-testid
+    await page.getByTestId('username-input').fill('alice_dm');
+    await page.getByTestId('password-input').fill('password123');
     
     // Submit form
-    await page.getByRole('button', { name: 'Se connecter' }).click();
+    await page.getByTestId('login-submit-button').click();
     
     // Wait for redirect to home page
     await expect(page).toHaveURL('/');
@@ -32,15 +33,15 @@ test.describe('Authentication', () => {
   test('should show error message with invalid credentials', async ({ page }) => {
     await page.goto('/login');
     
-    // Fill in login form with wrong password
-    await page.getByPlaceholder('alice_dm').fill('alice_dm');
-    await page.getByPlaceholder('••••••••••••').fill('wrongpassword');
+    // Fill in login form with wrong password using data-testid
+    await page.getByTestId('username-input').fill('alice_dm');
+    await page.getByTestId('password-input').fill('wrongpassword');
     
     // Submit form
-    await page.getByRole('button', { name: 'Se connecter' }).click();
+    await page.getByTestId('login-submit-button').click();
     
-    // Wait for error message
-    await expect(page.getByText(/incorrect|failed/i)).toBeVisible();
+    // Wait for error message using data-testid
+    await expect(page.getByTestId('error-message')).toBeVisible();
     
     // Should still be on login page
     await expect(page).toHaveURL('/login');

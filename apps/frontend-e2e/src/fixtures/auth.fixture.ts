@@ -44,9 +44,10 @@ export interface AuthFixtures {
  */
 async function loginUser(page: Page, username: User, password = 'password123'): Promise<void> {
   await page.goto('/login');
-  await page.getByPlaceholder('alice_dm').fill(username);
-  await page.getByPlaceholder('••••••••••••').fill(password);
-  await page.getByRole('button', { name: 'Se connecter' }).click();
+  // Use data-testid for stable selectors
+  await page.getByTestId('username-input').fill(username);
+  await page.getByTestId('password-input').fill(password);
+  await page.getByTestId('login-submit-button').click();
   await page.waitForURL('/');
 }
 
