@@ -1,4 +1,4 @@
-<div class="poll-widget">
+<div class="poll-widget" data-testid="poll-widget">
   <!-- Create Poll Section -->
   <div class="poll-widget__header" *ngIf="!poll">
     <button 
@@ -6,6 +6,7 @@
       (click)="toggleCreateForm()" 
       class="btn btn--primary btn--small"
       type="button"
+      data-testid="create-poll-button"
     >
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -19,7 +20,7 @@
   </div>
 
   <!-- Create Poll Form -->
-  <div *ngIf="showCreateForm" class="poll-form">
+  <div *ngIf="showCreateForm" class="poll-form" data-testid="poll-form">
     <h3>Nouveau sondage de dates</h3>
     
     <div class="form-group">
@@ -30,6 +31,7 @@
         [(ngModel)]="pollTitle"
         placeholder="Ex: Prochaine session D&D"
         class="form-control"
+        data-testid="poll-title-input"
       />
     </div>
 
@@ -89,8 +91,8 @@
     </div>
   </div>
 
-  <!-- Display Existing Poll -->
-  <div *ngIf="poll" class="poll-display">
+  <!-- Poll Display -->
+  <div *ngIf="poll" class="poll-display" data-testid="poll-display">
     <div class="poll-display__header">
       <h3>{{ poll.title }}</h3>
       <span class="poll-display__stats">
@@ -106,6 +108,7 @@
           'poll-option--selected': getUserVote() === date,
           'poll-option--best': isBestDate(date)
         }"
+        [attr.data-testid]="'poll-option-' + date"
       >
         <button 
           (click)="vote(date)" 
@@ -113,6 +116,7 @@
           type="button"
           [disabled]="getUserVote() === date || !isMember"
           [title]="!isMember ? 'Vous devez être membre du groupe pour voter' : ''"
+          data-testid="vote-button"
         >
           <div class="poll-option__content">
             <div class="poll-option__date">
