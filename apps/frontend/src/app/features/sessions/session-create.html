@@ -24,10 +24,17 @@
         <input
           type="text"
           id="game"
+          list="game-list"
           formControlName="game"
           placeholder="ex: Dungeons & Dragons 5e, Pathfinder..."
           [class.error]="sessionForm.get('game')?.touched && sessionForm.get('game')?.invalid"
         />
+        <datalist id="game-list">
+          <option *ngFor="let game of existingGames" [value]="game">{{ game }}</option>
+        </datalist>
+        <span class="help-text" *ngIf="existingGames.length > 0">
+          💡 Suggestions basées sur les jeux existants
+        </span>
         <span class="error-text" *ngIf="sessionForm.get('game')?.touched && sessionForm.get('game')?.invalid">
           {{ getErrorMessage('game') }}
         </span>

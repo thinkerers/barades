@@ -96,6 +96,13 @@
   margin-top: 0.25rem;
 }
 
+.help-text {
+  color: #9ca3af;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
 .checkbox-label {
   display: flex;
   align-items: center;

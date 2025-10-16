@@ -22,6 +22,9 @@ export class SessionCreateComponent {
   loading = false;
   error: string | null = null;
   
+  // Liste des jeux existants pour l'autocomplétion
+  existingGames: string[] = [];
+  
   levels = [
     { value: 'BEGINNER', label: 'Débutant' },
     { value: 'INTERMEDIATE', label: 'Intermédiaire' },
@@ -44,6 +47,9 @@ export class SessionCreateComponent {
       return;
     }
 
+    // Charger les jeux existants pour l'autocomplétion
+    this.loadExistingGames();
+
     this.sessionForm = this.fb.group({
       game: ['', [Validators.required, Validators.minLength(2)]],
       title: ['', [Validators.required, Validators.minLength(5)]],
@@ -53,6 +59,19 @@ export class SessionCreateComponent {
       level: ['OPEN', Validators.required],
       playersMax: [4, [Validators.required, Validators.min(2), Validators.max(12)]],
       tagColor: ['BLUE', Validators.required]
+    });
+  }
+
+  loadExistingGames(): void {
+    this.sessionsService.getSessions().subscribe({
+      next: (sessions) => {
+        // Extraire les noms de jeux uniques et les trier
+        this.existingGames = [...new Set(sessions.map(s => s.game))].sort();
+      },
+      error: (err) => {
+        console.error('Erreur lors du chargement des jeux:', err);
+        // Continuer même si le chargement échoue
+      }
     });
   }
 
