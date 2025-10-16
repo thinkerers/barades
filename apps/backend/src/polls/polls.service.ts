@@ -165,12 +165,15 @@ export class PollsService {
     const currentVotes = poll.votes as PollVotes || {};
     currentVotes[votePollDto.userId] = votePollDto.dateChoice;
 
-    return this.prisma.poll.update({
+    await this.prisma.poll.update({
       where: { id },
       data: {
         votes: currentVotes,
       },
     });
+
+    // Return the updated poll with calculated fields
+    return this.findOne(id);
   }
 
   async removeVote(id: string, userId: string, authenticatedUserId: string) {
@@ -196,12 +199,15 @@ export class PollsService {
     const currentVotes = poll.votes as PollVotes || {};
     delete currentVotes[userId];
 
-    return this.prisma.poll.update({
+    await this.prisma.poll.update({
       where: { id },
       data: {
         votes: currentVotes,
       },
     });
+
+    // Return the updated poll with calculated fields
+    return this.findOne(id);
   }
 
   async remove(id: string) {
