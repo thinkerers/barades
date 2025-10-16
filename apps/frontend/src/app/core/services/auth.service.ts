@@ -95,6 +95,13 @@ export class AuthService {
   }
 
   /**
+   * Get current user ID (shorthand for getCurrentUser()?.id)
+   */
+  getCurrentUserId(): string | null {
+    return this.getCurrentUser()?.id || null;
+  }
+
+  /**
    * Store token in localStorage
    */
   private setToken(token: string): void {

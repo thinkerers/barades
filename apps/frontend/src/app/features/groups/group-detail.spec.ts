@@ -6,12 +6,14 @@ import { of, throwError } from 'rxjs';
 import { GroupDetailComponent } from './group-detail';
 import { GroupsService } from '../../core/services/groups.service';
 import { PollsService } from '../../core/services/polls.service';
+import { AuthService } from '../../core/services/auth.service';
 
 describe('GroupDetailComponent', () => {
-  let component: GroupDetailComponent;
+  let component: ComponentFixture<GroupDetailComponent>;
   let fixture: ComponentFixture<GroupDetailComponent>;
   let groupsService: GroupsService;
   let pollsService: PollsService;
+  let authService: AuthService;
   let router: Router;
 
   const mockGroup = {
@@ -20,12 +22,13 @@ describe('GroupDetailComponent', () => {
     description: 'A test group description',
     playstyle: 'COMPETITIVE' as const,
     isRecruiting: true,
+    isPublic: true,
     maxMembers: 10,
     createdAt: '2025-01-01T00:00:00.000Z',
     updatedAt: '2025-01-01T00:00:00.000Z',
-    creatorId: '1',
+    creatorId: 'user-1',
     creator: {
-      id: '1',
+      id: 'user-1',
       username: 'test_user',
       avatar: null
     },
@@ -34,15 +37,21 @@ describe('GroupDetailComponent', () => {
     },
     members: [
       {
-        id: '1',
-        username: 'member1',
-        avatar: null,
+        userId: 'user-1',
+        user: {
+          id: 'user-1',
+          username: 'member1',
+          avatar: null
+        },
         joinedAt: '2025-01-01T00:00:00.000Z'
       },
       {
-        id: '2',
-        username: 'member2',
-        avatar: 'https://avatar.com/2',
+        userId: 'user-2',
+        user: {
+          id: 'user-2',
+          username: 'member2',
+          avatar: 'https://avatar.com/2'
+        },
         joinedAt: '2025-01-02T00:00:00.000Z'
       }
     ],
@@ -87,10 +96,14 @@ describe('GroupDetailComponent', () => {
     component = fixture.componentInstance;
     groupsService = TestBed.inject(GroupsService);
     pollsService = TestBed.inject(PollsService);
+    authService = TestBed.inject(AuthService);
     router = TestBed.inject(Router);
     
     // Mock polls service by default
     jest.spyOn(pollsService, 'getPolls').mockReturnValue(of([]));
+    
+    // Mock auth service by default (user not authenticated)
+    jest.spyOn(authService, 'getCurrentUserId').mockReturnValue(null);
   });
 
   it('should create', () => {
@@ -303,4 +316,98 @@ describe('GroupDetailComponent', () => {
       expect(compiled.textContent).toContain('Test error');
     });
   });
+
+  describe('Membership detection', () => {
+    it('should detect user is a member when userId matches', () => {
+      jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-1');
+      jest.spyOn(groupsService, 'getGroup').mockReturnValue(of(mockGroup));
+      
+      component.ngOnInit();
+      
+      expect(component.currentUserId).toBe('user-1');
+      expect(component.isMember).toBe(true);
+    });
+
+    it('should detect user is NOT a member when userId does not match', () => {
+      jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-999');
+      jest.spyOn(groupsService, 'getGroup').mockReturnValue(of(mockGroup));
+      
+      component.ngOnInit();
+      
+      expect(component.currentUserId).toBe('user-999');
+      expect(component.isMember).toBe(false);
+    });
+
+    it('should detect user is NOT a member when not authenticated', () => {
+      jest.spyOn(authService, 'getCurrentUserId').mockReturnValue(null);
+      jest.spyOn(groupsService, 'getGroup').mockReturnValue(of(mockGroup));
+      
+      component.ngOnInit();
+      
+      expect(component.currentUserId).toBe(null);
+      expect(component.isMember).toBe(false);
+    });
+
+    it('should correctly check membership with nested user structure', () => {
+      const groupWithMembers = {
+        ...mockGroup,
+        members: [
+          {
+            userId: 'user-alice',
+            user: {
+              id: 'user-alice',
+              username: 'alice',
+              avatar: null
+            },
+            joinedAt: '2025-01-01T00:00:00.000Z'
+          },
+          {
+            userId: 'user-bob',
+            user: {
+              id: 'user-bob',
+              username: 'bob',
+              avatar: null
+            },
+            joinedAt: '2025-01-02T00:00:00.000Z'
+          }
+        ]
+      };
+
+      jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-bob');
+      jest.spyOn(groupsService, 'getGroup').mockReturnValue(of(groupWithMembers));
+      
+      component.ngOnInit();
+      
+      expect(component.isMember).toBe(true);
+    });
+
+    it('should handle group with no members', () => {
+      const groupNoMembers = {
+        ...mockGroup,
+        members: []
+      };
+
+      jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-1');
+      jest.spyOn(groupsService, 'getGroup').mockReturnValue(of(groupNoMembers));
+      
+      component.ngOnInit();
+      
+      expect(component.isMember).toBe(false);
+    });
+
+    it('should handle group with undefined members', () => {
+      const groupUndefinedMembers = {
+        ...mockGroup,
+        members: undefined
+      };
+
+      jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-1');
+      jest.spyOn(groupsService, 'getGroup').mockReturnValue(of(groupUndefinedMembers));
+      
+      component.ngOnInit();
+      
+      expect(component.isMember).toBe(false);
+    });
+  });
 });
+
