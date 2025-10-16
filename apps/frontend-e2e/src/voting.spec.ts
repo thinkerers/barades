@@ -150,9 +150,14 @@ test.describe('Poll Voting', () => {
   test('should allow voting on multiple dates in same poll', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
-    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
+    
+    const brusselsCard = page.locator('.group-card', { hasText: 'Brussels Adventurers Guild' });
+    await brusselsCard.getByRole('link', { name: 'Voir les détails' }).click();
     
     await expect(page.locator('.group-detail__title')).toBeVisible();
+    
+    // Wait for poll to load
+    await expect(page.locator('.poll-display').first()).toBeVisible();
     
     const pollDisplay = page.locator('.poll-display').first();
     
@@ -168,9 +173,14 @@ test.describe('Poll Voting', () => {
   test('should show vote details tooltip', async ({ page }) => {
     // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
-    await page.getByRole('link', { name: 'Voir les détails' }).first().click();
+    
+    const brusselsCard = page.locator('.group-card', { hasText: 'Brussels Adventurers Guild' });
+    await brusselsCard.getByRole('link', { name: 'Voir les détails' }).click();
     
     await expect(page.locator('.group-detail__title')).toBeVisible();
+    
+    // Wait for poll to load
+    await expect(page.locator('.poll-display').first()).toBeVisible();
     
     const pollDisplay = page.locator('.poll-display').first();
     await expect(pollDisplay).toBeVisible();

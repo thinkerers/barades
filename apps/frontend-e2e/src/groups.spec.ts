@@ -91,8 +91,8 @@ test.describe('Groups Navigation', () => {
     // Wait for group detail to be visible
     await expect(page.locator('.group-detail')).toBeVisible();
     
-    // Check for members text in metadata (from group-card or group-detail)
-    await expect(page.getByText(/membre/i)).toBeVisible();
+    // Check for members section heading (more specific than /membre/i which matches multiple elements)
+    await expect(page.getByRole('heading', { name: /membres/i })).toBeVisible();
     
     // Check creator (alice_dm created Brussels Adventurers Guild)
     await expect(page.getByText('alice_dm')).toBeVisible();
