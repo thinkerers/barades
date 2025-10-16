@@ -18,6 +18,7 @@ describe('GroupsListComponent', () => {
       description: 'A competitive group for experienced players',
       playstyle: 'COMPETITIVE' as const,
       isRecruiting: true,
+      isPublic: true,
       maxMembers: 10,
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
