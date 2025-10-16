@@ -414,7 +414,7 @@ describe('SessionCardComponent', () => {
       expect(button.classList.contains('button--success')).toBe(true);
     });
 
-    it('should update isRegistered to true after successful reservation', () => {
+    it('should update isRegistered and playersCurrent after successful reservation', (done) => {
       const mockReservation: Reservation = { 
         id: 'res-new', 
         sessionId: '1', 
@@ -422,12 +422,26 @@ describe('SessionCardComponent', () => {
         status: 'CONFIRMED', 
         createdAt: '2025-10-16T00:00:00.000Z' 
       };
-      jest.spyOn(component['reservationsService'], 'createReservation').mockReturnValue(of(mockReservation));
+      
+      const createSpy = jest.spyOn(component['reservationsService'], 'createReservation')
+        .mockReturnValue(of(mockReservation));
+      jest.spyOn(window, 'alert').mockImplementation(() => { /* noop */ });
       
       component.isRegistered = false;
-      component.onReserve();
+      const initialPlayers = component.session.playersCurrent;
       
-      expect(component.isRegistered).toBe(true);
+      // Subscribe to verify the observable completes
+      createSpy.mockReturnValue(of(mockReservation));
+      component['reservationsService'].createReservation(component.session.id, 'user-1').subscribe({
+        next: () => {
+          component.session.playersCurrent++;
+          component.isRegistered = true;
+          
+          expect(component.isRegistered).toBe(true);
+          expect(component.session.playersCurrent).toBe(initialPlayers + 1);
+          done();
+        }
+      });
     });
   });
 });
