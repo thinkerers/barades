@@ -2,10 +2,19 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SessionCardComponent } from './session-card';
 import { RouterTestingModule } from '@angular/router/testing';
 import { Session } from '../../core/services/sessions.service';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { AuthService } from '../../core/services/auth.service';
+import { of } from 'rxjs';
 
 describe('SessionCardComponent', () => {
   let component: SessionCardComponent;
   let fixture: ComponentFixture<SessionCardComponent>;
+
+  const mockAuthService = {
+    getCurrentUser: jest.fn().mockReturnValue({ id: 'user-1', username: 'TestUser' }),
+    isAuthenticated: jest.fn().mockReturnValue(true)
+  };
 
   const mockSession: Session = {
     id: '1',
@@ -41,7 +50,12 @@ describe('SessionCardComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SessionCardComponent, RouterTestingModule]
+      imports: [SessionCardComponent, RouterTestingModule],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: AuthService, useValue: mockAuthService }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(SessionCardComponent);
