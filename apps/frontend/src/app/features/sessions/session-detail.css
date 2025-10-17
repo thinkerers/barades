@@ -6,7 +6,11 @@
 
 /* Header */
 .session-detail__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
+  gap: 1rem;
 }
 
 .button--back {
@@ -29,6 +33,25 @@
   color: var(--color-primary, #4f46e5);
 }
 
+.button--edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--color-primary, #4f46e5);
+  color: white;
+  border: 1px solid var(--color-primary, #4f46e5);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.button--edit:hover {
+  background-color: var(--color-primary-dark, #4338ca);
+  border-color: var(--color-primary-dark, #4338ca);
+}
+
 .button__icon {
   font-size: 1.25rem;
 }
@@ -44,7 +67,7 @@
   .session-detail__content {
     grid-template-columns: 1fr;
   }
-  
+
   .session-detail__sidebar {
     order: -1;
   }
@@ -444,7 +467,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Error State */

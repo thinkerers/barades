@@ -4,6 +4,10 @@
       <mat-icon>arrow_back</mat-icon>
       Retour aux sessions
     </button>
+    <button *ngIf="isOwner()" class="button button--edit" (click)="onEdit()">
+      <mat-icon>edit</mat-icon>
+      Modifier
+    </button>
   </div>
 
   <div class="session-detail__content">

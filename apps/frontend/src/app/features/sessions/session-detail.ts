@@ -161,4 +161,19 @@ export class SessionDetailComponent implements OnInit {
   goBack(): void {
     this.router.navigate(['/sessions']);
   }
+
+  isOwner(): boolean {
+    const currentUser = this.authService.getCurrentUser();
+    return !!(
+      currentUser &&
+      this.session &&
+      this.session.hostId === currentUser.id
+    );
+  }
+
+  onEdit(): void {
+    if (this.session) {
+      this.router.navigate(['/sessions', this.session.id, 'edit']);
+    }
+  }
 }
