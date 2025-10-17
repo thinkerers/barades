@@ -1,0 +1,59 @@
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+$barades-theme: mat.define-theme(
+  (
+    color: (
+      theme-type: dark,
+      primary: mat.$violet-palette,
+      tertiary: mat.$rose-palette,
+    ),
+    typography: (
+      plain-family: 'Inter, system-ui, -apple-system, sans-serif',
+      brand-family: 'Inter, system-ui, -apple-system, sans-serif',
+      medium-weight: 600,
+      regular-weight: 400,
+      bold-weight: 700,
+    ),
+    density: (
+      scale: 0,
+    ),
+  )
+);
+
+@include mat.all-component-themes($barades-theme);
+@include mat.all-component-typographies($barades-theme);
+@include mat.all-component-densities($barades-theme);
+
+@include mat.form-field-overrides(
+  (
+    outlined-outline-color: #2d3444,
+    outlined-hover-outline-color: #3d4455,
+    outlined-focus-outline-color: #6366f1,
+    outlined-label-text-color: #d1d5db,
+    outlined-input-text-color: #f9fafb,
+    leading-icon-color: #9ca3af,
+    trailing-icon-color: #9ca3af,
+    outlined-outline-width: 1px,
+    outlined-focus-outline-width: 1px,
+    filled-container-color: rgba(30, 35, 48, 0.6),
+  )
+);
+
+@include mat.option-overrides(
+  (
+    label-text-color: #f9fafb,
+    selected-state-label-text-color: #f9fafb,
+    selected-state-layer-color: rgba(99, 102, 241, 0.24),
+    hover-state-layer-color: rgba(99, 102, 241, 0.1),
+  )
+);
+
+@include mat.autocomplete-overrides(
+  (
+    background-color: #1e2330,
+    container-shape: 16px,
+    container-elevation-shadow: 0 8px 24px rgba(0, 0, 0, 0.45),
+  )
+);
