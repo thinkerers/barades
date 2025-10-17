@@ -1,15 +1,119 @@
-<section class="home">
-	<header class="home__header">
-		<h1 class="home__title">Bienvenue au Bar à Dés</h1>
-		<p class="home__subtitle">
-			Retrouvez vos sessions de jeu de rôle, vos groupes et vos lieux favoris en un clin
-			d'œil.
-		</p>
-	</header>
-	<div class="home__cta">
-		<a routerLink="/sessions" class="home__button">Explorer les sessions</a>
-		<a routerLink="/sessions/new" class="home__button home__button--secondary">
-			Créer une nouvelle session
-		</a>
-	</div>
+<!-- Hero Section -->
+<section class="hero">
+  <div class="hero__content">
+    <h1 class="hero__title">
+      Votre Prochaine Aventure <span class="hero__highlight">Commence Ici</span>
+    </h1>
+    <p class="hero__subtitle">
+      Trouvez des joueurs, des maîtres de jeu et des lieux pour vos parties de
+      jeu de rôle, où que vous soyez.
+    </p>
+
+    <!-- Formulaire de recherche -->
+    <div class="search-card glass-card">
+      <div class="search-form">
+        <!-- Recherche de jeu -->
+        <mat-form-field class="search-field" appearance="outline">
+          <mat-label>Nom du jeu, univers</mat-label>
+          <mat-icon matPrefix>casino</mat-icon>
+          <input
+            matInput
+            type="text"
+            placeholder="ex: D&D 5e, Cthulhu..."
+            [formControl]="gameControl"
+            [matAutocomplete]="autoGame"
+          />
+          <mat-autocomplete #autoGame="matAutocomplete">
+            <mat-option
+              *ngFor="let game of filteredGames$ | async"
+              [value]="game"
+            >
+              {{ game }}
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>
+
+        <!-- Recherche de ville -->
+        <mat-form-field class="search-field" appearance="outline">
+          <mat-label>Ville ou en ligne</mat-label>
+          <mat-icon matPrefix>place</mat-icon>
+          <input
+            matInput
+            type="text"
+            placeholder="ex: Bruxelles, En ligne..."
+            [formControl]="cityControl"
+            [matAutocomplete]="autoCity"
+          />
+          <mat-autocomplete #autoCity="matAutocomplete">
+            <mat-option
+              *ngFor="let city of filteredCities$ | async"
+              [value]="city"
+            >
+              {{ city }}
+            </mat-option>
+          </mat-autocomplete>
+        </mat-form-field>
+
+        <!-- Bouton de recherche -->
+        <button
+          mat-raised-button
+          color="primary"
+          class="search-button"
+          (click)="onSearch()"
+        >
+          <mat-icon>search</mat-icon>
+          <span>Rechercher</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Section Sessions à la Une -->
+<section class="featured-sessions">
+  <div class="featured-sessions__header">
+    <h2 class="featured-sessions__title">Parties à la Une</h2>
+    <a routerLink="/sessions" class="featured-sessions__link">
+      Voir toutes les parties
+      <mat-icon>arrow_forward</mat-icon>
+    </a>
+  </div>
+
+  <!-- Loader -->
+  <div *ngIf="loading" class="featured-sessions__loader">
+    <p>Chargement des sessions...</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="featured-sessions__error">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Sessions Grid with SessionCard component -->
+  <div *ngIf="!loading && !error" class="sessions-grid">
+    <app-session-card
+      *ngFor="let session of featuredSessions"
+      [session]="session"
+    ></app-session-card>
+  </div>
+</section>
+
+<!-- Section CTA -->
+<section class="cta-section">
+  <div class="cta-card glass-card">
+    <h2 class="cta-card__title">Prêt à organiser votre propre partie ?</h2>
+    <p class="cta-card__text">
+      Créez une session, invitez des joueurs et vivez une aventure inoubliable.
+    </p>
+    <div class="cta-card__buttons">
+      <a routerLink="/sessions/new" mat-raised-button color="primary">
+        <mat-icon>add</mat-icon>
+        Créer une session
+      </a>
+      <a routerLink="/groups" mat-stroked-button>
+        <mat-icon>groups</mat-icon>
+        Rejoindre un groupe
+      </a>
+    </div>
+  </div>
 </section>
