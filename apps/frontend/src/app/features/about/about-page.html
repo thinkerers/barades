@@ -1,0 +1,62 @@
+<section class="about-page">
+  <!-- Header -->
+  <div class="about-header">
+    <h1 class="about-title">
+      À Propos de <span class="text-primary">Bar à Dés</span>
+    </h1>
+    <p class="about-subtitle">
+      Notre mission est de rendre le jeu de rôle accessible à tous, en
+      connectant les joueurs, les maîtres de jeu et les communautés, une partie
+      à la fois.
+    </p>
+  </div>
+
+  <!-- Content Card -->
+  <div class="about-card">
+    <!-- Mission Section -->
+    <div class="about-section">
+      <h3 class="section-title">
+        <mat-icon class="section-icon">rocket_launch</mat-icon>
+        Notre Mission
+      </h3>
+      <p class="section-text">
+        Chez Bar à Dés, nous croyons que le jeu de rôle est une forme d'art
+        collaborative, une source inépuisable d'aventures et un moyen
+        fantastique de créer des liens. Notre plateforme a été conçue par des
+        passionnés, pour des passionnés, avec un objectif simple : éliminer les
+        obstacles à l'organisation de parties. Fini les heures passées à
+        chercher des joueurs compatibles ou un lieu pour se réunir. Nous
+        centralisons tout ce dont vous avez besoin pour que vous puissiez vous
+        concentrer sur l'essentiel : raconter des histoires inoubliables.
+      </p>
+    </div>
+
+    <!-- Team Section -->
+    <div class="about-section">
+      <h3 class="section-title">L'Équipe</h3>
+      <div class="team-grid">
+        @for (member of teamMembers; track member.name) {
+        <div class="team-member">
+          <div class="member-avatar">{{ member.avatar }}</div>
+          <h4 class="member-name">{{ member.name }}</h4>
+          <p class="member-role">{{ member.role }}</p>
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="about-cta">
+      <h3 class="cta-title">Rejoignez l'Aventure</h3>
+      <p class="cta-text">
+        Bar à Dés est plus qu'un outil, c'est une communauté grandissante. Que
+        vous soyez un vétéran aguerri ou un aventurier curieux, votre prochaine
+        grande histoire vous attend.
+      </p>
+      <a routerLink="/sessions" class="cta-button">
+        <mat-icon>casino</mat-icon>
+        <span>Trouver une partie</span>
+      </a>
+    </div>
+  </div>
+</section>
