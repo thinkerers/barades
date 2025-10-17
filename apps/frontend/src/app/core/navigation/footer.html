@@ -55,22 +55,6 @@
           <li><a routerLink="/api-docs" class="footer-link">API</a></li>
         </ul>
       </div>
-
-      <!-- Légal Section -->
-      <div class="footer-section">
-        <h4 class="footer-title">Légal</h4>
-        <ul class="footer-links">
-          <li>
-            <a routerLink="/privacy" class="footer-link">Confidentialité</a>
-          </li>
-          <li>
-            <a routerLink="/terms" class="footer-link"
-              >Conditions d'utilisation</a
-            >
-          </li>
-          <li><a routerLink="/cookies" class="footer-link">Cookies</a></li>
-        </ul>
-      </div>
     </div>
 
     <!-- Bottom Section -->
@@ -78,6 +62,15 @@
       <p class="footer-copyright">
         &copy; {{ currentYear }} barades.com. Tous droits réservés.
       </p>
+      <nav class="footer-legal" aria-label="Liens légaux">
+        <a routerLink="/privacy" class="footer-legal-link">Confidentialité</a>
+        <span class="footer-legal-separator">·</span>
+        <a routerLink="/terms" class="footer-legal-link"
+          >Conditions d'utilisation</a
+        >
+        <span class="footer-legal-separator">·</span>
+        <a routerLink="/cookies" class="footer-legal-link">Cookies</a>
+      </nav>
       <div class="footer-social">
         <a
           href="https://twitter.com"

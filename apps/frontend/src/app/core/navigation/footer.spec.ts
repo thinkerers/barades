@@ -33,7 +33,7 @@ describe('Footer', () => {
   it('should render footer sections', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const sections = compiled.querySelectorAll('.footer-section');
-    expect(sections.length).toBe(5); // Bar à Dés, Communauté, Ressources, Développeurs, Légal
+    expect(sections.length).toBe(4); // Bar à Dés, Communauté, Ressources, Développeurs
   });
 
   it('should render social links', () => {

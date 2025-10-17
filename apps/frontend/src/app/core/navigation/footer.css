@@ -78,6 +78,30 @@
   margin: 0;
 }
 
+.footer-legal {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.footer-legal-link {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary, #9ca3af);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-legal-link:hover {
+  color: var(--color-primary, #4f46e5);
+}
+
+.footer-legal-separator {
+  color: var(--color-text-tertiary, #6b7280);
+  user-select: none;
+}
+
 .footer-social {
   display: flex;
   gap: 1rem;
