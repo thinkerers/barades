@@ -1,9 +1,12 @@
-<article 
+<article
   class="session-card"
   [class]="'session-card--' + session.tagColor.toLowerCase()"
 >
   <!-- Tag Color Indicator -->
-  <div class="session-card__tag" [ngClass]="getTagColorClass(session.tagColor)"></div>
+  <div
+    class="session-card__tag"
+    [ngClass]="getTagColorClass(session.tagColor)"
+  ></div>
 
   <!-- Header -->
   <header class="session-card__header">
@@ -14,11 +17,13 @@
   <!-- Status Badges -->
   <div class="session-card__badges">
     <div class="session-card__status" [ngClass]="getStatusClass()">
-      <span *ngIf="!isFull()">{{ getAvailableSpots() }} place(s) disponible(s)</span>
+      <span *ngIf="!isFull()"
+        >{{ getAvailableSpots() }} place(s) disponible(s)</span
+      >
       <span *ngIf="isFull()">Complet</span>
     </div>
     <div class="session-card__registered" *ngIf="isRegistered">
-      ✓ Inscrit
+      <mat-icon>check_circle</mat-icon> Inscrit
     </div>
   </div>
 
@@ -26,51 +31,40 @@
   <div class="session-card__details">
     <!-- Date -->
     <div class="session-card__detail">
-      <svg class="icon" viewBox="0 0 24 24" width="20" height="20">
-        <path fill="currentColor" d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5z"/>
-      </svg>
+      <mat-icon>event</mat-icon>
       <span>{{ formatDate(session.date) }}</span>
     </div>
 
     <!-- Host -->
     <div class="session-card__detail" *ngIf="session.host">
-      <svg class="icon" viewBox="0 0 24 24" width="20" height="20">
-        <path fill="currentColor" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-      </svg>
+      <mat-icon>person</mat-icon>
       <span>{{ session.host.username }}</span>
     </div>
 
     <!-- Location -->
     <div class="session-card__detail" *ngIf="session.location">
-      <svg class="icon" viewBox="0 0 24 24" width="20" height="20">
-        <path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-      </svg>
+      <mat-icon>place</mat-icon>
       <span>{{ session.location.name }}, {{ session.location.city }}</span>
     </div>
-    
+
     <!-- Online indicator -->
     <div class="session-card__detail" *ngIf="session.online">
-      <svg class="icon" viewBox="0 0 24 24" width="20" height="20">
-        <path fill="currentColor" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-4h11v4zm0-5H4V9h11v4zm5 5h-4V9h4v9z"/>
-      </svg>
+      <mat-icon>computer</mat-icon>
       <span>En ligne</span>
     </div>
 
     <!-- Level -->
     <div class="session-card__detail">
-      <svg class="icon" viewBox="0 0 24 24" width="20" height="20">
-        <path fill="currentColor" d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
-      </svg>
+      <mat-icon>trending_up</mat-icon>
       <span>{{ getLevelLabel(session.level) }}</span>
     </div>
 
     <!-- Players -->
     <div class="session-card__detail session-card__detail--players">
-      <svg class="icon" viewBox="0 0 24 24" width="20" height="20">
-        <path fill="currentColor" d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-      </svg>
+      <mat-icon>groups</mat-icon>
       <span>
-        <strong>{{ session.playersCurrent }}/{{ session.playersMax }}</strong> joueurs
+        <strong>{{ session.playersCurrent }}/{{ session.playersMax }}</strong>
+        joueurs
       </span>
     </div>
   </div>
@@ -82,18 +76,22 @@
 
   <!-- Actions -->
   <footer class="session-card__actions">
-    <button 
-      type="button" 
+    <button
+      type="button"
       class="button button--primary"
       [disabled]="isFull() || loading || isRegistered"
       [class.button--success]="isRegistered"
       (click)="onReserve()"
     >
       <span *ngIf="loading">Réservation...</span>
-      <span *ngIf="!loading && isRegistered">✓ Déjà inscrit</span>
-      <span *ngIf="!loading && !isRegistered">{{ isFull() ? 'Complet' : 'Réserver ma place' }}</span>
+      <span *ngIf="!loading && isRegistered"
+        ><mat-icon>check</mat-icon> Déjà inscrit</span
+      >
+      <span *ngIf="!loading && !isRegistered"
+        >{{ isFull() ? 'Complet' : 'Réserver ma place' }}</span
+      >
     </button>
-    <a 
+    <a
       [routerLink]="['/sessions', session.id]"
       class="button button--secondary"
     >

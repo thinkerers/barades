@@ -1,7 +1,7 @@
 <div class="session-detail" *ngIf="!loading && !error && session">
   <div class="session-detail__header">
     <button class="button button--back" (click)="goBack()">
-      <span class="button__icon">←</span>
+      <mat-icon>arrow_back</mat-icon>
       Retour aux sessions
     </button>
   </div>
@@ -12,7 +12,7 @@
       <div class="session-detail__title-section">
         <h1 class="session-detail__title">{{ session.title }}</h1>
         <div class="session-detail__game">
-          <span class="game-icon">🎲</span>
+          <mat-icon>casino</mat-icon>
           {{ session.game }}
         </div>
       </div>
@@ -20,10 +20,11 @@
       <!-- Status Badges -->
       <div class="session-detail__badges">
         <span class="badge" [ngClass]="getStatusClass()">
-          {{ isFull() ? 'Complet' : getAvailableSpots() + ' place(s) disponible(s)' }}
+          {{ isFull() ? 'Complet' : getAvailableSpots() + ' place(s)
+          disponible(s)' }}
         </span>
         <span class="badge badge--registered" *ngIf="isRegistered">
-          ✓ Inscrit
+          <mat-icon>check_circle</mat-icon> Inscrit
         </span>
       </div>
 
@@ -36,7 +37,7 @@
       <!-- Session Details Grid -->
       <div class="session-detail__info-grid">
         <div class="info-card">
-          <span class="info-card__icon">📅</span>
+          <mat-icon class="info-card__icon">event</mat-icon>
           <div class="info-card__content">
             <span class="info-card__label">Date et heure</span>
             <span class="info-card__value">{{ formatDate(session.date) }}</span>
@@ -44,26 +45,32 @@
         </div>
 
         <div class="info-card">
-          <span class="info-card__icon">🌐</span>
+          <mat-icon class="info-card__icon">public</mat-icon>
           <div class="info-card__content">
             <span class="info-card__label">Format</span>
-            <span class="info-card__value">{{ session.online ? 'En ligne' : 'Présentiel' }}</span>
+            <span class="info-card__value"
+              >{{ session.online ? 'En ligne' : 'Présentiel' }}</span
+            >
           </div>
         </div>
 
         <div class="info-card">
-          <span class="info-card__icon">👥</span>
+          <mat-icon class="info-card__icon">groups</mat-icon>
           <div class="info-card__content">
             <span class="info-card__label">Joueurs</span>
-            <span class="info-card__value">{{ session.playersCurrent }} / {{ session.playersMax }}</span>
+            <span class="info-card__value"
+              >{{ session.playersCurrent }} / {{ session.playersMax }}</span
+            >
           </div>
         </div>
 
         <div class="info-card">
-          <span class="info-card__icon">📊</span>
+          <mat-icon class="info-card__icon">leaderboard</mat-icon>
           <div class="info-card__content">
             <span class="info-card__label">Niveau requis</span>
-            <span class="info-card__value">{{ getLevelLabel(session.level) }}</span>
+            <span class="info-card__value"
+              >{{ getLevelLabel(session.level) }}</span
+            >
           </div>
         </div>
       </div>
@@ -86,23 +93,35 @@
       <div class="session-detail__location" *ngIf="session.location">
         <h2 class="section-title">Lieu</h2>
         <div class="location-card">
-          <span class="location-card__icon">📍</span>
+          <mat-icon class="location-card__icon">place</mat-icon>
           <div class="location-card__info">
             <span class="location-card__name">{{ session.location.name }}</span>
-            <span class="location-card__address">{{ session.location.city }} ({{ session.location.type }})</span>
+            <span class="location-card__address"
+              >{{ session.location.city }} ({{ session.location.type }})</span
+            >
           </div>
         </div>
       </div>
 
       <!-- Participants -->
-      <div class="session-detail__participants" *ngIf="session.reservations && session.reservations.length > 0">
-        <h2 class="section-title">Participants ({{ session.reservations.length }})</h2>
+      <div
+        class="session-detail__participants"
+        *ngIf="session.reservations && session.reservations.length > 0"
+      >
+        <h2 class="section-title">
+          Participants ({{ session.reservations.length }})
+        </h2>
         <div class="participants-list">
-          <div class="participant" *ngFor="let reservation of session.reservations">
+          <div
+            class="participant"
+            *ngFor="let reservation of session.reservations"
+          >
             <div class="participant__avatar">
               {{ reservation.user.username.charAt(0).toUpperCase() }}
             </div>
-            <span class="participant__name">{{ reservation.user.username }}</span>
+            <span class="participant__name"
+              >{{ reservation.user.username }}</span
+            >
           </div>
         </div>
       </div>
@@ -112,27 +131,30 @@
     <aside class="session-detail__sidebar">
       <div class="reservation-card">
         <h3 class="reservation-card__title">Réservation</h3>
-        
+
         <div class="reservation-card__spots">
-          <span class="spots-icon">👥</span>
+          <mat-icon class="spots-icon">groups</mat-icon>
           <span class="spots-text">
             <strong>{{ getAvailableSpots() }}</strong> place(s) restante(s)
           </span>
         </div>
 
-        <button 
+        <button
           class="button button--primary button--reserve"
           [class.button--success]="isRegistered"
           [disabled]="isFull() || isRegistered || reserving"
-          (click)="onReserve()">
+          (click)="onReserve()"
+        >
           <span *ngIf="!reserving && !isRegistered">Réserver ma place</span>
           <span *ngIf="reserving">Réservation...</span>
-          <span *ngIf="isRegistered">✓ Déjà inscrit</span>
+          <span *ngIf="isRegistered"
+            ><mat-icon>check</mat-icon> Déjà inscrit</span
+          >
         </button>
 
         <div class="reservation-card__info">
           <p class="info-text">
-            <span class="info-icon">ℹ️</span>
+            <mat-icon class="info-icon">info</mat-icon>
             Vous recevrez une confirmation par email après votre réservation.
           </p>
         </div>
@@ -149,7 +171,7 @@
 
 <!-- Error State -->
 <div class="session-detail__error" *ngIf="error">
-  <div class="error-icon">⚠️</div>
+  <mat-icon class="error-icon">warning</mat-icon>
   <h2>Erreur</h2>
   <p>{{ error }}</p>
   <button class="button button--secondary" (click)="goBack()">

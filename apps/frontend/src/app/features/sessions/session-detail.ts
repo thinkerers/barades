@@ -1,13 +1,14 @@
-import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SessionsService, Session } from '../../core/services/sessions.service';
-import { ReservationsService } from '../../core/services/reservations.service';
 import { AuthService } from '../../core/services/auth.service';
+import { ReservationsService } from '../../core/services/reservations.service';
+import { Session, SessionsService } from '../../core/services/sessions.service';
 
 @Component({
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   selector: 'app-session-detail',
   templateUrl: './session-detail.html',
   styleUrl: './session-detail.css',
@@ -47,9 +48,10 @@ export class SessionDetailComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading session:', err);
-        this.error = 'Impossible de charger la session. Elle n\'existe peut-être pas.';
+        this.error =
+          "Impossible de charger la session. Elle n'existe peut-être pas.";
         this.loading = false;
-      }
+      },
     });
   }
 
@@ -62,12 +64,14 @@ export class SessionDetailComponent implements OnInit {
 
     this.reservationsService.getReservations(currentUser.id).subscribe({
       next: (reservations) => {
-        this.isRegistered = reservations.some(r => r.sessionId === this.session?.id);
+        this.isRegistered = reservations.some(
+          (r) => r.sessionId === this.session?.id
+        );
       },
       error: (err) => {
         console.error('Error checking registration:', err);
         this.isRegistered = false;
-      }
+      },
     });
   }
 
@@ -77,7 +81,7 @@ export class SessionDetailComponent implements OnInit {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
       this.router.navigate(['/login'], {
-        queryParams: { returnUrl: `/sessions/${this.session.id}` }
+        queryParams: { returnUrl: `/sessions/${this.session.id}` },
       });
       return;
     }
@@ -92,7 +96,8 @@ export class SessionDetailComponent implements OnInit {
     }
 
     this.reserving = true;
-    this.reservationsService.createReservation(this.session.id, currentUser.id)
+    this.reservationsService
+      .createReservation(this.session.id, currentUser.id)
       .subscribe({
         next: () => {
           this.isRegistered = true;
@@ -100,22 +105,24 @@ export class SessionDetailComponent implements OnInit {
             this.session.playersCurrent++;
           }
           this.reserving = false;
-          alert('✅ Réservation confirmée ! Vous avez reçu un email de confirmation.');
+          alert(
+            '✅ Réservation confirmée ! Vous avez reçu un email de confirmation.'
+          );
         },
         error: (err) => {
           console.error('Error creating reservation:', err);
           this.reserving = false;
           alert(`❌ ${err.error?.message || 'Erreur lors de la réservation'}`);
-        }
+        },
       });
   }
 
   getLevelLabel(level: string): string {
     const labels: Record<string, string> = {
-      'BEGINNER': 'Débutant',
-      'INTERMEDIATE': 'Intermédiaire',
-      'ADVANCED': 'Avancé',
-      'OPEN': 'Tous niveaux'
+      BEGINNER: 'Débutant',
+      INTERMEDIATE: 'Intermédiaire',
+      ADVANCED: 'Avancé',
+      OPEN: 'Tous niveaux',
     };
     return labels[level] || level;
   }
@@ -128,16 +135,20 @@ export class SessionDetailComponent implements OnInit {
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     }).format(date);
   }
 
   getAvailableSpots(): number {
-    return this.session ? this.session.playersMax - this.session.playersCurrent : 0;
+    return this.session
+      ? this.session.playersMax - this.session.playersCurrent
+      : 0;
   }
 
   isFull(): boolean {
-    return this.session ? this.session.playersCurrent >= this.session.playersMax : true;
+    return this.session
+      ? this.session.playersCurrent >= this.session.playersMax
+      : true;
   }
 
   getStatusClass(): string {

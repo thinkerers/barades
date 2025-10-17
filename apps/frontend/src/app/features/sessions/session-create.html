@@ -7,7 +7,15 @@
   <form [formGroup]="sessionForm" (ngSubmit)="onSubmit()" class="session-form">
     <!-- Error Message -->
     <div *ngIf="error" class="error-message">
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
         <circle cx="12" cy="12" r="10"></circle>
         <line x1="12" y1="8" x2="12" y2="12"></line>
         <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -30,13 +38,15 @@
           [class.error]="sessionForm.get('game')?.touched && sessionForm.get('game')?.invalid"
         />
         <datalist id="game-list">
-          <option *ngFor="let game of existingGames" [value]="game">{{ game }}</option>
+          <option *ngFor="let game of existingGames" [value]="game">
+            {{ game }}
+          </option>
         </datalist>
-        
+
         <!-- Suggestions de correction -->
         <div *ngIf="gameSuggestions.length > 0" class="suggestions-box">
           <div class="suggestions-header">
-            💡 Tu voulais peut-être dire :
+            <mat-icon>lightbulb</mat-icon> Tu voulais peut-être dire :
           </div>
           <div class="suggestions-list">
             <button
@@ -46,15 +56,24 @@
               (click)="applySuggestion(suggestion.value)"
             >
               <span class="suggestion-name">{{ suggestion.value }}</span>
-              <span class="suggestion-score">{{ (suggestion.similarity * 100) | number:'1.0-0' }}% similaire</span>
+              <span class="suggestion-score"
+                >{{ (suggestion.similarity * 100) | number:'1.0-0' }}%
+                similaire</span
+              >
             </button>
           </div>
         </div>
-        
-        <span class="help-text" *ngIf="existingGames.length > 0 && gameSuggestions.length === 0">
+
+        <span
+          class="help-text"
+          *ngIf="existingGames.length > 0 && gameSuggestions.length === 0"
+        >
           💡 Suggestions basées sur les jeux existants
         </span>
-        <span class="error-text" *ngIf="sessionForm.get('game')?.touched && sessionForm.get('game')?.invalid">
+        <span
+          class="error-text"
+          *ngIf="sessionForm.get('game')?.touched && sessionForm.get('game')?.invalid"
+        >
           {{ getErrorMessage('game') }}
         </span>
       </div>
@@ -70,7 +89,10 @@
           placeholder="ex: Les Mines de Phandelver - Chapitre 1"
           [class.error]="sessionForm.get('title')?.touched && sessionForm.get('title')?.invalid"
         />
-        <span class="error-text" *ngIf="sessionForm.get('title')?.touched && sessionForm.get('title')?.invalid">
+        <span
+          class="error-text"
+          *ngIf="sessionForm.get('title')?.touched && sessionForm.get('title')?.invalid"
+        >
           {{ getErrorMessage('title') }}
         </span>
       </div>
@@ -99,7 +121,10 @@
           formControlName="date"
           [class.error]="sessionForm.get('date')?.touched && sessionForm.get('date')?.invalid"
         />
-        <span class="error-text" *ngIf="sessionForm.get('date')?.touched && sessionForm.get('date')?.invalid">
+        <span
+          class="error-text"
+          *ngIf="sessionForm.get('date')?.touched && sessionForm.get('date')?.invalid"
+        >
           {{ getErrorMessage('date') }}
         </span>
       </div>
@@ -116,7 +141,10 @@
           max="12"
           [class.error]="sessionForm.get('playersMax')?.touched && sessionForm.get('playersMax')?.invalid"
         />
-        <span class="error-text" *ngIf="sessionForm.get('playersMax')?.touched && sessionForm.get('playersMax')?.invalid">
+        <span
+          class="error-text"
+          *ngIf="sessionForm.get('playersMax')?.touched && sessionForm.get('playersMax')?.invalid"
+        >
           {{ getErrorMessage('playersMax') }}
         </span>
       </div>

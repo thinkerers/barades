@@ -1,15 +1,15 @@
-import { Component, Input, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { Session } from '../../core/services/sessions.service';
-import { ReservationsService } from '../../core/services/reservations.service';
+import { Component, inject, Input, OnInit } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-import { Router } from '@angular/router';
+import { ReservationsService } from '../../core/services/reservations.service';
+import { Session } from '../../core/services/sessions.service';
 
 @Component({
   selector: 'app-session-card',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, MatIconModule],
   templateUrl: './session-card.html',
   styleUrl: './session-card.css',
 })
@@ -30,21 +30,21 @@ export class SessionCardComponent implements OnInit {
 
   getTagColorClass(color: string): string {
     const colorMap: Record<string, string> = {
-      'RED': 'tag--red',
-      'GREEN': 'tag--green',
-      'PURPLE': 'tag--purple',
-      'BLUE': 'tag--blue',
-      'GRAY': 'tag--gray'
+      RED: 'tag--red',
+      GREEN: 'tag--green',
+      PURPLE: 'tag--purple',
+      BLUE: 'tag--blue',
+      GRAY: 'tag--gray',
     };
     return colorMap[color] || 'tag--gray';
   }
 
   getLevelLabel(level: string): string {
     const labels: Record<string, string> = {
-      'BEGINNER': 'Débutant',
-      'INTERMEDIATE': 'Intermédiaire',
-      'ADVANCED': 'Avancé',
-      'OPEN': 'Tous niveaux'
+      BEGINNER: 'Débutant',
+      INTERMEDIATE: 'Intermédiaire',
+      ADVANCED: 'Avancé',
+      OPEN: 'Tous niveaux',
     };
     return labels[level] || level;
   }
@@ -57,7 +57,7 @@ export class SessionCardComponent implements OnInit {
       month: 'long',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     }).format(date);
   }
 
@@ -89,12 +89,14 @@ export class SessionCardComponent implements OnInit {
     // Load user's reservations and check if one matches this session
     this.reservationsService.getReservations(currentUser.id).subscribe({
       next: (reservations) => {
-        this.isRegistered = reservations.some(r => r.sessionId === this.session.id);
+        this.isRegistered = reservations.some(
+          (r) => r.sessionId === this.session.id
+        );
       },
       error: (err) => {
         console.error('Error checking registration status:', err);
         this.isRegistered = false;
-      }
+      },
     });
   }
 
@@ -104,7 +106,7 @@ export class SessionCardComponent implements OnInit {
     if (!currentUser) {
       // Rediriger vers la page de connexion
       this.router.navigate(['/login'], {
-        queryParams: { returnUrl: `/sessions` }
+        queryParams: { returnUrl: `/sessions` },
       });
       return;
     }
@@ -118,7 +120,8 @@ export class SessionCardComponent implements OnInit {
     this.loading = true;
     this.error = null;
 
-    this.reservationsService.createReservation(this.session.id, currentUser.id)
+    this.reservationsService
+      .createReservation(this.session.id, currentUser.id)
       .subscribe({
         next: (reservation) => {
           console.log('Réservation créée:', reservation);
@@ -127,14 +130,16 @@ export class SessionCardComponent implements OnInit {
           this.isRegistered = true;
           this.loading = false;
           // TODO: Afficher un message de succès (toast/snackbar)
-          alert('✅ Réservation confirmée ! Vous avez reçu un email de confirmation.');
+          alert(
+            '✅ Réservation confirmée ! Vous avez reçu un email de confirmation.'
+          );
         },
         error: (err) => {
           console.error('Erreur lors de la réservation:', err);
           this.error = err.error?.message || 'Erreur lors de la réservation';
           this.loading = false;
           alert(`❌ ${this.error}`);
-        }
+        },
       });
   }
 }

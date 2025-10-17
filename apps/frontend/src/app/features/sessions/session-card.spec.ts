@@ -1,27 +1,29 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { SessionCardComponent } from './session-card';
-import { RouterTestingModule } from '@angular/router/testing';
-import { Session } from '../../core/services/sessions.service';
-import { Reservation } from '../../core/services/reservations.service';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
-import { AuthService } from '../../core/services/auth.service';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingModule } from '@angular/router/testing';
 import { of } from 'rxjs';
+import { AuthService } from '../../core/services/auth.service';
+import { Reservation } from '../../core/services/reservations.service';
+import { Session } from '../../core/services/sessions.service';
+import { SessionCardComponent } from './session-card';
 
 describe('SessionCardComponent', () => {
   let component: SessionCardComponent;
   let fixture: ComponentFixture<SessionCardComponent>;
 
   const mockAuthService = {
-    getCurrentUser: jest.fn().mockReturnValue({ id: 'user-1', username: 'TestUser' }),
-    isAuthenticated: jest.fn().mockReturnValue(true)
+    getCurrentUser: jest
+      .fn()
+      .mockReturnValue({ id: 'user-1', username: 'TestUser' }),
+    isAuthenticated: jest.fn().mockReturnValue(true),
   };
 
   const mockSession: Session = {
     id: '1',
     game: 'Dungeons & Dragons 5e',
     title: 'Les Mines de Phandelver',
-    description: 'Une aventure épique pour débutants dans l\'univers de D&D',
+    description: "Une aventure épique pour débutants dans l'univers de D&D",
     date: '2025-10-20T18:00:00.000Z',
     recurrenceRule: null,
     recurrenceEndDate: null,
@@ -37,7 +39,7 @@ describe('SessionCardComponent', () => {
     host: {
       id: 'host-1',
       username: 'GameMaster42',
-      avatar: null
+      avatar: null,
     },
     location: {
       id: 'loc-1',
@@ -45,31 +47,36 @@ describe('SessionCardComponent', () => {
       city: 'Brussels',
       type: 'GAME_STORE',
       lat: 50.8476,
-      lon: 4.3572
-    }
+      lon: 4.3572,
+    },
   };
 
   beforeEach(async () => {
     // Reset mocks before each test
-    mockAuthService.getCurrentUser.mockReturnValue({ id: 'user-1', username: 'TestUser' });
+    mockAuthService.getCurrentUser.mockReturnValue({
+      id: 'user-1',
+      username: 'TestUser',
+    });
     mockAuthService.isAuthenticated.mockReturnValue(true);
-    
+
     await TestBed.configureTestingModule({
       imports: [SessionCardComponent, RouterTestingModule],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: AuthService, useValue: mockAuthService }
-      ]
+        { provide: AuthService, useValue: mockAuthService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SessionCardComponent);
     component = fixture.componentInstance;
     component.session = { ...mockSession };
-    
+
     // Mock the reservations service
-    jest.spyOn(component['reservationsService'], 'getReservations').mockReturnValue(of([]));
-    
+    jest
+      .spyOn(component['reservationsService'], 'getReservations')
+      .mockReturnValue(of([]));
+
     fixture.detectChanges();
   });
 
@@ -304,7 +311,9 @@ describe('SessionCardComponent', () => {
       component.session.playersMax = 5;
       component.session.playersCurrent = 2;
       fixture.detectChanges();
-      const badge = fixture.nativeElement.querySelector('.session-card__status');
+      const badge = fixture.nativeElement.querySelector(
+        '.session-card__status'
+      );
       expect(badge.textContent).toContain('3 place(s) disponible(s)');
       expect(badge.classList.contains('status--available')).toBe(true);
     });
@@ -313,7 +322,9 @@ describe('SessionCardComponent', () => {
       component.session.playersMax = 5;
       component.session.playersCurrent = 3;
       fixture.detectChanges();
-      const badge = fixture.nativeElement.querySelector('.session-card__status');
+      const badge = fixture.nativeElement.querySelector(
+        '.session-card__status'
+      );
       expect(badge.textContent).toContain('2 place(s) disponible(s)');
       expect(badge.classList.contains('status--limited')).toBe(true);
     });
@@ -322,7 +333,9 @@ describe('SessionCardComponent', () => {
       component.session.playersMax = 5;
       component.session.playersCurrent = 5;
       fixture.detectChanges();
-      const badge = fixture.nativeElement.querySelector('.session-card__status');
+      const badge = fixture.nativeElement.querySelector(
+        '.session-card__status'
+      );
       expect(badge.textContent).toContain('Complet');
       expect(badge.classList.contains('status--full')).toBe(true);
     });
@@ -348,52 +361,82 @@ describe('SessionCardComponent', () => {
     it('should redirect to login when user is not authenticated', () => {
       mockAuthService.getCurrentUser.mockReturnValue(null);
       const navigateSpy = jest.spyOn(component['router'], 'navigate');
-      
+
       component.onReserve();
-      
+
       expect(navigateSpy).toHaveBeenCalledWith(['/login'], {
-        queryParams: { returnUrl: '/sessions' }
+        queryParams: { returnUrl: '/sessions' },
       });
     });
 
     it('should not create reservation when user is not authenticated', () => {
       mockAuthService.getCurrentUser.mockReturnValue(null);
-      const createSpy = jest.spyOn(component['reservationsService'], 'createReservation');
-      
+      const createSpy = jest.spyOn(
+        component['reservationsService'],
+        'createReservation'
+      );
+
       component.onReserve();
-      
+
       expect(createSpy).not.toHaveBeenCalled();
     });
   });
 
   describe('Registration Status', () => {
     it('should check registration status on init', () => {
-      const spy = jest.spyOn(component['reservationsService'], 'getReservations');
+      const spy = jest.spyOn(
+        component['reservationsService'],
+        'getReservations'
+      );
       component.ngOnInit();
       expect(spy).toHaveBeenCalledWith('user-1');
     });
 
     it('should set isRegistered to false when user has no reservations', () => {
-      jest.spyOn(component['reservationsService'], 'getReservations').mockReturnValue(of([]));
+      jest
+        .spyOn(component['reservationsService'], 'getReservations')
+        .mockReturnValue(of([]));
       component.checkIfRegistered();
       expect(component.isRegistered).toBe(false);
     });
 
     it('should set isRegistered to true when user has reservation for this session', () => {
       const mockReservations: Reservation[] = [
-        { id: 'res-1', sessionId: '1', userId: 'user-1', status: 'CONFIRMED', createdAt: '2025-10-01T00:00:00.000Z' }
+        {
+          id: 'res-1',
+          sessionId: '1',
+          userId: 'user-1',
+          status: 'CONFIRMED',
+          createdAt: '2025-10-01T00:00:00.000Z',
+        },
       ];
-      jest.spyOn(component['reservationsService'], 'getReservations').mockReturnValue(of(mockReservations));
+      jest
+        .spyOn(component['reservationsService'], 'getReservations')
+        .mockReturnValue(of(mockReservations));
       component.checkIfRegistered();
       expect(component.isRegistered).toBe(true);
     });
 
     it('should set isRegistered to false when user has reservations for other sessions', () => {
       const mockReservations: Reservation[] = [
-        { id: 'res-1', sessionId: '2', userId: 'user-1', status: 'CONFIRMED', createdAt: '2025-10-01T00:00:00.000Z' },
-        { id: 'res-2', sessionId: '3', userId: 'user-1', status: 'CONFIRMED', createdAt: '2025-10-02T00:00:00.000Z' }
+        {
+          id: 'res-1',
+          sessionId: '2',
+          userId: 'user-1',
+          status: 'CONFIRMED',
+          createdAt: '2025-10-01T00:00:00.000Z',
+        },
+        {
+          id: 'res-2',
+          sessionId: '3',
+          userId: 'user-1',
+          status: 'CONFIRMED',
+          createdAt: '2025-10-02T00:00:00.000Z',
+        },
       ];
-      jest.spyOn(component['reservationsService'], 'getReservations').mockReturnValue(of(mockReservations));
+      jest
+        .spyOn(component['reservationsService'], 'getReservations')
+        .mockReturnValue(of(mockReservations));
       component.checkIfRegistered();
       expect(component.isRegistered).toBe(false);
     });
@@ -407,15 +450,19 @@ describe('SessionCardComponent', () => {
     it('should display "Inscrit" badge when user is registered', () => {
       component.isRegistered = true;
       fixture.detectChanges();
-      const badge = fixture.nativeElement.querySelector('.session-card__registered');
+      const badge = fixture.nativeElement.querySelector(
+        '.session-card__registered'
+      );
       expect(badge).toBeTruthy();
-      expect(badge.textContent).toContain('✓ Inscrit');
+      expect(badge.textContent).toContain('Inscrit');
     });
 
     it('should not display "Inscrit" badge when user is not registered', () => {
       component.isRegistered = false;
       fixture.detectChanges();
-      const badge = fixture.nativeElement.querySelector('.session-card__registered');
+      const badge = fixture.nativeElement.querySelector(
+        '.session-card__registered'
+      );
       expect(badge).toBeFalsy();
     });
 
@@ -423,7 +470,7 @@ describe('SessionCardComponent', () => {
       component.isRegistered = true;
       fixture.detectChanges();
       const button = fixture.nativeElement.querySelector('.button--primary');
-      expect(button.textContent).toContain('✓ Déjà inscrit');
+      expect(button.textContent).toContain('Déjà inscrit');
     });
 
     it('should disable button when user is already registered', () => {
@@ -441,33 +488,38 @@ describe('SessionCardComponent', () => {
     });
 
     it('should update isRegistered and playersCurrent after successful reservation', (done) => {
-      const mockReservation: Reservation = { 
-        id: 'res-new', 
-        sessionId: '1', 
-        userId: 'user-1', 
-        status: 'CONFIRMED', 
-        createdAt: '2025-10-16T00:00:00.000Z' 
+      const mockReservation: Reservation = {
+        id: 'res-new',
+        sessionId: '1',
+        userId: 'user-1',
+        status: 'CONFIRMED',
+        createdAt: '2025-10-16T00:00:00.000Z',
       };
-      
-      const createSpy = jest.spyOn(component['reservationsService'], 'createReservation')
+
+      const createSpy = jest
+        .spyOn(component['reservationsService'], 'createReservation')
         .mockReturnValue(of(mockReservation));
-      jest.spyOn(window, 'alert').mockImplementation(() => { /* noop */ });
-      
+      jest.spyOn(window, 'alert').mockImplementation(() => {
+        /* noop */
+      });
+
       component.isRegistered = false;
       const initialPlayers = component.session.playersCurrent;
-      
+
       // Subscribe to verify the observable completes
       createSpy.mockReturnValue(of(mockReservation));
-      component['reservationsService'].createReservation(component.session.id, 'user-1').subscribe({
-        next: () => {
-          component.session.playersCurrent++;
-          component.isRegistered = true;
-          
-          expect(component.isRegistered).toBe(true);
-          expect(component.session.playersCurrent).toBe(initialPlayers + 1);
-          done();
-        }
-      });
+      component['reservationsService']
+        .createReservation(component.session.id, 'user-1')
+        .subscribe({
+          next: () => {
+            component.session.playersCurrent++;
+            component.isRegistered = true;
+
+            expect(component.isRegistered).toBe(true);
+            expect(component.session.playersCurrent).toBe(initialPlayers + 1);
+            done();
+          },
+        });
     });
   });
 });
