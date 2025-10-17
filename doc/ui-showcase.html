@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bar à Dés - Charte Graphique UI Components</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-900 p-8">
+    
+    <!-- Header -->
+    <div class="max-w-7xl mx-auto mb-12">
+        <h1 class="text-5xl font-bold text-white mb-4 gradient-bg bg-clip-text text-transparent">
+            Bar à Dés
+        </h1>
+        <p class="text-xl text-gray-400">Charte Graphique - Composants UI</p>
+    </div>
+
+    <div class="max-w-7xl mx-auto space-y-12">
+
+        <!-- ============================================ -->
+        <!-- SECTION 1: PALETTE DE COULEURS -->
+        <!-- ============================================ -->
+        <section class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold text-white mb-6">🎨 Palette de Couleurs</h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <!-- Couleurs primaires -->
+                <div>
+                    <div class="h-32 rounded-lg mb-3" style="background: #667eea;"></div>
+                    <p class="text-white font-semibold">#667eea</p>
+                    <p class="text-gray-400 text-sm">Indigo Primaire</p>
+                </div>
+                <div>
+                    <div class="h-32 rounded-lg mb-3" style="background: #764ba2;"></div>
+                    <p class="text-white font-semibold">#764ba2</p>
+                    <p class="text-gray-400 text-sm">Violet Secondaire</p>
+                </div>
+                <div>
+                    <div class="h-32 rounded-lg mb-3 border border-gray-600" style="background: #111827;"></div>
+                    <p class="text-white font-semibold">#111827</p>
+                    <p class="text-gray-400 text-sm">Dark Background</p>
+                </div>
+                <div>
+                    <div class="h-32 rounded-lg mb-3 border border-gray-600" style="background: #1f2937;"></div>
+                    <p class="text-white font-semibold">#1f2937</p>
+                    <p class="text-gray-400 text-sm">Gray Surface</p>
+                </div>
+                
+                <!-- Couleurs fonctionnelles -->
+                <div>
+                    <div class="h-32 rounded-lg mb-3" style="background: #10b981;"></div>
+                    <p class="text-white font-semibold">#10b981</p>
+                    <p class="text-gray-400 text-sm">Success Green</p>
+                </div>
+                <div>
+                    <div class="h-32 rounded-lg mb-3" style="background: #ef4444;"></div>
+                    <p class="text-white font-semibold">#ef4444</p>
+                    <p class="text-gray-400 text-sm">Error Red</p>
+                </div>
+                <div>
+                    <div class="h-32 rounded-lg mb-3" style="background: #f59e0b;"></div>
+                    <p class="text-white font-semibold">#f59e0b</p>
+                    <p class="text-gray-400 text-sm">Warning Orange</p>
+                </div>
+                <div>
+                    <div class="h-32 rounded-lg mb-3" style="background: #3b82f6;"></div>
+                    <p class="text-white font-semibold">#3b82f6</p>
+                    <p class="text-gray-400 text-sm">Info Blue</p>
+                </div>
+            </div>
+
+            <!-- Dégradé signature -->
+            <div class="mt-8">
+                <h3 class="text-xl font-semibold text-white mb-4">Dégradé Signature</h3>
+                <div class="h-24 rounded-lg gradient-bg flex items-center justify-center">
+                    <p class="text-white font-bold text-2xl">linear-gradient(135deg, #667eea 0%, #764ba2 100%)</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SECTION 2: TYPOGRAPHIE -->
+        <!-- ============================================ -->
+        <section class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold text-white mb-6">✍️ Typographie - Inter Font</h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <p class="text-gray-400 text-sm mb-2">H1 - 48px Bold</p>
+                    <h1 class="text-5xl font-bold text-white">Trouvez votre prochaine aventure</h1>
+                </div>
+                
+                <div>
+                    <p class="text-gray-400 text-sm mb-2">H2 - 32px Bold</p>
+                    <h2 class="text-3xl font-bold text-white">Sessions à proximité</h2>
+                </div>
+                
+                <div>
+                    <p class="text-gray-400 text-sm mb-2">H3 - 24px SemiBold</p>
+                    <h3 class="text-2xl font-semibold text-white">Dungeons & Dragons 5e</h3>
+                </div>
+                
+                <div>
+                    <p class="text-gray-400 text-sm mb-2">Body - 16px Regular</p>
+                    <p class="text-base text-gray-300">
+                        Rejoignez une communauté passionnée de joueurs de jeux de rôle. 
+                        Trouvez des sessions près de chez vous, créez votre groupe et organisez 
+                        vos prochaines parties avec notre système de planning collaboratif.
+                    </p>
+                </div>
+                
+                <div>
+                    <p class="text-gray-400 text-sm mb-2">Small - 14px Regular</p>
+                    <p class="text-sm text-gray-400">
+                        Session organisée par alice_dm • Brussels • 6 places disponibles
+                    </p>
+                </div>
+                
+                <div>
+                    <p class="text-gray-400 text-sm mb-2">Caption - 12px Medium</p>
+                    <span class="text-xs font-medium text-gray-400 uppercase tracking-wide">
+                        DÉBUTANT • EN LIGNE • GRATUIT
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SECTION 3: BOUTONS -->
+        <!-- ============================================ -->
+        <section class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold text-white mb-6">🔘 Boutons</h2>
+            
+            <div class="space-y-6">
+                <!-- Bouton primaire -->
+                <div>
+                    <p class="text-gray-400 text-sm mb-3">Bouton Primaire (Normal)</p>
+                    <button class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
+                        Réserver ma place
+                    </button>
+                </div>
+                
+                <!-- Bouton primaire large -->
+                <div>
+                    <p class="text-gray-400 text-sm mb-3">Bouton Primaire (Large)</p>
+                    <button class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold px-8 py-4 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 text-lg">
+                        Créer un groupe
+                    </button>
+                </div>
+                
+                <!-- Bouton secondaire -->
+                <div>
+                    <p class="text-gray-400 text-sm mb-3">Bouton Secondaire (Outline)</p>
+                    <button class="border-2 border-indigo-500 text-indigo-400 hover:bg-indigo-500 hover:text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300">
+                        En savoir plus
+                    </button>
+                </div>
+                
+                <!-- Bouton danger -->
+                <div>
+                    <p class="text-gray-400 text-sm mb-3">Bouton Danger</p>
+                    <button class="bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300">
+                        Annuler la réservation
+                    </button>
+                </div>
+                
+                <!-- Bouton disabled -->
+                <div>
+                    <p class="text-gray-400 text-sm mb-3">Bouton Désactivé</p>
+                    <button class="bg-gray-700 text-gray-500 font-semibold px-6 py-3 rounded-lg cursor-not-allowed" disabled>
+                        Complet
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SECTION 4: BADGES & TAGS -->
+        <!-- ============================================ -->
+        <section class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold text-white mb-6">🏷️ Badges & Tags</h2>
+            
+            <div class="space-y-6">
+                <!-- Badges de disponibilité -->
+                <div>
+                    <p class="text-gray-400 text-sm mb-3">Badges Disponibilité</p>
+                    <div class="flex flex-wrap gap-3">
+                        <span class="bg-green-500 text-white text-xs font-medium px-3 py-1 rounded-full">
+                            3/6 places
+                        </span>
+                        <span class="bg-red-500 text-white text-xs font-medium px-3 py-1 rounded-full">
+                            Complet (6/6)
+                        </span>
+                        <span class="bg-orange-500 text-white text-xs font-medium px-3 py-1 rounded-full">
+                            En attente
+                        </span>
+                        <span class="bg-blue-500 text-white text-xs font-medium px-3 py-1 rounded-full">
+                            Confirmé
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Badges de niveau -->
+                <div>
+                    <p class="text-gray-400 text-sm mb-3">Badges Niveau</p>
+                    <div class="flex flex-wrap gap-3">
+                        <span class="bg-green-500/20 text-green-300 text-xs font-medium px-3 py-1 rounded-full border border-green-500/50">
+                            Débutant
+                        </span>
+                        <span class="bg-blue-500/20 text-blue-300 text-xs font-medium px-3 py-1 rounded-full border border-blue-500/50">
+                            Intermédiaire
+                        </span>
+                        <span class="bg-purple-500/20 text-purple-300 text-xs font-medium px-3 py-1 rounded-full border border-purple-500/50">
+                            Avancé
+                        </span>
+                        <span class="bg-red-500/20 text-red-300 text-xs font-medium px-3 py-1 rounded-full border border-red-500/50">
+                            Expert
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Badges de playstyle -->
+                <div>
+                    <p class="text-gray-400 text-sm mb-3">Badges Playstyle</p>
+                    <div class="flex flex-wrap gap-3">
+                        <span class="bg-indigo-500/20 text-indigo-300 text-xs font-medium px-3 py-1 rounded-full border border-indigo-500/50">
+                            🎲 CASUAL
+                        </span>
+                        <span class="bg-red-500/20 text-red-300 text-xs font-medium px-3 py-1 rounded-full border border-red-500/50">
+                            ⚔️ HARDCORE
+                        </span>
+                        <span class="bg-purple-500/20 text-purple-300 text-xs font-medium px-3 py-1 rounded-full border border-purple-500/50">
+                            🎭 MIXED
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Tags de jeux -->
+                <div>
+                    <p class="text-gray-400 text-sm mb-3">Tags Jeux</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-gray-700 text-gray-300 text-xs font-medium px-3 py-1 rounded">
+                            D&D 5e
+                        </span>
+                        <span class="bg-gray-700 text-gray-300 text-xs font-medium px-3 py-1 rounded">
+                            Pathfinder
+                        </span>
+                        <span class="bg-gray-700 text-gray-300 text-xs font-medium px-3 py-1 rounded">
+                            Call of Cthulhu
+                        </span>
+                        <span class="bg-gray-700 text-gray-300 text-xs font-medium px-3 py-1 rounded">
+                            Catan
+                        </span>
+                        <span class="bg-gray-700 text-gray-300 text-xs font-medium px-3 py-1 rounded">
+                            Wingspan
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SECTION 5: CARDS -->
+        <!-- ============================================ -->
+        <section class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold text-white mb-6">🃏 Cards</h2>
+            
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Session Card -->
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-gray-700">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-semibold text-white">Dungeons & Dragons 5e</h3>
+                        <span class="bg-green-500 text-white text-xs font-medium px-3 py-1 rounded-full">
+                            3/6 places
+                        </span>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">
+                        Aventure épique pour débutants et intermédiaires. Plongez dans un monde 
+                        de magie et de mystères avec des compagnons passionnés.
+                    </p>
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center text-sm text-gray-300">
+                            <span class="mr-2">👤</span>
+                            <span>Organisé par <span class="text-indigo-400 font-medium">alice_dm</span></span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-300">
+                            <span class="mr-2">📍</span>
+                            <span>Café Joystick, Brussels</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-300">
+                            <span class="mr-2">📅</span>
+                            <span>Samedi 19 oct, 14h00</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex gap-2">
+                            <span class="bg-green-500/20 text-green-300 text-xs px-2 py-1 rounded border border-green-500/50">
+                                Débutant
+                            </span>
+                            <span class="bg-gray-700 text-gray-300 text-xs px-2 py-1 rounded">
+                                Table
+                            </span>
+                        </div>
+                        <button class="text-indigo-400 hover:text-indigo-300 font-medium text-sm">
+                            Voir détails →
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Group Card -->
+                <div class="bg-gray-800 rounded-xl shadow-lg p-6 hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-gray-700">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-xl font-semibold text-white">Brussels Adventurers Guild</h3>
+                        <span class="bg-indigo-500/20 text-indigo-300 text-xs font-medium px-3 py-1 rounded-full border border-indigo-500/50">
+                            🎲 CASUAL
+                        </span>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-4">
+                        Groupe convivial de joueurs basés à Bruxelles. Sessions régulières 
+                        de D&D, Pathfinder et autres systèmes.
+                    </p>
+                    <div class="space-y-2 mb-4">
+                        <div class="flex items-center text-sm text-gray-300">
+                            <span class="mr-2">👥</span>
+                            <span><span class="text-white font-medium">12 membres</span> actifs</span>
+                        </div>
+                        <div class="flex items-center text-sm text-gray-300">
+                            <span class="mr-2">🎮</span>
+                            <span>D&D 5e, Pathfinder, Call of Cthulhu</span>
+                        </div>
+                    </div>
+                    <button class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-2 rounded-lg hover:shadow-lg transition-all duration-300">
+                        Rejoindre le groupe
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SECTION 6: INPUTS & FORMS -->
+        <!-- ============================================ -->
+        <section class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold text-white mb-6">📝 Inputs & Formulaires</h2>
+            
+            <div class="space-y-6 max-w-2xl">
+                <!-- Text input -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Nom d'utilisateur</label>
+                    <input 
+                        type="text" 
+                        class="bg-gray-900 border-2 border-gray-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 text-white placeholder-gray-500 px-4 py-3 rounded-lg w-full transition-all duration-300"
+                        placeholder="alice_dm"
+                    >
+                </div>
+                
+                <!-- Email input -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                    <input 
+                        type="email" 
+                        class="bg-gray-900 border-2 border-gray-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 text-white placeholder-gray-500 px-4 py-3 rounded-lg w-full transition-all duration-300"
+                        placeholder="alice@example.com"
+                    >
+                </div>
+                
+                <!-- Textarea -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                    <textarea 
+                        class="bg-gray-900 border-2 border-gray-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 text-white placeholder-gray-500 px-4 py-3 rounded-lg w-full transition-all duration-300"
+                        rows="4"
+                        placeholder="Décrivez votre session..."
+                    ></textarea>
+                </div>
+                
+                <!-- Select -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-2">Niveau requis</label>
+                    <select class="bg-gray-900 border-2 border-gray-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/50 text-white px-4 py-3 rounded-lg w-full transition-all duration-300">
+                        <option>Débutant</option>
+                        <option>Intermédiaire</option>
+                        <option>Avancé</option>
+                        <option>Expert</option>
+                    </select>
+                </div>
+                
+                <!-- Checkbox -->
+                <div class="flex items-center">
+                    <input 
+                        type="checkbox" 
+                        id="online" 
+                        class="w-5 h-5 text-indigo-600 bg-gray-900 border-gray-700 rounded focus:ring-indigo-500 focus:ring-2"
+                    >
+                    <label for="online" class="ml-3 text-gray-300">Session en ligne (Discord/Roll20)</label>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SECTION 7: MODALS -->
+        <!-- ============================================ -->
+        <section class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold text-white mb-6">🪟 Modals</h2>
+            
+            <!-- Modal Example (inline, not overlay) -->
+            <div class="max-w-md mx-auto bg-gray-900 rounded-2xl shadow-2xl p-8 border border-gray-700">
+                <h3 class="text-2xl font-bold text-white mb-6">Connexion</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                        <input 
+                            type="email" 
+                            class="bg-gray-800 border-2 border-gray-700 focus:border-indigo-500 text-white px-4 py-3 rounded-lg w-full"
+                            placeholder="votre@email.com"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Mot de passe</label>
+                        <input 
+                            type="password" 
+                            class="bg-gray-800 border-2 border-gray-700 focus:border-indigo-500 text-white px-4 py-3 rounded-lg w-full"
+                            placeholder="••••••••"
+                        >
+                    </div>
+                    
+                    <button class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold py-3 rounded-lg hover:shadow-lg transition-all duration-300">
+                        Se connecter
+                    </button>
+                    
+                    <p class="text-center text-sm text-gray-400">
+                        Pas encore de compte ? 
+                        <a href="#" class="text-indigo-400 hover:text-indigo-300 font-medium">S'inscrire</a>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- SECTION 8: ALERTS & NOTIFICATIONS -->
+        <!-- ============================================ -->
+        <section class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+            <h2 class="text-3xl font-bold text-white mb-6">⚠️ Alerts & Notifications</h2>
+            
+            <div class="space-y-4 max-w-2xl">
+                <!-- Success alert -->
+                <div class="bg-green-500/10 border border-green-500/50 text-green-300 px-4 py-3 rounded-lg flex items-start">
+                    <span class="text-xl mr-3">✅</span>
+                    <div>
+                        <p class="font-semibold">Réservation confirmée !</p>
+                        <p class="text-sm mt-1">Vous avez rejoint la session "D&D 5e - Aventure épique"</p>
+                    </div>
+                </div>
+                
+                <!-- Error alert -->
+                <div class="bg-red-500/10 border border-red-500/50 text-red-300 px-4 py-3 rounded-lg flex items-start">
+                    <span class="text-xl mr-3">❌</span>
+                    <div>
+                        <p class="font-semibold">Erreur lors de la réservation</p>
+                        <p class="text-sm mt-1">Cette session est complète. Essayez une autre date.</p>
+                    </div>
+                </div>
+                
+                <!-- Warning alert -->
+                <div class="bg-orange-500/10 border border-orange-500/50 text-orange-300 px-4 py-3 rounded-lg flex items-start">
+                    <span class="text-xl mr-3">⚠️</span>
+                    <div>
+                        <p class="font-semibold">Attention</p>
+                        <p class="text-sm mt-1">Plus que 2 places disponibles pour cette session</p>
+                    </div>
+                </div>
+                
+                <!-- Info alert -->
+                <div class="bg-blue-500/10 border border-blue-500/50 text-blue-300 px-4 py-3 rounded-lg flex items-start">
+                    <span class="text-xl mr-3">ℹ️</span>
+                    <div>
+                        <p class="font-semibold">Information</p>
+                        <p class="text-sm mt-1">Un rappel vous sera envoyé 24h avant la session</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Footer info -->
+    <div class="max-w-7xl mx-auto mt-12 text-center text-gray-500 text-sm">
+        <p>Bar à Dés - Charte Graphique UI Showcase</p>
+        <p class="mt-2">Pour Canva : Prenez des screenshots de chaque section</p>
+        <p class="mt-1">Police : Inter • Gradient : #667eea → #764ba2</p>
+    </div>
+
+</body>
+</html>

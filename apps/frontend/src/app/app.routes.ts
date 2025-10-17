@@ -9,6 +9,7 @@ import { GroupsListComponent } from './features/groups/groups-list';
 import { GroupDetailComponent } from './features/groups/group-detail';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
+import { ShowcasePage } from './features/showcase/showcase-page';
 
 export const appRoutes: Route[] = [
 	// Auth routes (no layout)
@@ -52,6 +53,10 @@ export const appRoutes: Route[] = [
 			{
 				path: 'groups/:id',
 				component: GroupDetailComponent,
+			},
+			{
+				path: 'showcase',
+				component: ShowcasePage,
 			},
 		],
 	},
