@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import {
   EmptyStateComponent,
+  ErrorMessageComponent,
   LoadingSpinnerComponent,
   RadioGroupComponent,
   RadioOption,
@@ -21,6 +22,7 @@ import { SessionCardComponent } from './session-card';
     SessionCardComponent,
     LoadingSpinnerComponent,
     EmptyStateComponent,
+    ErrorMessageComponent,
     SearchInputComponent,
     RadioGroupComponent,
   ],

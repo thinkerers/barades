@@ -1,9 +1,10 @@
-import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { GroupsService, Group } from '../../core/services/groups.service';
-import { PollsService, Poll } from '../../core/services/polls.service';
+import { ErrorMessageComponent } from '@org/ui';
 import { AuthService } from '../../core/services/auth.service';
+import { Group, GroupsService } from '../../core/services/groups.service';
+import { Poll, PollsService } from '../../core/services/polls.service';
 import { PollWidgetComponent } from './poll-widget';
 
 interface GroupMember {
@@ -37,9 +38,14 @@ interface GroupDetail extends Group {
 @Component({
   selector: 'app-group-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, PollWidgetComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    PollWidgetComponent,
+    ErrorMessageComponent,
+  ],
   templateUrl: './group-detail.html',
-  styleUrl: './group-detail.css'
+  styleUrl: './group-detail.css',
 })
 export class GroupDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -59,7 +65,7 @@ export class GroupDetailComponent implements OnInit {
   ngOnInit(): void {
     // Récupérer l'utilisateur connecté
     this.currentUserId = this.authService.getCurrentUserId();
-    
+
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadGroup(id);
@@ -78,14 +84,16 @@ export class GroupDetailComponent implements OnInit {
       next: (data) => {
         this.group = data as GroupDetail;
         // Vérifier si l'utilisateur est membre (comparer avec userId)
-        this.isMember = this.group.members?.some(m => m.userId === this.currentUserId) || false;
+        this.isMember =
+          this.group.members?.some((m) => m.userId === this.currentUserId) ||
+          false;
         this.loading = false;
       },
       error: (err) => {
         console.error('Error loading group:', err);
         this.error = 'Impossible de charger les détails du groupe.';
         this.loading = false;
-      }
+      },
     });
   }
 
@@ -100,7 +108,7 @@ export class GroupDetailComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading polls:', err);
-      }
+      },
     });
   }
 
@@ -111,7 +119,7 @@ export class GroupDetailComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading poll details:', err);
-      }
+      },
     });
   }
 
@@ -128,20 +136,20 @@ export class GroupDetailComponent implements OnInit {
 
   getPlaystyleLabel(playstyle: string): string {
     const labels: Record<string, string> = {
-      'COMPETITIVE': 'Compétitif',
-      'CASUAL': 'Décontracté',
-      'STORY_DRIVEN': 'Narratif',
-      'SANDBOX': 'Bac à sable'
+      COMPETITIVE: 'Compétitif',
+      CASUAL: 'Décontracté',
+      STORY_DRIVEN: 'Narratif',
+      SANDBOX: 'Bac à sable',
     };
     return labels[playstyle] || playstyle;
   }
 
   getPlaystyleColor(playstyle: string): string {
     const colors: Record<string, string> = {
-      'COMPETITIVE': 'red',
-      'CASUAL': 'green',
-      'STORY_DRIVEN': 'purple',
-      'SANDBOX': 'blue'
+      COMPETITIVE: 'red',
+      CASUAL: 'green',
+      STORY_DRIVEN: 'purple',
+      SANDBOX: 'blue',
     };
     return colors[playstyle] || 'gray';
   }
@@ -179,7 +187,7 @@ export class GroupDetailComponent implements OnInit {
     return new Intl.DateTimeFormat('fr-BE', {
       day: 'numeric',
       month: 'long',
-      year: 'numeric'
+      year: 'numeric',
     }).format(date);
   }
 
@@ -190,7 +198,7 @@ export class GroupDetailComponent implements OnInit {
       month: 'long',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     }).format(date);
   }
 }

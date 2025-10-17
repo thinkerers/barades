@@ -3,6 +3,7 @@ export * from './lib/ui/ui';
 
 // Feedback components
 export * from './lib/feedback/empty-state/empty-state';
+export * from './lib/feedback/error-message/error-message';
 export * from './lib/feedback/loading-spinner/loading-spinner';
 
 // Input components

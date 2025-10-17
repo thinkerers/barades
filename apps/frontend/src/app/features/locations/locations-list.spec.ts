@@ -1,9 +1,25 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { LocationsListComponent } from './locations-list';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { LocationsService } from '../../core/services/locations.service';
+import {
+  ComponentFixture,
+  TestBed,
+  fakeAsync,
+  tick,
+} from '@angular/core/testing';
+import { Component, Input } from '@angular/core';
 import { of, throwError } from 'rxjs';
+import { LocationsService } from '../../core/services/locations.service';
+
+// Mock MatIcon component
+@Component({
+  selector: 'mat-icon',
+  template: '<span>{{children}}</span>',
+  standalone: true
+})
+class MockMatIconComponent {
+  @Input() children?: string;
+}
+import { LocationsListComponent } from './locations-list';
 
 describe('LocationsListComponent', () => {
   let component: LocationsListComponent;
@@ -26,7 +42,7 @@ describe('LocationsListComponent', () => {
       lon: 4.3572,
       website: 'https://example.com',
       createdAt: '2025-01-01T00:00:00.000Z',
-      updatedAt: '2025-01-01T00:00:00.000Z'
+      updatedAt: '2025-01-01T00:00:00.000Z',
     },
     {
       id: '2',
@@ -43,7 +59,7 @@ describe('LocationsListComponent', () => {
       lon: 4.3589,
       website: 'https://example.com',
       createdAt: '2025-01-01T00:00:00.000Z',
-      updatedAt: '2025-01-01T00:00:00.000Z'
+      updatedAt: '2025-01-01T00:00:00.000Z',
     },
     {
       id: '3',
@@ -60,7 +76,7 @@ describe('LocationsListComponent', () => {
       lon: 4.3517,
       website: 'https://example.com',
       createdAt: '2025-01-01T00:00:00.000Z',
-      updatedAt: '2025-01-01T00:00:00.000Z'
+      updatedAt: '2025-01-01T00:00:00.000Z',
     },
     {
       id: '4',
@@ -77,22 +93,24 @@ describe('LocationsListComponent', () => {
       lon: 0,
       website: '',
       createdAt: '2025-01-01T00:00:00.000Z',
-      updatedAt: '2025-01-01T00:00:00.000Z'
-    }
+      updatedAt: '2025-01-01T00:00:00.000Z',
+    },
   ];
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LocationsListComponent, HttpClientTestingModule],
-      providers: [provideHttpClient()]
+      imports: [LocationsListComponent, HttpClientTestingModule, MockMatIconComponent],
+      providers: [provideHttpClient()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(LocationsListComponent);
     component = fixture.componentInstance;
     locationsService = TestBed.inject(LocationsService);
-    
+
     // Mock the initMap method to prevent Leaflet initialization
-    jest.spyOn<LocationsListComponent, never>(component, 'initMap' as never).mockImplementation();
+    jest
+      .spyOn<LocationsListComponent, never>(component, 'initMap' as never)
+      .mockImplementation();
   });
 
   it('should create', () => {
@@ -100,20 +118,26 @@ describe('LocationsListComponent', () => {
   });
 
   it('should load locations on init', () => {
-    jest.spyOn(locationsService, 'getLocations').mockReturnValue(of(mockLocations));
-    
+    jest
+      .spyOn(locationsService, 'getLocations')
+      .mockReturnValue(of(mockLocations));
+
     fixture.detectChanges();
 
     // Should exclude online location (PRIVATE with lat=0, lon=0)
     expect(component.locations.length).toBe(3);
-    expect(component.locations.every(loc => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0))).toBe(true);
+    expect(
+      component.locations.every(
+        (loc) => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0)
+      )
+    ).toBe(true);
     expect(component.loading).toBe(false);
   });
 
   it('should handle error when loading locations fails', () => {
-    jest.spyOn(locationsService, 'getLocations').mockReturnValue(
-      throwError(() => new Error('Failed to load'))
-    );
+    jest
+      .spyOn(locationsService, 'getLocations')
+      .mockReturnValue(throwError(() => new Error('Failed to load')));
 
     fixture.detectChanges();
 
@@ -122,7 +146,9 @@ describe('LocationsListComponent', () => {
   });
 
   it('should get correct location type label', () => {
-    expect(component.getLocationTypeLabel('GAME_STORE')).toBe('Boutique de jeux');
+    expect(component.getLocationTypeLabel('GAME_STORE')).toBe(
+      'Boutique de jeux'
+    );
     expect(component.getLocationTypeLabel('CAFE')).toBe('Café');
     expect(component.getLocationTypeLabel('BAR')).toBe('Bar');
   });
@@ -130,8 +156,8 @@ describe('LocationsListComponent', () => {
   describe('Filtering', () => {
     beforeEach(() => {
       // Filter out online location (same logic as component)
-      const validLocations = mockLocations.filter(loc => 
-        !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0)
+      const validLocations = mockLocations.filter(
+        (loc) => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0)
       );
       component.locations = [...validLocations];
       component.filteredLocations = [...validLocations];
@@ -141,7 +167,7 @@ describe('LocationsListComponent', () => {
       it('should filter locations by name', () => {
         component.searchTerm = 'Joystick';
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(1);
         expect(component.filteredLocations[0].name).toBe('Café Joystick');
       });
@@ -149,29 +175,31 @@ describe('LocationsListComponent', () => {
       it('should filter locations by address', () => {
         component.searchTerm = 'Bouchers';
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(1);
-        expect(component.filteredLocations[0].address).toBe('Rue des Bouchers 8');
+        expect(component.filteredLocations[0].address).toBe(
+          'Rue des Bouchers 8'
+        );
       });
 
       it('should filter locations by city', () => {
         component.searchTerm = 'Brussels';
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(3); // Exclut la location en ligne
       });
 
       it('should be case-insensitive', () => {
         component.searchTerm = 'brussels';
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(3);
       });
 
       it('should return all locations when search term is empty', () => {
         component.searchTerm = '';
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(3); // Exclut la location en ligne
       });
     });
@@ -180,7 +208,7 @@ describe('LocationsListComponent', () => {
       it('should filter locations by GAME_STORE type', () => {
         component.selectedType = 'GAME_STORE';
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(1);
         expect(component.filteredLocations[0].type).toBe('GAME_STORE');
       });
@@ -188,7 +216,7 @@ describe('LocationsListComponent', () => {
       it('should filter locations by CAFE type', () => {
         component.selectedType = 'CAFE';
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(1);
         expect(component.filteredLocations[0].type).toBe('CAFE');
       });
@@ -196,7 +224,7 @@ describe('LocationsListComponent', () => {
       it('should filter locations by BAR type', () => {
         component.selectedType = 'BAR';
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(1);
         expect(component.filteredLocations[0].type).toBe('BAR');
       });
@@ -204,7 +232,7 @@ describe('LocationsListComponent', () => {
       it('should return all locations when type is empty', () => {
         component.selectedType = '';
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(3); // Exclut la location en ligne
       });
     });
@@ -213,9 +241,9 @@ describe('LocationsListComponent', () => {
       it('should filter locations with WiFi', () => {
         component.filters.wifi = true;
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(3);
-        component.filteredLocations.forEach(loc => {
+        component.filteredLocations.forEach((loc) => {
           expect(loc.amenities).toContain('WiFi');
         });
       });
@@ -223,9 +251,9 @@ describe('LocationsListComponent', () => {
       it('should filter locations with Gaming Tables', () => {
         component.filters.tables = true;
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(2);
-        component.filteredLocations.forEach(loc => {
+        component.filteredLocations.forEach((loc) => {
           expect(loc.amenities).toContain('Gaming Tables');
         });
       });
@@ -233,9 +261,9 @@ describe('LocationsListComponent', () => {
       it('should filter locations with Food', () => {
         component.filters.food = true;
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(2);
-        component.filteredLocations.forEach(loc => {
+        component.filteredLocations.forEach((loc) => {
           expect(loc.amenities).toContain('Food');
         });
       });
@@ -243,9 +271,9 @@ describe('LocationsListComponent', () => {
       it('should filter locations with Drinks', () => {
         component.filters.drinks = true;
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(3);
-        component.filteredLocations.forEach(loc => {
+        component.filteredLocations.forEach((loc) => {
           expect(loc.amenities).toContain('Drinks');
         });
       });
@@ -253,7 +281,7 @@ describe('LocationsListComponent', () => {
       it('should filter locations with Parking', () => {
         component.filters.parking = true;
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(1);
         expect(component.filteredLocations[0].name).toBe('Brussels Game Store');
       });
@@ -262,9 +290,9 @@ describe('LocationsListComponent', () => {
         component.filters.wifi = true;
         component.filters.food = true;
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(2);
-        component.filteredLocations.forEach(loc => {
+        component.filteredLocations.forEach((loc) => {
           expect(loc.amenities).toContain('WiFi');
           expect(loc.amenities).toContain('Food');
         });
@@ -275,7 +303,7 @@ describe('LocationsListComponent', () => {
         component.filters.food = true;
         component.filters.parking = true;
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(1);
         expect(component.filteredLocations[0].name).toBe('Brussels Game Store');
       });
@@ -286,7 +314,7 @@ describe('LocationsListComponent', () => {
         component.searchTerm = 'Brussels';
         component.selectedType = 'GAME_STORE';
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(1);
         expect(component.filteredLocations[0].name).toBe('Brussels Game Store');
       });
@@ -295,7 +323,7 @@ describe('LocationsListComponent', () => {
         component.searchTerm = 'Café';
         component.filters.food = true;
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(1);
         expect(component.filteredLocations[0].name).toBe('Café Joystick');
       });
@@ -304,7 +332,7 @@ describe('LocationsListComponent', () => {
         component.selectedType = 'BAR';
         component.filters.wifi = true;
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(1);
         expect(component.filteredLocations[0].name).toBe('Le Dé à Coudre');
       });
@@ -314,7 +342,7 @@ describe('LocationsListComponent', () => {
         component.selectedType = 'GAME_STORE';
         component.filters.parking = true;
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(1);
         expect(component.filteredLocations[0].name).toBe('Brussels Game Store');
       });
@@ -323,7 +351,7 @@ describe('LocationsListComponent', () => {
         component.searchTerm = 'Café';
         component.selectedType = 'BAR';
         component.applyFilters();
-        
+
         expect(component.filteredLocations.length).toBe(0);
       });
     });
@@ -334,9 +362,9 @@ describe('LocationsListComponent', () => {
         component.selectedType = 'GAME_STORE';
         component.filters.wifi = true;
         component.filters.food = true;
-        
+
         component.resetFilters();
-        
+
         expect(component.searchTerm).toBe('');
         expect(component.selectedType).toBe('');
         expect(component.filters.wifi).toBe(false);
@@ -350,9 +378,9 @@ describe('LocationsListComponent', () => {
         component.searchTerm = 'Joystick';
         component.applyFilters();
         expect(component.filteredLocations.length).toBe(1);
-        
+
         component.resetFilters();
-        
+
         expect(component.filteredLocations.length).toBe(3); // Exclut la location en ligne
       });
     });
@@ -389,21 +417,27 @@ describe('LocationsListComponent', () => {
 
     describe('Online/Private location exclusion', () => {
       it('should exclude locations with lat=0 and lon=0 on load', () => {
-        jest.spyOn(locationsService, 'getLocations').mockReturnValue(of(mockLocations));
-        
+        jest
+          .spyOn(locationsService, 'getLocations')
+          .mockReturnValue(of(mockLocations));
+
         component.ngOnInit();
-        
+
         expect(component.locations.length).toBe(3);
-        expect(component.locations.every(loc => loc.lat !== 0 || loc.lon !== 0)).toBe(true);
+        expect(
+          component.locations.every((loc) => loc.lat !== 0 || loc.lon !== 0)
+        ).toBe(true);
       });
 
       it('should exclude PRIVATE locations with no coordinates on load', () => {
-        jest.spyOn(locationsService, 'getLocations').mockReturnValue(of(mockLocations));
-        
+        jest
+          .spyOn(locationsService, 'getLocations')
+          .mockReturnValue(of(mockLocations));
+
         component.ngOnInit();
-        
+
         const hasPrivateWithNoCoords = component.locations.some(
-          loc => loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0
+          (loc) => loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0
         );
         expect(hasPrivateWithNoCoords).toBe(false);
       });
@@ -412,16 +446,18 @@ describe('LocationsListComponent', () => {
         const privateLocationWithCoords = {
           ...mockLocations[3],
           lat: 50.8503,
-          lon: 4.3517
+          lon: 4.3517,
         };
-        jest.spyOn(locationsService, 'getLocations').mockReturnValue(
-          of([...mockLocations.slice(0, 3), privateLocationWithCoords])
-        );
-        
+        jest
+          .spyOn(locationsService, 'getLocations')
+          .mockReturnValue(
+            of([...mockLocations.slice(0, 3), privateLocationWithCoords])
+          );
+
         component.ngOnInit();
-        
+
         const hasPrivateWithCoords = component.locations.some(
-          loc => loc.type === 'PRIVATE' && loc.lat !== 0 && loc.lon !== 0
+          (loc) => loc.type === 'PRIVATE' && loc.lat !== 0 && loc.lon !== 0
         );
         expect(hasPrivateWithCoords).toBe(true);
       });
@@ -456,22 +492,24 @@ describe('LocationsListComponent', () => {
       if (!Element.prototype.scrollIntoView) {
         Element.prototype.scrollIntoView = jest.fn();
       }
-      
+
       // Mock initMap to prevent Leaflet initialization errors
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       jest.spyOn(component as any, 'initMap').mockImplementation(jest.fn());
-      
-      jest.spyOn(locationsService, 'getLocations').mockReturnValue(of(mockLocations));
+
+      jest
+        .spyOn(locationsService, 'getLocations')
+        .mockReturnValue(of(mockLocations));
       fixture.detectChanges();
-      
+
       // Setup a mock map and marker for testing
       component['map'] = {
         setView: jest.fn().mockReturnThis(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
-      
+
       const mockMarker = {
-        openPopup: jest.fn()
+        openPopup: jest.fn(),
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       component['markersByLocationId'].set('1', mockMarker as any);
@@ -481,9 +519,9 @@ describe('LocationsListComponent', () => {
       it('should set selectedLocationId and zoom to marker for valid location', () => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const setViewSpy = jest.spyOn(component['map']!, 'setView');
-        
+
         component.onLocationClick('1');
-        
+
         expect(component.selectedLocationId).toBe('1');
         expect(setViewSpy).toHaveBeenCalledWith(
           [50.8476, 4.3572], // Brussels Game Store coordinates
@@ -521,19 +559,21 @@ describe('LocationsListComponent', () => {
           scrollIntoView: jest.fn(),
           classList: {
             add: jest.fn(),
-            remove: jest.fn()
-          }
+            remove: jest.fn(),
+          },
         };
-        
-        jest.spyOn(document, 'getElementById').mockReturnValue(mockElement as unknown as HTMLElement);
+
+        jest
+          .spyOn(document, 'getElementById')
+          .mockReturnValue(mockElement as unknown as HTMLElement);
 
         component.onMarkerClick('1');
 
         expect(mockElement.scrollIntoView).toHaveBeenCalledWith({
           behavior: 'smooth',
-          block: 'center'
+          block: 'center',
         });
-        
+
         jest.restoreAllMocks();
       });
 
@@ -543,23 +583,25 @@ describe('LocationsListComponent', () => {
           classList: {
             add: jest.fn(),
             remove: jest.fn(),
-            contains: jest.fn()
-          }
+            contains: jest.fn(),
+          },
         };
-        
-        jest.spyOn(document, 'getElementById').mockReturnValue(mockElement as unknown as HTMLElement);
+
+        jest
+          .spyOn(document, 'getElementById')
+          .mockReturnValue(mockElement as unknown as HTMLElement);
 
         component.onMarkerClick('1');
 
         // Verify class is added immediately
         expect(mockElement.classList.add).toHaveBeenCalledWith('highlight');
-        
+
         // Fast-forward time by 2 seconds
         tick(2000);
-        
+
         // Verify class is removed after 2 seconds
         expect(mockElement.classList.remove).toHaveBeenCalledWith('highlight');
-        
+
         jest.restoreAllMocks();
       }));
 
@@ -573,18 +615,33 @@ describe('LocationsListComponent', () => {
     describe('calculateDistance', () => {
       it('should calculate distance between two points correctly', () => {
         // Brussels to Antwerp (approximately 45 km)
-        const distance = component['calculateDistance'](50.8476, 4.3572, 51.2194, 4.4025);
+        const distance = component['calculateDistance'](
+          50.8476,
+          4.3572,
+          51.2194,
+          4.4025
+        );
         expect(distance).toBeGreaterThan(40);
         expect(distance).toBeLessThan(50);
       });
 
       it('should return 0 for same coordinates', () => {
-        const distance = component['calculateDistance'](50.8476, 4.3572, 50.8476, 4.3572);
+        const distance = component['calculateDistance'](
+          50.8476,
+          4.3572,
+          50.8476,
+          4.3572
+        );
         expect(distance).toBe(0);
       });
 
       it('should work with negative coordinates', () => {
-        const distance = component['calculateDistance'](40.7128, -74.0060, 34.0522, -118.2437);
+        const distance = component['calculateDistance'](
+          40.7128,
+          -74.006,
+          34.0522,
+          -118.2437
+        );
         // New York to Los Angeles (approximately 3935 km)
         expect(distance).toBeGreaterThan(3900);
         expect(distance).toBeLessThan(4000);
@@ -647,19 +704,21 @@ describe('LocationsListComponent', () => {
       // Mock initMap to prevent Leaflet initialization
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       jest.spyOn(component as any, 'initMap').mockImplementation(jest.fn());
-      
-      jest.spyOn(locationsService, 'getLocations').mockReturnValue(of(mockLocations));
-      
+
+      jest
+        .spyOn(locationsService, 'getLocations')
+        .mockReturnValue(of(mockLocations));
+
       mockGeolocation = {
-        getCurrentPosition: jest.fn()
+        getCurrentPosition: jest.fn(),
       };
-      
+
       Object.defineProperty(global.navigator, 'geolocation', {
         value: mockGeolocation,
         writable: true,
-        configurable: true
+        configurable: true,
       });
-      
+
       fixture.detectChanges();
     });
 
@@ -668,12 +727,14 @@ describe('LocationsListComponent', () => {
         Object.defineProperty(global.navigator, 'geolocation', {
           value: undefined,
           writable: true,
-          configurable: true
+          configurable: true,
         });
 
         component.getUserLocation();
 
-        expect(component.geolocationError).toBe('La géolocalisation n\'est pas supportée par votre navigateur');
+        expect(component.geolocationError).toBe(
+          "La géolocalisation n'est pas supportée par votre navigateur"
+        );
       });
 
       it('should set geolocating to true when called', () => {
@@ -690,9 +751,9 @@ describe('LocationsListComponent', () => {
             altitude: null,
             altitudeAccuracy: null,
             heading: null,
-            speed: null
+            speed: null,
           },
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
 
         mockGeolocation.getCurrentPosition.mockImplementation((success) => {
@@ -700,13 +761,13 @@ describe('LocationsListComponent', () => {
         });
 
         component.getUserLocation();
-        
+
         // Fast-forward timers
         tick(100);
 
         expect(component.userPosition).toEqual({
           lat: 50.8476,
-          lon: 4.3572
+          lon: 4.3572,
         });
         expect(component.geolocating).toBe(false);
         expect(component.geolocationError).toBeNull();
@@ -718,18 +779,22 @@ describe('LocationsListComponent', () => {
           message: 'User denied geolocation',
           PERMISSION_DENIED: 1,
           POSITION_UNAVAILABLE: 2,
-          TIMEOUT: 3
+          TIMEOUT: 3,
         };
 
-        mockGeolocation.getCurrentPosition.mockImplementation((success, error) => {
-          error(mockError);
-        });
+        mockGeolocation.getCurrentPosition.mockImplementation(
+          (success, error) => {
+            error(mockError);
+          }
+        );
 
         component.getUserLocation();
         tick(100);
 
         expect(component.geolocating).toBe(false);
-        expect(component.geolocationError).toBe('Permission de géolocalisation refusée');
+        expect(component.geolocationError).toBe(
+          'Permission de géolocalisation refusée'
+        );
       }));
 
       it('should handle POSITION_UNAVAILABLE error', fakeAsync(() => {
@@ -738,12 +803,14 @@ describe('LocationsListComponent', () => {
           message: 'Position unavailable',
           PERMISSION_DENIED: 1,
           POSITION_UNAVAILABLE: 2,
-          TIMEOUT: 3
+          TIMEOUT: 3,
         };
 
-        mockGeolocation.getCurrentPosition.mockImplementation((success, error) => {
-          error(mockError);
-        });
+        mockGeolocation.getCurrentPosition.mockImplementation(
+          (success, error) => {
+            error(mockError);
+          }
+        );
 
         component.getUserLocation();
         tick(100);
@@ -758,18 +825,22 @@ describe('LocationsListComponent', () => {
           message: 'Timeout',
           PERMISSION_DENIED: 1,
           POSITION_UNAVAILABLE: 2,
-          TIMEOUT: 3
+          TIMEOUT: 3,
         };
 
-        mockGeolocation.getCurrentPosition.mockImplementation((success, error) => {
-          error(mockError);
-        });
+        mockGeolocation.getCurrentPosition.mockImplementation(
+          (success, error) => {
+            error(mockError);
+          }
+        );
 
         component.getUserLocation();
         tick(100);
 
         expect(component.geolocating).toBe(false);
-        expect(component.geolocationError).toBe('Délai de géolocalisation dépassé');
+        expect(component.geolocationError).toBe(
+          'Délai de géolocalisation dépassé'
+        );
       }));
 
       it('should handle unknown error', fakeAsync(() => {
@@ -778,18 +849,22 @@ describe('LocationsListComponent', () => {
           message: 'Unknown error',
           PERMISSION_DENIED: 1,
           POSITION_UNAVAILABLE: 2,
-          TIMEOUT: 3
+          TIMEOUT: 3,
         };
 
-        mockGeolocation.getCurrentPosition.mockImplementation((success, error) => {
-          error(mockError);
-        });
+        mockGeolocation.getCurrentPosition.mockImplementation(
+          (success, error) => {
+            error(mockError);
+          }
+        );
 
         component.getUserLocation();
         tick(100);
 
         expect(component.geolocating).toBe(false);
-        expect(component.geolocationError).toBe('Erreur de géolocalisation inconnue');
+        expect(component.geolocationError).toBe(
+          'Erreur de géolocalisation inconnue'
+        );
       }));
 
       it('should request high accuracy position', () => {
@@ -801,7 +876,7 @@ describe('LocationsListComponent', () => {
           {
             enableHighAccuracy: true,
             timeout: 10000,
-            maximumAge: 0
+            maximumAge: 0,
           }
         );
       });

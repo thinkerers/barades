@@ -11,13 +11,13 @@
   </div>
 
   <!-- Error State -->
-  <div *ngIf="error && !loading" class="error-container">
-    <mat-icon style="width: 48px; height: 48px; font-size: 48px"
-      >error</mat-icon
-    >
-    <p>{{ error }}</p>
-    <button (click)="retry()" class="retry-button">Réessayer</button>
-  </div>
+  <lib-error-message
+    *ngIf="error && !loading"
+    [message]="error"
+    actionLabel="Réessayer"
+    (action)="retry()"
+  >
+  </lib-error-message>
 
   <!-- Map and List - Always rendered but hidden during loading -->
   <div class="content-wrapper" [class.hidden]="loading || error">

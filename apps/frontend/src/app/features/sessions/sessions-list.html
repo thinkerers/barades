@@ -13,16 +13,13 @@
   ></lib-loading-spinner>
 
   <!-- Error State -->
-  <div *ngIf="error && !loading" class="sessions-page__error">
-    <p>{{ error }}</p>
-    <button
-      type="button"
-      (click)="loadSessions()"
-      class="button button--primary"
-    >
-      Réessayer
-    </button>
-  </div>
+  <lib-error-message
+    *ngIf="error && !loading"
+    [message]="error"
+    actionLabel="Réessayer"
+    (action)="loadSessions()"
+  >
+  </lib-error-message>
 
   <!-- Filters Panel -->
   <div *ngIf="!loading && !error" class="filters-panel">

@@ -312,7 +312,7 @@ describe('GroupDetailComponent', () => {
       fixture.detectChanges();
 
       const compiled = fixture.nativeElement as HTMLElement;
-      expect(compiled.querySelector('.error-state')).toBeTruthy();
+      expect(compiled.querySelector('lib-error-message')).toBeTruthy();
       expect(compiled.textContent).toContain('Test error');
     });
   });

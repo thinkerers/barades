@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icons';
+import { ErrorMessageComponent } from '@org/ui';
 import * as L from 'leaflet';
 import {
   Location,
@@ -11,7 +12,7 @@ import {
 @Component({
   selector: 'app-locations-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatIconModule, ErrorMessageComponent],
   templateUrl: './locations-list.html',
   styleUrl: './locations-list.css',
 })

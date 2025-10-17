@@ -1,18 +1,19 @@
-import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { GroupsService, Group } from '../../core/services/groups.service';
+import { Component, OnInit, inject } from '@angular/core';
+import { ErrorMessageComponent } from '@org/ui';
+import { Group, GroupsService } from '../../core/services/groups.service';
 import { GroupCardComponent } from './group-card';
 
 @Component({
   selector: 'app-groups-list',
   standalone: true,
-  imports: [CommonModule, GroupCardComponent],
+  imports: [CommonModule, GroupCardComponent, ErrorMessageComponent],
   templateUrl: './groups-list.html',
-  styleUrl: './groups-list.css'
+  styleUrl: './groups-list.css',
 })
 export class GroupsListComponent implements OnInit {
   private groupsService = inject(GroupsService);
-  
+
   groups: Group[] = [];
   loading = true;
   error: string | null = null;
@@ -34,7 +35,7 @@ export class GroupsListComponent implements OnInit {
         console.error('Error loading groups:', err);
         this.error = 'Impossible de charger les groupes. Veuillez réessayer.';
         this.loading = false;
-      }
+      },
     });
   }
 
