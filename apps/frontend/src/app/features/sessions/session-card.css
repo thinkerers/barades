@@ -1,9 +1,10 @@
 /* Session Card */
 .session-card {
-  background: white;
+  background: var(--color-bg-card, #1e2330);
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--color-border, #2d3444);
   border-left: 4px solid transparent;
   transition: all 0.3s ease;
   position: relative;
@@ -14,8 +15,9 @@
 }
 
 .session-card:hover {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   transform: translateY(-4px);
+  border-color: var(--color-border-light, #3d4455);
 }
 
 /* Color variants */
@@ -36,7 +38,7 @@
 }
 
 .session-card--gray {
-  border-left-color: #718096;
+  border-left-color: var(--color-text-secondary, #d1d5db);
 }
 
 /* Tag indicator */
@@ -66,7 +68,7 @@
 }
 
 .tag--gray {
-  background-color: #718096;
+  background-color: var(--color-text-secondary, #d1d5db);
 }
 
 /* Header */
@@ -80,20 +82,21 @@
 .session-card__title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: #1a202c;
+  color: var(--color-text-primary, #ffffff);
   margin: 0;
   line-height: 1.3;
 }
 
 .session-card__game {
   display: inline-block;
-  background: #edf2f7;
-  color: #2d3748;
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--color-primary-light, #818cf8);
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.875rem;
   font-weight: 500;
   width: fit-content;
+  border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
 /* Status Badges Container */
@@ -105,29 +108,32 @@
 }
 
 /* Status Badge */
-.session-card__status {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+.badge--status {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
-  text-align: center;
-  width: fit-content;
+  gap: 0.375rem;
 }
 
 .status--available {
-  background: #c6f6d5;
-  color: #22543d;
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
 .status--limited {
-  background: #feebc8;
-  color: #7c2d12;
+  background: rgba(251, 146, 60, 0.2);
+  color: #fb923c;
+  border: 1px solid rgba(251, 146, 60, 0.3);
 }
 
 .status--full {
-  background: #fed7d7;
-  color: #742a2a;
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 /* Registered Badge */
@@ -138,8 +144,9 @@
   font-size: 0.875rem;
   font-weight: 600;
   text-align: center;
-  background: #bee3f8;
-  color: #2c5282;
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
   width: fit-content;
 }
 
@@ -155,23 +162,23 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #4a5568;
+  color: var(--color-text-secondary, #d1d5db);
   font-size: 0.875rem;
 }
 
 .session-card__detail--players {
   font-weight: 500;
-  color: #2d3748;
+  color: var(--color-text-primary, #ffffff);
 }
 
 .session-card__detail .icon {
   flex-shrink: 0;
-  color: #718096;
+  color: var(--color-text-secondary, #d1d5db);
 }
 
 /* Description */
 .session-card__description {
-  color: #4a5568;
+  color: var(--color-text-secondary, #d1d5db);
   font-size: 0.875rem;
   line-height: 1.5;
   display: -webkit-box;
@@ -187,7 +194,7 @@
   display: flex;
   gap: 0.75rem;
   padding-top: 1rem;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--color-border, #2d3444);
   margin-top: auto;
 }
 
@@ -208,38 +215,40 @@
 }
 
 .button--primary {
-  background: #4f46e5;
-  color: white;
+  background: var(--color-primary, #6366f1);
+  color: var(--color-text-primary, #ffffff);
 }
 
 .button--primary:hover:not(:disabled) {
-  background: #4338ca;
+  background: var(--color-primary-light, #818cf8);
 }
 
 .button--primary:disabled {
-  background: #cbd5e0;
-  color: #a0aec0;
+  background: rgba(99, 102, 241, 0.3);
+  color: var(--color-text-secondary, #d1d5db);
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .button--success {
-  background: #38a169 !important;
-  color: white !important;
+  background: rgba(34, 197, 94, 0.2) !important;
+  color: #4ade80 !important;
+  border: 1px solid rgba(34, 197, 94, 0.3) !important;
   cursor: default !important;
 }
 
 .button--success:hover {
-  background: #38a169 !important;
+  background: rgba(34, 197, 94, 0.2) !important;
 }
 
 .button--secondary {
-  background: white;
-  color: #4f46e5;
-  border: 1px solid #4f46e5;
+  background: transparent;
+  color: var(--color-primary-light, #818cf8);
+  border: 1px solid var(--color-primary, #6366f1);
 }
 
 .button--secondary:hover {
-  background: #eef2ff;
+  background: rgba(99, 102, 241, 0.1);
 }
 
 /* Responsive */

@@ -6,6 +6,31 @@
 
 /* You can add global styles to this file, and also import other style files */
 
+/* Thème sombre global */
+body {
+  background-color: var(--color-bg, #0f1419);
+  color: var(--color-text, #f9fafb);
+  min-height: 100vh;
+}
+
+/* Scrollbar styling pour le thème sombre */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary, #1a1d2e);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border, #3d4455);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-light, #4d5565);
+}
+
 /* Fix Leaflet icon paths */
 .leaflet-default-icon-path {
   background-image: url('/assets/leaflet/marker-icon.png');
