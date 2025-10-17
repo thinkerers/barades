@@ -1,4 +1,26 @@
+import type { Page, TestInfo } from '@playwright/test';
 import { test, expect } from './fixtures/auth.fixture';
+import type { PollSandboxContext, PollSandboxOptions } from './helpers/test-data';
+
+async function openSandboxGroup(
+  page: Page,
+  createPollSandbox: (options?: PollSandboxOptions) => Promise<PollSandboxContext>,
+  testInfo: TestInfo,
+  options?: PollSandboxOptions,
+): Promise<PollSandboxContext> {
+  const sandbox = await createPollSandbox({
+    namePrefix: `Error Handling Sandbox ${testInfo.title}`,
+    members: ['alice_dm'],
+    ...options,
+  });
+
+  await page.goto('/groups');
+  const groupCard = page.locator('.group-card', { hasText: sandbox.groupName });
+  await expect(groupCard).toBeVisible();
+  await groupCard.getByRole('link', { name: 'Voir les détails' }).click();
+  await expect(page.locator('.group-detail__title')).toContainText(sandbox.groupName);
+  return sandbox;
+}
 
 /**
  * Error Handling and Network Failures Tests
@@ -159,7 +181,7 @@ test.describe('Error Handling', () => {
       await expect(page.locator('.group-card').first()).toBeVisible({ timeout: 10000 });
     });
 
-    test('should not break UI with slow poll creation', async ({ authenticatedPage: page }) => {
+    test('should not break UI with slow poll creation', async ({ authenticatedPage: page, createPollSandbox }, testInfo) => {
       test.fixme(true, 'Poll creation flow missing optimistic/disabled state for slow responses.');
       // Slow down poll creation endpoint
       await page.route('**/api/polls', async route => {
@@ -169,13 +191,11 @@ test.describe('Error Handling', () => {
         await route.continue();
       });
       
-      await page.goto('/groups');
-      
-      const eliteCard = page.locator('.group-card', { hasText: 'Elite Strategy Players' });
-      await eliteCard.getByRole('link', { name: 'Voir les détails' }).click();
+      await openSandboxGroup(page, createPollSandbox, testInfo);
       
       await page.getByTestId('create-poll-button').click();
-      await page.getByTestId('poll-title-input').fill('Test Slow Poll');
+      const pollTitle = `Test Slow Poll ${testInfo.repeatEachIndex}`;
+      await page.getByTestId('poll-title-input').fill(pollTitle);
       await page.locator('#date-input').fill('2025-10-30T19:00');
       await page.getByRole('button', { name: /ajouter/i }).click();
       await page.locator('#date-input').fill('2025-11-02T19:00');
@@ -189,7 +209,7 @@ test.describe('Error Handling', () => {
       await expect(submitButton).toBeDisabled();
       
       // After delay, poll should be created
-      await expect(page.getByText('Test Slow Poll')).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText(pollTitle)).toBeVisible({ timeout: 10000 });
     });
   });
 

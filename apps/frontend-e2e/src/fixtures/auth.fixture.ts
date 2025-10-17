@@ -1,5 +1,5 @@
 import { test as base, Page } from '@playwright/test';
-import { acquireEliteStrategyPlayersLock } from '../helpers/api-cleanup';
+import { createPollSandbox as createPollSandboxHelper, type PollSandboxContext, type PollSandboxOptions } from '../helpers/test-data';
 
 /**
  * Authentication fixture for Playwright tests
@@ -40,9 +40,9 @@ export interface AuthFixtures {
   logout: (page: Page) => Promise<void>;
 
   /**
-   * Exclusive lock for Elite Strategy Players poll operations
+   * Helper to create isolated poll sandbox groups backed by Prisma
    */
-  eliteGroupLock: void;
+  createPollSandbox: (options?: PollSandboxOptions) => Promise<PollSandboxContext>;
 }
 
 /**
@@ -91,12 +91,30 @@ export const test = base.extend<AuthFixtures>({
   },
 
   // eslint-disable-next-line no-empty-pattern
-  eliteGroupLock: async ({}, use) => {
-    const release = await acquireEliteStrategyPlayersLock();
-    try {
-      await use(undefined);
-    } finally {
-      await release();
+  createPollSandbox: async ({}, use) => {
+    const active: Array<PollSandboxContext & { cleaned?: boolean }> = [];
+
+    await use(async (options) => {
+      const sandbox = await createPollSandboxHelper(options);
+      const wrapped: PollSandboxContext & { cleaned?: boolean } = {
+        ...sandbox,
+        async cleanup() {
+          if (wrapped.cleaned) {
+            return;
+          }
+          wrapped.cleaned = true;
+          await sandbox.cleanup();
+        },
+      };
+
+      active.push(wrapped);
+      return wrapped;
+    });
+
+    while (active.length > 0) {
+      const sandbox = active.pop();
+      if (!sandbox) continue;
+      await sandbox.cleanup();
     }
   },
 });

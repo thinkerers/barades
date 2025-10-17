@@ -1,179 +1,138 @@
+import type { Page } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
 import { test, expect } from './fixtures/auth.fixture';
-import { cleanupEliteStrategyPlayersPolls } from './helpers/api-cleanup';
 
-test.describe.configure({ mode: 'serial' });
+function uniqueTitle(base: string): string {
+  return `${base} ${randomUUID().slice(0, 8)}`;
+}
+
+async function openGroupDetail(page: Page, groupName: string): Promise<void> {
+  await page.goto('/groups');
+  const groupCard = page.locator('.group-card', { hasText: groupName });
+  await expect(groupCard).toBeVisible();
+  await groupCard.getByRole('link', { name: 'Voir les détails' }).click();
+  await expect(page.locator('.group-detail__title')).toContainText(groupName);
+  await expect(page.getByTestId('poll-widget')).toBeVisible();
+}
 
 test.describe('Poll Creation and Management', () => {
-  test.beforeEach(async ({ authenticatedPage: page, eliteGroupLock: _eliteGroupLock }) => {
-    void _eliteGroupLock;
-    // Clean up any existing polls in Elite Strategy Players to ensure deterministic tests
-    await cleanupEliteStrategyPlayersPolls(page);
-  });
+  test('should allow alice_dm to create a poll in a dedicated sandbox group', async ({ authenticatedPage: page, createPollSandbox }, testInfo) => {
+    const sandbox = await createPollSandbox({
+      namePrefix: `Poll Creation ${testInfo.title}`,
+      members: ['alice_dm'],
+    });
 
-  test('should allow alice_dm to create a poll in Brussels Adventurers Guild', async ({ authenticatedPage: page }) => {
-    // Navigate to groups
-    await page.goto('/groups');
-    
-    // Brussels Adventurers Guild already has a poll from seed data
-    // We need to go to Elite Strategy Players instead (alice is member, cleaned by beforeEach)
-    const eliteCard = page.locator('.group-card', { hasText: 'Elite Strategy Players' });
-    await eliteCard.getByRole('link', { name: 'Voir les détails' }).click();
-    
-    // Wait for group detail page to load
-    await expect(page.locator('.group-detail__title')).toBeVisible();
-    
-    // Wait for poll widget to load using data-testid
-    await expect(page.getByTestId('poll-widget')).toBeVisible();
-    
-    // Click the create poll button using data-testid
+    const pollTitle = uniqueTitle('Session Gloomhaven');
+
+    await openGroupDetail(page, sandbox.groupName);
     await page.getByTestId('create-poll-button').click();
-    
-    // Fill in poll form using data-testid
-    await page.getByTestId('poll-title-input').fill('Meilleure date pour session Gloomhaven ?');
-    
-    // Add first date using datetime-local input
-    await page.locator('#date-input').fill('2025-10-30T19:00');
-    await page.getByRole('button', { name: /ajouter/i }).click();
-    
-    // Add second date
-    await page.locator('#date-input').fill('2025-11-02T19:00');
-    await page.getByRole('button', { name: /ajouter/i }).click();
-    
-    // Add third date
-    await page.locator('#date-input').fill('2025-11-05T19:00');
-    await page.getByRole('button', { name: /ajouter/i }).click();
-    
-    // Submit poll - button text: "Créer le sondage"
+    await page.getByTestId('poll-title-input').fill(pollTitle);
+
+    const addDate = async (value: string) => {
+      await page.locator('#date-input').fill(value);
+      await page.getByRole('button', { name: /ajouter/i }).click();
+    };
+
+    await addDate('2025-10-30T19:00');
+    await addDate('2025-11-02T19:00');
+    await addDate('2025-11-05T19:00');
+
     await page.getByRole('button', { name: /créer le sondage/i }).click();
-    
-    // Verify poll appears (check for the title in poll display h3)
-    await expect(page.locator('.poll-display h3')).toContainText('Gloomhaven');
+    await expect(page.locator('.poll-display h3')).toHaveText(pollTitle);
   });
 
-  test('should prevent bob_boardgamer from accessing Elite Strategy Players', async ({ page, loginAs }) => {
-    // Login as bob_boardgamer (not a member of Elite Strategy Players)
+  test('should prevent bob_boardgamer from accessing private sandbox groups', async ({ page, loginAs, createPollSandbox }, testInfo) => {
+    const sandbox = await createPollSandbox({
+      namePrefix: `Private Poll Group ${testInfo.title}`,
+      members: ['alice_dm'],
+      isPublic: false,
+      recruiting: false,
+    });
+
+    await loginAs(page, 'alice_dm');
+    await openGroupDetail(page, sandbox.groupName);
+
     await loginAs(page, 'bob_boardgamer');
     await expect(page).toHaveURL('/');
-    
-    // Navigate to groups
     await page.goto('/groups');
-    
-    // Elite Strategy Players should not be visible
-    await expect(page.getByText('Elite Strategy Players')).toBeHidden();
+    await expect(page.getByText(sandbox.groupName)).toBeHidden();
   });
 
-  test('should show poll creation button only for group members', async ({ authenticatedPage: page, loginAs }) => {
-    // Navigate to Elite Strategy Players (alice is a member, no poll yet)
-    await page.goto('/groups');
-    
-    const eliteCard = page.locator('.group-card', { hasText: 'Elite Strategy Players' });
-    await eliteCard.getByRole('link', { name: 'Voir les détails' }).click();
-    
-    // Wait for page to load
-    await expect(page.locator('.group-detail__title')).toBeVisible();
-    
-    // Should see poll widget with create button using data-testid
-    await expect(page.getByTestId('poll-widget')).toBeVisible();
+  test('should show poll creation button only for group members', async ({ authenticatedPage: page, loginAs, createPollSandbox }, testInfo) => {
+    const sandbox = await createPollSandbox({
+      namePrefix: `Membership Sandbox ${testInfo.title}`,
+      members: ['alice_dm'],
+      isPublic: false,
+      recruiting: false,
+    });
+
+    await openGroupDetail(page, sandbox.groupName);
     await expect(page.getByTestId('create-poll-button')).toBeVisible();
-    
-    // Login as dave_poker (not a member of Elite Strategy Players)
+
     await loginAs(page, 'dave_poker');
     await expect(page).toHaveURL('/');
-    
-    // Navigate to Elite Strategy Players (private group)
     await page.goto('/groups');
-    
-    // Dave should NOT see Elite Strategy Players at all (private, not a member)
-    await expect(page.getByText('Elite Strategy Players')).toBeHidden();
+    await expect(page.getByText(sandbox.groupName)).toBeHidden();
   });
 
-  test('should display existing poll in group', async ({ authenticatedPage: page }) => {
-    // Navigate to Brussels Adventurers Guild (has a seed poll)
+  test('should display existing poll in seeded group', async ({ authenticatedPage: page }) => {
     await page.goto('/groups');
-    
     const brusselsCard = page.locator('.group-card', { hasText: 'Brussels Adventurers Guild' });
     await brusselsCard.getByRole('link', { name: 'Voir les détails' }).click();
-    
-    await expect(page).toHaveURL(/\/groups\/.+/);
-    
-    // Wait for poll-widget to load
+    await expect(page).toHaveURL(/\/groups\//);
     await expect(page.locator('.poll-widget')).toBeVisible();
-    
-    // Check for existing poll from seed data (title in h3)
     await expect(page.locator('.poll-display h3')).toContainText(/best date/i);
   });
 
   test('should show vote counts for poll dates', async ({ authenticatedPage: page }) => {
-    // Navigate to Brussels Adventurers Guild
     await page.goto('/groups');
-    
     const brusselsCard = page.locator('.group-card', { hasText: 'Brussels Adventurers Guild' });
     await brusselsCard.getByRole('link', { name: 'Voir les détails' }).click();
-    
-    // Wait for page to load
-    await expect(page.locator('.group-detail__title')).toBeVisible();
-    
-    // Wait for poll to load
-    await expect(page.locator('.poll-display').first()).toBeVisible();
-    
-    // Wait for poll to load
     const pollSection = page.locator('.poll-display').first();
     await expect(pollSection).toBeVisible();
-    
-    // Poll should show vote counts (look for text like "2 votes" in poll-display__stats)
     await expect(pollSection.locator('.poll-display__stats')).toContainText(/vote/i);
   });
 
-  test('should validate poll form fields', async ({ authenticatedPage: page }) => {
-    // Navigate to Elite Strategy Players (cleaned by beforeEach, alice is member)
-    await page.goto('/groups');
-    
-    const eliteCard = page.locator('.group-card', { hasText: 'Elite Strategy Players' });
-    await eliteCard.getByRole('link', { name: 'Voir les détails' }).click();
-    
-    // Click create poll button using data-testid
+  test('should validate poll form fields in sandbox group', async ({ authenticatedPage: page, createPollSandbox }, testInfo) => {
+    const sandbox = await createPollSandbox({
+      namePrefix: `Validation Sandbox ${testInfo.title}`,
+      members: ['alice_dm'],
+    });
+
+    await openGroupDetail(page, sandbox.groupName);
     await page.getByTestId('create-poll-button').click();
-    
-    // Try to submit without filling fields - button should be disabled
+
     const submitButton = page.getByRole('button', { name: /créer le sondage/i });
     await expect(submitButton).toBeDisabled();
-    
-    // Fill title but no dates - still disabled using data-testid
+
     await page.getByTestId('poll-title-input').fill('Test Poll');
     await expect(submitButton).toBeDisabled();
-    
-    // Add only one date - still disabled (needs minimum 2)
+
     await page.locator('#date-input').fill('2025-11-10T19:00');
     await page.getByRole('button', { name: /ajouter/i }).click();
     await expect(submitButton).toBeDisabled();
-    
-    // Add second date - now enabled
+
     await page.locator('#date-input').fill('2025-11-11T19:00');
     await page.getByRole('button', { name: /ajouter/i }).click();
     await expect(submitButton).toBeEnabled();
   });
 
-  test('should allow member to create multiple polls in same group', async ({ authenticatedPage: page }) => {
+  test('should allow member to create multiple polls in same group', async ({ authenticatedPage: page, createPollSandbox }, testInfo) => {
     test.fixme(true, 'Multiple concurrent polls per group not supported yet.');
-    // Navigate to Elite Strategy Players (cleaned by beforeEach)
-    await page.goto('/groups');
-    
-    const eliteCard = page.locator('.group-card', { hasText: 'Elite Strategy Players' });
-    await eliteCard.getByRole('link', { name: 'Voir les détails' }).click();
-    
-    // Create first poll using data-testid
+
+    const sandbox = await createPollSandbox({
+      namePrefix: `Multiple Polls ${testInfo.title}`,
+      members: ['alice_dm'],
+    });
+
+    await openGroupDetail(page, sandbox.groupName);
     await page.getByTestId('create-poll-button').click();
-    await page.getByTestId('poll-title-input').fill('Session Twilight Imperium ?');
+    await page.getByTestId('poll-title-input').fill(uniqueTitle('Session Twilight Imperium'));
     await page.locator('#date-input').fill('2025-11-10T19:00');
     await page.getByRole('button', { name: /ajouter/i }).click();
     await page.locator('#date-input').fill('2025-11-11T19:00');
     await page.getByRole('button', { name: /ajouter/i }).click();
     await page.getByRole('button', { name: /créer le sondage/i }).click();
-    
-    // Verify first poll appears
-    await expect(page.getByText('Session Twilight Imperium ?')).toBeVisible();
-    
-    // NOTE: The current implementation might only support one poll per group
-    // This test documents expected behavior for future implementation
+    await expect(page.getByTestId('poll-display')).toBeVisible();
   });
 });

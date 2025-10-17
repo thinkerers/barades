@@ -15,7 +15,9 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@org/ui": ["packages/ui/src/index.ts"]
+      "@org/ui": ["packages/ui/src/index.ts"],
+      "@org/backend-prisma": ["apps/backend/generated/prisma/index"],
+      "@org/backend-prisma/*": ["apps/backend/generated/prisma/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]
