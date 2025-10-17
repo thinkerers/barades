@@ -6,19 +6,8 @@ import {
   fakeAsync,
   tick,
 } from '@angular/core/testing';
-import { Component, Input } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { LocationsService } from '../../core/services/locations.service';
-
-// Mock MatIcon component
-@Component({
-  selector: 'mat-icon',
-  template: '<span>{{children}}</span>',
-  standalone: true
-})
-class MockMatIconComponent {
-  @Input() children?: string;
-}
 import { LocationsListComponent } from './locations-list';
 
 describe('LocationsListComponent', () => {
@@ -99,7 +88,7 @@ describe('LocationsListComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [LocationsListComponent, HttpClientTestingModule, MockMatIconComponent],
+      imports: [LocationsListComponent, HttpClientTestingModule],
       providers: [provideHttpClient()],
     }).compileComponents();
 

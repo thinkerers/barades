@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatIcon } from '@angular/material/icon';
+import { By } from '@angular/platform-browser';
 import { ErrorMessageComponent } from './error-message';
 
 describe('ErrorMessageComponent', () => {
@@ -38,21 +40,23 @@ describe('ErrorMessageComponent', () => {
   });
 
   describe('Icon Display', () => {
-    it('should display SVG error icon by default', () => {
+    it('should render Material icon by default', () => {
       fixture.detectChanges();
 
-      const svg = fixture.nativeElement.querySelector('.error-icon');
-      expect(svg).toBeTruthy();
-      expect(svg.tagName.toLowerCase()).toBe('svg');
+      const iconDebug = fixture.debugElement.query(By.directive(MatIcon));
+      expect(iconDebug).toBeTruthy();
+      const iconEl = iconDebug.nativeElement as HTMLElement;
+      expect(iconEl.classList.contains('error-icon')).toBe(true);
+      expect(iconEl.tagName.toLowerCase()).toBe('mat-icon');
     });
 
-    it('should have correct SVG attributes', () => {
+    it('should set accessibility attributes on icon', () => {
       fixture.detectChanges();
 
-      const svg = fixture.nativeElement.querySelector('.error-icon');
-      expect(svg.getAttribute('width')).toBe('48');
-      expect(svg.getAttribute('height')).toBe('48');
-      expect(svg.getAttribute('aria-hidden')).toBe('true');
+      const iconEl = fixture.nativeElement.querySelector('.error-icon');
+      expect(iconEl).toBeTruthy();
+      expect(iconEl.getAttribute('aria-hidden')).toBe('true');
+      expect(iconEl.getAttribute('role')).toBe('presentation');
     });
   });
 

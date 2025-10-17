@@ -6,11 +6,12 @@ import {
   Input,
   Output,
 } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'lib-error-message',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './error-message.html',
   styleUrl: './error-message.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,10 +23,10 @@ export class ErrorMessageComponent {
   @Input() message = '';
 
   /**
-   * Icon type to display
-   * @default 'circle-error'
+   * Material icon name to display
+   * @default 'error_outline'
    */
-  @Input() icon = 'circle-error';
+  @Input() icon = 'error_outline';
 
   /**
    * Label for the action button (optional)

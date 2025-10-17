@@ -11,8 +11,12 @@
 .error-icon {
   color: var(--color-error, #ef4444);
   flex-shrink: 0;
+  font-size: 48px;
   width: 48px;
   height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .error-text {

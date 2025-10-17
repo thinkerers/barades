@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icons';
+import { MatIconModule } from '@angular/material/icon';
 import { ErrorMessageComponent } from '@org/ui';
 import * as L from 'leaflet';
 import {
