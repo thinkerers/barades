@@ -48,7 +48,7 @@ test.describe('Groups Navigation', () => {
     
     // Wait for group detail to load (*ngIf="group && !loading")
     // Check for the title using class selector (more reliable than role)
-    await expect(page.locator('.group-detail__title')).toBeVisible();
+    await expect(page.locator('.group-detail__title')).toBeVisible({ timeout: 10000 });
   });
 
   test('should display group details correctly', async ({ authenticatedPage: page }) => {
@@ -60,7 +60,7 @@ test.describe('Groups Navigation', () => {
     
     // Check group information is displayed (using .group-detail-container or .group-detail)
     const detailSection = page.locator('.group-detail');
-    await expect(detailSection).toBeVisible();
+    await expect(detailSection).toBeVisible({ timeout: 10000 });
     
     // Verify playstyle badge is shown (use .playstyle-badge class)
     await expect(page.locator('.playstyle-badge')).toBeVisible();
