@@ -111,6 +111,50 @@
       "detail": "Open the Nx project dependency graph."
     },
     {
+      "label": "dev: frontend",
+      "type": "shell",
+      "command": "npx",
+      "args": ["nx", "serve", "frontend"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": {
+          "regexp": "^([^\\s].*):(\\d+):(\\d+) - (error|warning|info): (.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*",
+          "endsPattern": "(Compiled successfully|Failed to compile)"
+        }
+      },
+      "detail": "Start Angular dev server with proxy to backend (port 4200)."
+    },
+    {
+      "label": "dev: backend",
+      "type": "shell",
+      "command": "npx",
+      "args": ["nx", "serve", "backend"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "detail": "Start NestJS backend in watch mode (builds + runs on changes)."
+    },
+    {
+      "label": "dev: full stack",
+      "dependsOn": ["dev: backend", "dev: frontend"],
+      "problemMatcher": [],
+      "detail": "Launch both frontend and backend dev servers in parallel."
+    },
+    {
       "label": "prisma: studio",
       "type": "shell",
       "command": "npx",
