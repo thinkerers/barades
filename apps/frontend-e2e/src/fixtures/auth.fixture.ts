@@ -1,4 +1,5 @@
 import { test as base, Page } from '@playwright/test';
+import { acquireEliteStrategyPlayersLock } from '../helpers/api-cleanup';
 
 /**
  * Authentication fixture for Playwright tests
@@ -37,6 +38,11 @@ export interface AuthFixtures {
    * Function to logout
    */
   logout: (page: Page) => Promise<void>;
+
+  /**
+   * Exclusive lock for Elite Strategy Players poll operations
+   */
+  eliteGroupLock: void;
 }
 
 /**
@@ -82,6 +88,16 @@ export const test = base.extend<AuthFixtures>({
   // eslint-disable-next-line no-empty-pattern
   logout: async ({}, use) => {
     await use(logoutUser);
+  },
+
+  // eslint-disable-next-line no-empty-pattern
+  eliteGroupLock: async ({}, use) => {
+    const release = await acquireEliteStrategyPlayersLock();
+    try {
+      await use(undefined);
+    } finally {
+      await release();
+    }
   },
 });
 

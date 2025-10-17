@@ -9,6 +9,10 @@ Cette suite de tests E2E valide les fonctionnalités principales de l'applicatio
 ✅ **Auto-waiting** : Pas de `waitForTimeout()` manuel  
 ✅ **Robustesse** : Éviter les sélecteurs CSS fragiles  
 
+### ⚠️ Tests négatifs en attente
+
+Les nouveaux scénarios négatifs (erreurs réseau, permissions, validations, edge cases) sont temporairement marqués en `test.fixme`. Ils documentent les comportements encore manquants côté application. Voir `doc/e2e-known-gaps.md` pour le détail et la priorisation.
+
 ### Tests d'authentification (`auth.spec.ts`)
 - ✅ Affichage du formulaire de connexion
 - ✅ Connexion réussie avec credentials valides (alice_dm, bob_boardgamer)

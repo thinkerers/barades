@@ -211,8 +211,18 @@ export class PollsService {
   }
 
   async remove(id: string) {
-    return this.prisma.poll.delete({
-      where: { id },
-    });
+    try {
+      return await this.prisma.poll.delete({
+        where: { id },
+      });
+    } catch (error) {
+      // Handle P2025: Poll not found (already deleted or never existed)
+      if (error.code === 'P2025') {
+        // Return a minimal response indicating the poll is gone
+        // This makes DELETE idempotent and prevents 500 errors in cleanup scenarios
+        return { id, deleted: true };
+      }
+      throw error;
+    }
   }
 }
