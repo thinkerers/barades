@@ -15,7 +15,11 @@
   <!-- Error State -->
   <div *ngIf="error && !loading" class="sessions-page__error">
     <p>{{ error }}</p>
-    <button type="button" (click)="loadSessions()" class="button button--primary">
+    <button
+      type="button"
+      (click)="loadSessions()"
+      class="button button--primary"
+    >
       Réessayer
     </button>
   </div>
@@ -24,17 +28,17 @@
   <div *ngIf="!loading && !error" class="filters-panel">
     <div class="filters-header">
       <h3>
-        🔍 Filtres
+        <mat-icon aria-label="Filtres">search</mat-icon> Filtres
         <span *ngIf="getActiveFiltersCount() > 0" class="active-filters-count">
           {{ getActiveFiltersCount() }}
         </span>
       </h3>
-      <button 
-        (click)="resetFilters()" 
+      <button
+        (click)="resetFilters()"
         class="btn-clear-filters"
         [disabled]="getActiveFiltersCount() === 0"
       >
-        🔄 Réinitialiser
+        <mat-icon aria-label="Réinitialiser">refresh</mat-icon> Réinitialiser
       </button>
     </div>
 
@@ -42,10 +46,10 @@
       <!-- Search Bar -->
       <div class="filter-group">
         <label for="search">Recherche</label>
-        <input 
-          type="text" 
-          id="search" 
-          [(ngModel)]="searchTerm" 
+        <input
+          type="text"
+          id="search"
+          [(ngModel)]="searchTerm"
           (input)="applyFilters()"
           placeholder="Nom, jeu, description..."
           class="search-input"
@@ -57,44 +61,49 @@
         <div class="filter-label">Type de session</div>
         <div class="radio-group">
           <label class="radio-label">
-            <input 
-              type="radio" 
-              name="sessionType" 
+            <input
+              type="radio"
+              name="sessionType"
               value="all"
-              [(ngModel)]="sessionType" 
+              [(ngModel)]="sessionType"
               (change)="applyFilters()"
             />
-            <span>📋 Toutes</span>
+            <span><mat-icon aria-label="Toutes">list</mat-icon> Toutes</span>
           </label>
           <label class="radio-label">
-            <input 
-              type="radio" 
-              name="sessionType" 
+            <input
+              type="radio"
+              name="sessionType"
               value="online"
-              [(ngModel)]="sessionType" 
+              [(ngModel)]="sessionType"
               (change)="applyFilters()"
             />
-            <span>💻 En ligne</span>
+            <span
+              ><mat-icon aria-label="En ligne">computer</mat-icon> En
+              ligne</span
+            >
           </label>
           <label class="radio-label">
-            <input 
-              type="radio" 
-              name="sessionType" 
+            <input
+              type="radio"
+              name="sessionType"
               value="onsite"
-              [(ngModel)]="sessionType" 
+              [(ngModel)]="sessionType"
               (change)="applyFilters()"
             />
-            <span>🎲 Sur table</span>
+            <span
+              ><mat-icon aria-label="Sur table">casino</mat-icon> Sur
+              table</span
+            >
           </label>
         </div>
       </div>
-
       <!-- Game System Filter -->
       <div class="filter-group">
         <label for="game-filter">Système de jeu</label>
-        <select 
-          id="game-filter" 
-          [(ngModel)]="selectedGameSystem" 
+        <select
+          id="game-filter"
+          [(ngModel)]="selectedGameSystem"
           (change)="applyFilters()"
           class="type-select"
         >
@@ -108,40 +117,47 @@
       <!-- Availability Filter -->
       <div class="filter-group">
         <label class="checkbox-label checkbox-label--standalone">
-          <input 
-            type="checkbox" 
-            [(ngModel)]="onlyAvailable" 
+          <input
+            type="checkbox"
+            [(ngModel)]="onlyAvailable"
             (change)="applyFilters()"
           />
-          <span>✅ Uniquement les sessions avec places disponibles</span>
+          <span
+            ><mat-icon aria-label="Places disponibles">check_circle</mat-icon>
+            Uniquement les sessions avec places disponibles</span
+          >
         </label>
       </div>
     </div>
   </div>
-
   <!-- Sessions List -->
   <div *ngIf="!loading && !error" class="sessions-list">
     <!-- Results count -->
     <div class="sessions-list__header">
       <h2>
-        Sessions disponibles 
-        <span class="count">({{ filteredSessions.length }} / {{ sessions.length }})</span>
+        Sessions disponibles
+        <span class="count"
+          >({{ filteredSessions.length }} / {{ sessions.length }})</span
+        >
       </h2>
     </div>
 
     <div *ngIf="filteredSessions.length === 0" class="sessions-list__empty">
       <p>Aucune session ne correspond à vos critères de recherche.</p>
-      <button type="button" (click)="resetFilters()" class="button button--secondary">
+      <button
+        type="button"
+        (click)="resetFilters()"
+        class="button button--secondary"
+      >
         Réinitialiser les filtres
       </button>
     </div>
 
     <div class="sessions-list__cards">
-      <app-session-card 
-        *ngFor="let session of filteredSessions" 
+      <app-session-card
+        *ngFor="let session of filteredSessions"
         [session]="session"
       ></app-session-card>
     </div>
   </div>
 </div>
-

@@ -1,19 +1,20 @@
-import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { SessionsService, Session } from '../../core/services/sessions.service';
+import { MatIconModule } from '@angular/material/icon';
+import { Session, SessionsService } from '../../core/services/sessions.service';
 import { SessionCardComponent } from './session-card';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule, SessionCardComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, SessionCardComponent],
   selector: 'app-sessions-list',
   templateUrl: './sessions-list.html',
   styleUrl: './sessions-list.css',
 })
 export class SessionsListPage implements OnInit {
   private readonly sessionsService = inject(SessionsService);
-  
+
   sessions: Session[] = [];
   filteredSessions: Session[] = [];
   loading = true;
@@ -35,25 +36,26 @@ export class SessionsListPage implements OnInit {
   loadSessions(): void {
     this.loading = true;
     this.error = null;
-    
+
     this.sessionsService.getSessions().subscribe({
       next: (sessions) => {
         this.sessions = sessions;
         this.filteredSessions = [...sessions];
-        
+
         // Extract unique game systems for dropdown
-        this.gameSystems = [...new Set(sessions.map(s => s.game))].sort();
-        
+        this.gameSystems = [...new Set(sessions.map((s) => s.game))].sort();
+
         this.loading = false;
-        
+
         // Apply filters if any are already set
         this.applyFilters();
       },
       error: (err) => {
         console.error('Error loading sessions:', err);
-        this.error = 'Impossible de charger les sessions. Vérifiez que le backend est démarré.';
+        this.error =
+          'Impossible de charger les sessions. Vérifiez que le backend est démarré.';
         this.loading = false;
-      }
+      },
     });
   }
 
@@ -61,16 +63,17 @@ export class SessionsListPage implements OnInit {
    * Apply all filters to the sessions list
    */
   applyFilters(): void {
-    this.filteredSessions = this.sessions.filter(session => {
+    this.filteredSessions = this.sessions.filter((session) => {
       // Search filter (title, game, description)
       const trimmedSearch = this.searchTerm.trim();
       if (trimmedSearch) {
         const term = trimmedSearch.toLowerCase();
-        const matchesSearch = 
+        const matchesSearch =
           session.title.toLowerCase().includes(term) ||
           session.game.toLowerCase().includes(term) ||
-          (session.description && session.description.toLowerCase().includes(term));
-        
+          (session.description &&
+            session.description.toLowerCase().includes(term));
+
         if (!matchesSearch) return false;
       }
 
@@ -112,12 +115,12 @@ export class SessionsListPage implements OnInit {
    */
   getActiveFiltersCount(): number {
     let count = 0;
-    
+
     if (this.searchTerm.trim()) count++;
     if (this.sessionType !== 'all') count++;
     if (this.selectedGameSystem) count++;
     if (this.onlyAvailable) count++;
-    
+
     return count;
   }
 }
