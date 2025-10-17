@@ -12,6 +12,7 @@ import { LocationsListComponent } from './features/locations/locations-list';
 import { ProfilePage } from './features/profile/profile-page';
 import { SessionCreateComponent } from './features/sessions/session-create';
 import { SessionDetailComponent } from './features/sessions/session-detail';
+import { SessionEditComponent } from './features/sessions/session-edit';
 import { SessionsListPage } from './features/sessions/sessions-list';
 import { ShowcasePage } from './features/showcase/showcase-page';
 
@@ -41,6 +42,12 @@ export const appRoutes: Route[] = [
       {
         path: 'sessions/new',
         component: SessionCreateComponent,
+        canActivate: [authGuard],
+      },
+      {
+        path: 'sessions/:id/edit',
+        component: SessionEditComponent,
+        canActivate: [authGuard],
       },
       {
         path: 'sessions/:id',
