@@ -1,8 +1,18 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-import { SessionsService } from './sessions.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { SessionOwnerGuard } from './guards/session-owner.guard';
+import { SessionsService } from './sessions.service';
 
 @Controller('sessions')
 export class SessionsController {
@@ -25,11 +35,13 @@ export class SessionsController {
   }
 
   @Patch(':id')
+  @UseGuards(JwtAuthGuard, SessionOwnerGuard)
   update(@Param('id') id: string, @Body() updateSessionDto: UpdateSessionDto) {
     return this.sessionsService.update(id, updateSessionDto);
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, SessionOwnerGuard)
   remove(@Param('id') id: string) {
     return this.sessionsService.remove(id);
   }

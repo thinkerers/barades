@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
-import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class SessionsService {
@@ -15,7 +15,9 @@ export class SessionsService {
         description: createSessionDto.description,
         date: new Date(createSessionDto.date),
         recurrenceRule: createSessionDto.recurrenceRule,
-        recurrenceEndDate: createSessionDto.recurrenceEndDate ? new Date(createSessionDto.recurrenceEndDate) : null,
+        recurrenceEndDate: createSessionDto.recurrenceEndDate
+          ? new Date(createSessionDto.recurrenceEndDate)
+          : null,
         online: createSessionDto.online,
         level: createSessionDto.level,
         playersMax: createSessionDto.playersMax,
@@ -95,9 +97,59 @@ export class SessionsService {
     });
   }
 
-  update(_id: string, _updateSessionDto: UpdateSessionDto) {
-    // TODO: Implement with proper Zod validation
-    throw new Error('Method not implemented yet');
+  async update(id: string, updateSessionDto: UpdateSessionDto) {
+    // Vérifier que la session existe
+    const existingSession = await this.prisma.session.findUnique({
+      where: { id },
+    });
+
+    if (!existingSession) {
+      throw new Error('Session not found');
+    }
+
+    // Mettre à jour la session
+    return this.prisma.session.update({
+      where: { id },
+      data: {
+        ...(updateSessionDto.game && { game: updateSessionDto.game }),
+        ...(updateSessionDto.title && { title: updateSessionDto.title }),
+        ...(updateSessionDto.description !== undefined && {
+          description: updateSessionDto.description,
+        }),
+        ...(updateSessionDto.date && { date: new Date(updateSessionDto.date) }),
+        ...(updateSessionDto.recurrenceRule !== undefined && {
+          recurrenceRule: updateSessionDto.recurrenceRule,
+        }),
+        ...(updateSessionDto.recurrenceEndDate !== undefined && {
+          recurrenceEndDate: updateSessionDto.recurrenceEndDate
+            ? new Date(updateSessionDto.recurrenceEndDate)
+            : null,
+        }),
+        ...(updateSessionDto.online !== undefined && {
+          online: updateSessionDto.online,
+        }),
+        ...(updateSessionDto.level && { level: updateSessionDto.level }),
+        ...(updateSessionDto.playersMax && {
+          playersMax: updateSessionDto.playersMax,
+        }),
+        ...(updateSessionDto.tagColor && {
+          tagColor: updateSessionDto.tagColor,
+        }),
+        ...(updateSessionDto.locationId !== undefined && {
+          locationId: updateSessionDto.locationId,
+        }),
+      },
+      include: {
+        host: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
+        location: true,
+      },
+    });
   }
 
   remove(_id: string) {
@@ -105,4 +157,3 @@ export class SessionsService {
     throw new Error('Method not implemented yet');
   }
 }
-
