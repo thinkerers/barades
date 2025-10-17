@@ -22,6 +22,6 @@ export interface User {
   username: string;
   firstName?: string;
   lastName?: string;
-  avatar?: string;
+  avatar?: string | null;
   bio?: string;
 }
