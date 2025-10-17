@@ -10,12 +10,14 @@ import { PollsModule } from '../polls/polls.module';
 import { AuthModule } from '../auth/auth.module';
 import { EmailModule } from '../email/email.module';
 import { ReservationsModule } from '../reservations/reservations.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuthModule,
+    UsersModule,
     SessionsModule,
     LocationsModule,
     GroupsModule,
