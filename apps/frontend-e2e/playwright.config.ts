@@ -20,7 +20,7 @@ const envCandidates = [
 ];
 
 for (const candidate of envCandidates) {
-  if (!process.env.DATABASE_URL && existsSync(candidate)) {
+  if (!process.env['DATABASE_URL'] && existsSync(candidate)) {
     loadEnv({ path: candidate });
   }
 }

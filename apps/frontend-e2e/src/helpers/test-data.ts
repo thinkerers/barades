@@ -1,8 +1,8 @@
 // eslint-disable-next-line @nx/enforce-module-boundaries
-import { PrismaClient, Playstyle } from '@org/backend-prisma';
+import { PrismaClient, $Enums } from '@org/backend-prisma';
 import { randomUUID } from 'node:crypto';
 
-if (!process.env.DATABASE_URL) {
+if (!process.env['DATABASE_URL']) {
   throw new Error(
     'DATABASE_URL must be defined before running Playwright poll sandbox helpers. ' +
       'Ensure your environment or .env file is loaded so the Prisma client can connect.',
@@ -20,7 +20,7 @@ export interface PollSandboxOptions {
   members?: string[];
   isPublic?: boolean;
   recruiting?: boolean;
-  playstyle?: Playstyle;
+  playstyle?: $Enums.Playstyle;
 }
 
 export interface PollSandboxContext {
@@ -43,7 +43,7 @@ export async function createPollSandbox(options: PollSandboxOptions = {}): Promi
     members = ['alice_dm'],
     isPublic = true,
     recruiting = true,
-    playstyle = Playstyle.CASUAL,
+    playstyle = 'CASUAL' as $Enums.Playstyle,
   } = options;
 
   if (members.length === 0) {
@@ -61,7 +61,7 @@ export async function createPollSandbox(options: PollSandboxOptions = {}): Promi
       name: groupName,
       games: DEFAULT_GAMES,
       location: DEFAULT_LOCATION,
-      playstyle,
+      playstyle: playstyle,
       description: DEFAULT_DESCRIPTION,
       recruiting,
       isPublic,
