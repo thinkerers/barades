@@ -1,0 +1,156 @@
+<section class="contact-page">
+  <!-- Header -->
+  <div class="contact-header">
+    <h1 class="contact-title">Nous Contacter</h1>
+    <p class="contact-subtitle">
+      Une question, une suggestion ou un problème ? N'hésitez pas à nous envoyer
+      un message. Notre équipe vous répondra dans les plus brefs délais.
+    </p>
+  </div>
+
+  <!-- Content Grid -->
+  <div class="contact-grid">
+    <!-- Contact Form -->
+    <div class="contact-form-card">
+      <form
+        [formGroup]="contactForm"
+        (ngSubmit)="onSubmit()"
+        class="contact-form"
+      >
+        <!-- Name Field -->
+        <div class="form-group">
+          <label for="name" class="form-label">Votre nom</label>
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            class="form-input"
+            placeholder="Élise"
+            [class.invalid]="submitted && name?.invalid"
+          />
+          @if (submitted && name?.invalid) {
+          <div class="error-message">
+            @if (name?.errors?.['required']) {
+            <span>Le nom est requis</span>
+            } @if (name?.errors?.['minlength']) {
+            <span>Le nom doit contenir au moins 2 caractères</span>
+            }
+          </div>
+          }
+        </div>
+
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="email" class="form-label">Votre email</label>
+          <input
+            type="email"
+            id="email"
+            formControlName="email"
+            class="form-input"
+            placeholder="elise@barades.com"
+            [class.invalid]="submitted && email?.invalid"
+          />
+          @if (submitted && email?.invalid) {
+          <div class="error-message">
+            @if (email?.errors?.['required']) {
+            <span>L'email est requis</span>
+            } @if (email?.errors?.['email']) {
+            <span>L'email n'est pas valide</span>
+            }
+          </div>
+          }
+        </div>
+
+        <!-- Subject Field -->
+        <div class="form-group">
+          <label for="subject" class="form-label">Sujet</label>
+          <input
+            type="text"
+            id="subject"
+            formControlName="subject"
+            class="form-input"
+            placeholder="Suggestion de fonctionnalité"
+            [class.invalid]="submitted && subject?.invalid"
+          />
+          @if (submitted && subject?.invalid) {
+          <div class="error-message">
+            @if (subject?.errors?.['required']) {
+            <span>Le sujet est requis</span>
+            } @if (subject?.errors?.['minlength']) {
+            <span>Le sujet doit contenir au moins 3 caractères</span>
+            }
+          </div>
+          }
+        </div>
+
+        <!-- Message Field -->
+        <div class="form-group">
+          <label for="message" class="form-label">Votre message</label>
+          <textarea
+            id="message"
+            formControlName="message"
+            rows="5"
+            class="form-input"
+            placeholder="Bonjour, je pense qu'il serait utile d'ajouter..."
+            [class.invalid]="submitted && message?.invalid"
+          ></textarea>
+          @if (submitted && message?.invalid) {
+          <div class="error-message">
+            @if (message?.errors?.['required']) {
+            <span>Le message est requis</span>
+            } @if (message?.errors?.['minlength']) {
+            <span>Le message doit contenir au moins 10 caractères</span>
+            }
+          </div>
+          }
+        </div>
+
+        <!-- Submit Button -->
+        <div class="form-group">
+          <button type="submit" class="submit-button">
+            <mat-icon>send</mat-icon>
+            <span>Envoyer le message</span>
+          </button>
+        </div>
+
+        <!-- Feedback Messages -->
+        <div class="form-feedback">
+          @if (successMessage) {
+          <div class="success-message">{{ successMessage }}</div>
+          } @if (errorMessage) {
+          <div class="error-feedback">{{ errorMessage }}</div>
+          }
+        </div>
+      </form>
+    </div>
+
+    <!-- Contact Info & Map -->
+    <div class="contact-info-section">
+      <!-- Contact Information -->
+      <div class="info-card">
+        <h3 class="info-title">Informations</h3>
+        <ul class="info-list">
+          <li class="info-item">
+            <mat-icon class="info-icon">place</mat-icon>
+            <div class="info-text">
+              <div>Bar à Dés HQ</div>
+              <div>Grand Place, 7500 Tournai</div>
+              <div>Belgique</div>
+            </div>
+          </li>
+          <li class="info-item">
+            <mat-icon class="info-icon">email</mat-icon>
+            <a href="mailto:contact@barades.com" class="info-link"
+              >contact&#64;barades.com</a
+            >
+          </li>
+        </ul>
+      </div>
+
+      <!-- Map Placeholder -->
+      <div class="map-card">
+        <div id="contact-map" class="contact-map"></div>
+      </div>
+    </div>
+  </div>
+</section>
