@@ -1,0 +1,146 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "nx: affected test",
+      "type": "shell",
+      "command": "npx",
+      "args": ["nx", "affected", "--target=test", "--parallel=3"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "detail": "Run Jest on projects affected by the last changes."
+    },
+    {
+      "label": "nx: test all",
+      "type": "shell",
+      "command": "npx",
+      "args": ["nx", "run-many", "--target=test", "--all", "--parallel=3"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "detail": "Run the complete Jest test suite across all projects."
+    },
+    {
+      "label": "nx: affected lint",
+      "type": "shell",
+      "command": "npx",
+      "args": ["nx", "affected", "--target=lint", "--parallel=3"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$eslint-compact",
+      "detail": "Lint only the projects affected by the last changes."
+    },
+    {
+      "label": "nx: lint all",
+      "type": "shell",
+      "command": "npx",
+      "args": ["nx", "run-many", "--target=lint", "--all", "--parallel=3"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "problemMatcher": "$eslint-compact",
+      "detail": "Run ESLint across every project in the workspace."
+    },
+    {
+      "label": "nx: affected e2e",
+      "type": "shell",
+      "command": "npx",
+      "args": ["nx", "affected", "--target=e2e"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "detail": "Execute Playwright E2E tests for affected projects."
+    },
+    {
+      "label": "nx: e2e all",
+      "type": "shell",
+      "command": "npx",
+      "args": ["nx", "run-many", "--target=e2e", "--all"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "detail": "Execute the full Playwright E2E suite."
+    },
+    {
+      "label": "nx: build affected",
+      "type": "shell",
+      "command": "npx",
+      "args": ["nx", "affected", "--target=build"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "detail": "Build only the projects affected by recent changes."
+    },
+    {
+      "label": "nx: build all",
+      "type": "shell",
+      "command": "npx",
+      "args": ["nx", "run-many", "--target=build", "--all"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "build",
+      "detail": "Build every project in the workspace."
+    },
+    {
+      "label": "nx: graph",
+      "type": "shell",
+      "command": "npx",
+      "args": ["nx", "graph"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "detail": "Open the Nx project dependency graph."
+    },
+    {
+      "label": "prisma: studio",
+      "type": "shell",
+      "command": "npx",
+      "args": ["prisma", "studio"],
+      "options": {
+        "cwd": "${workspaceFolder}/apps/backend"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "detail": "Launch Prisma Studio from the backend app."
+    },
+    {
+      "label": "prisma: generate",
+      "type": "shell",
+      "command": "npx",
+      "args": ["prisma", "generate"],
+      "options": {
+        "cwd": "${workspaceFolder}/apps/backend"
+      },
+      "detail": "Regenerate the Prisma client for the backend."
+    },
+    {
+      "label": "prisma: migrate dev",
+      "type": "shell",
+      "command": "npx",
+      "args": ["prisma", "migrate", "dev"],
+      "options": {
+        "cwd": "${workspaceFolder}/apps/backend"
+      },
+      "detail": "Apply new migrations and regenerate Prisma client in dev mode."
+    }
+  ]
+}
