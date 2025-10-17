@@ -155,6 +155,16 @@
       "detail": "Launch both frontend and backend dev servers in parallel."
     },
     {
+      "label": "dev: stop servers",
+      "type": "shell",
+      "command": "npx",
+      "args": ["kill-port", "4200", "3000"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "detail": "Cleanly stop the Angular (4200) and NestJS (3000) dev servers."
+    },
+    {
       "label": "prisma: studio",
       "type": "shell",
       "command": "npx",
