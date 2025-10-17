@@ -1,0 +1,46 @@
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--color-text-secondary, #d1d5db);
+  background: var(--color-bg-card, #1e2330);
+  border-radius: 12px;
+  border: 1px solid var(--color-border, #2d3444);
+}
+
+.empty-state__message {
+  margin-bottom: 1.5rem;
+  font-size: 1.125rem;
+  color: var(--color-text-secondary, #d1d5db);
+}
+
+/* Button styles */
+.button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.button--primary {
+  background: var(--color-primary, #6366f1);
+  color: var(--color-text-primary, #ffffff);
+}
+
+.button--primary:hover {
+  background: var(--color-primary-light, #818cf8);
+}
+
+.button--secondary {
+  background: transparent;
+  color: var(--color-primary-light, #818cf8);
+  border: 1px solid var(--color-primary, #6366f1);
+}
+
+.button--secondary:hover {
+  background: rgba(99, 102, 241, 0.1);
+}

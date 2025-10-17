@@ -7,10 +7,10 @@
   </header>
 
   <!-- Loading State -->
-  <div *ngIf="loading" class="sessions-page__loading">
-    <div class="spinner"></div>
-    <p>Chargement des sessions...</p>
-  </div>
+  <lib-loading-spinner
+    *ngIf="loading"
+    message="Chargement des sessions..."
+  ></lib-loading-spinner>
 
   <!-- Error State -->
   <div *ngIf="error && !loading" class="sessions-page__error">
@@ -142,16 +142,12 @@
       </h2>
     </div>
 
-    <div *ngIf="filteredSessions.length === 0" class="sessions-list__empty">
-      <p>Aucune session ne correspond à vos critères de recherche.</p>
-      <button
-        type="button"
-        (click)="resetFilters()"
-        class="button button--secondary"
-      >
-        Réinitialiser les filtres
-      </button>
-    </div>
+    <lib-empty-state
+      *ngIf="filteredSessions.length === 0"
+      message="Aucune session ne correspond à vos critères de recherche."
+      actionLabel="Réinitialiser les filtres"
+      (action)="resetFilters()"
+    ></lib-empty-state>
 
     <div class="sessions-list__cards">
       <app-session-card
