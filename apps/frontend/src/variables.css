@@ -1,0 +1,48 @@
+/*
+ * Variables CSS globales pour l'application Barades
+ * Thème principal avec mode clair
+ */
+
+:root {
+  /* Couleurs primaires */
+  --color-primary: #4f46e5;
+  --color-primary-dark: #4338ca;
+  --color-primary-light: #6366f1;
+
+  /* Couleurs de texte */
+  --color-text: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #9ca3af;
+  --color-text-primary: #111827;
+
+  /* Couleurs de fond */
+  --color-bg: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-dark: #1f2937;
+
+  /* Couleurs de bordure */
+  --color-border: #e5e7eb;
+  --color-border-dark: #374151;
+
+  /* Couleurs d'état */
+  --color-success: #10b981;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+}
+
+/* Mode sombre (optionnel - prêt pour le futur) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-text: #f9fafb;
+    --color-text-secondary: #d1d5db;
+    --color-text-tertiary: #9ca3af;
+    --color-text-primary: #ffffff;
+
+    --color-bg: #111827;
+    --color-bg-secondary: #1f2937;
+
+    --color-border: #374151;
+    --color-border-dark: #4b5563;
+  }
+}

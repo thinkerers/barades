@@ -19,7 +19,7 @@
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   background-color: transparent;
-  color: var(--color-text);
+  color: var(--color-text, #111827);
   border: 1px solid var(--color-border, #e5e7eb);
   border-radius: 0.5rem;
   font-size: 0.875rem;
@@ -90,7 +90,7 @@
 .session-detail__title {
   font-size: 2rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--color-text, #111827);
   margin: 0;
 }
 
@@ -153,7 +153,7 @@
 .section-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--color-text, #111827);
   margin: 0 0 1rem 0;
 }
 
@@ -216,7 +216,7 @@
 .info-card__value {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--color-text, #111827);
 }
 
 /* Host Card */
@@ -256,7 +256,7 @@
 .host-card__name {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--color-text, #111827);
 }
 
 .host-card__role {
@@ -292,7 +292,7 @@
 .location-card__name {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--color-text, #111827);
 }
 
 .location-card__address {
@@ -337,7 +337,7 @@
 .participant__name {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-text);
+  color: var(--color-text, #111827);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -364,7 +364,7 @@
 .reservation-card__title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--color-text, #111827);
   margin: 0;
 }
 
@@ -389,7 +389,7 @@
 .spots-text strong {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--color-text);
+  color: var(--color-text, #111827);
 }
 
 .button--reserve {
@@ -491,7 +491,7 @@
 .session-detail__error h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: var(--color-text);
+  color: var(--color-text, #111827);
   margin: 0;
 }
 
@@ -504,7 +504,7 @@
 .button--secondary {
   padding: 0.75rem 1.5rem;
   background-color: var(--color-bg-secondary, #f9fafb);
-  color: var(--color-text);
+  color: var(--color-text, #111827);
   border: 1px solid var(--color-border, #e5e7eb);
   border-radius: 0.5rem;
   font-size: 0.875rem;
