@@ -1,0 +1,151 @@
+<div class="profile-container">
+  <mat-card class="profile-card">
+    <mat-card-header>
+      <div class="profile-header">
+        <div class="profile-avatar">
+          @if (user?.avatar) {
+          <img [src]="user!.avatar" [alt]="user!.username" />
+          } @else {
+          <div class="avatar-placeholder">{{ getInitials() }}</div>
+          }
+        </div>
+        <div class="profile-title">
+          <mat-card-title>{{ user?.username }}</mat-card-title>
+          <mat-card-subtitle>{{ user?.email }}</mat-card-subtitle>
+        </div>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      @if (errorMessage) {
+      <div class="error-message">
+        <mat-icon>error</mat-icon>
+        <span>{{ errorMessage }}</span>
+      </div>
+      } @if (successMessage) {
+      <div class="success-message">
+        <mat-icon>check_circle</mat-icon>
+        <span>{{ successMessage }}</span>
+      </div>
+      }
+
+      <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+        <!-- Username (readonly) -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nom d'utilisateur</mat-label>
+          <input matInput formControlName="username" readonly />
+          <mat-icon matPrefix>person</mat-icon>
+        </mat-form-field>
+
+        <!-- Email (readonly) -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="email" type="email" readonly />
+          <mat-icon matPrefix>email</mat-icon>
+        </mat-form-field>
+
+        <!-- First Name -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Prénom</mat-label>
+          <input
+            matInput
+            formControlName="firstName"
+            placeholder="Alice"
+            [readonly]="!isEditing"
+          />
+          <mat-icon matPrefix>badge</mat-icon>
+        </mat-form-field>
+
+        <!-- Last Name -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nom</mat-label>
+          <input
+            matInput
+            formControlName="lastName"
+            placeholder="Dupont"
+            [readonly]="!isEditing"
+          />
+          <mat-icon matPrefix>badge</mat-icon>
+        </mat-form-field>
+
+        <!-- Bio -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Bio</mat-label>
+          <textarea
+            matInput
+            formControlName="bio"
+            rows="4"
+            placeholder="Parlez-nous de vous, de vos jeux préférés..."
+            [readonly]="!isEditing"
+            maxlength="500"
+          ></textarea>
+          <mat-icon matPrefix>description</mat-icon>
+          @if (isEditing && profileForm.get('bio')?.value) {
+          <mat-hint align="end">
+            {{ profileForm.get('bio')?.value?.length || 0 }} / 500
+          </mat-hint>
+          } @if (profileForm.get('bio')?.hasError('maxLength') &&
+          profileForm.get('bio')?.touched) {
+          <mat-error>La bio ne peut pas dépasser 500 caractères</mat-error>
+          }
+        </mat-form-field>
+
+        <!-- Skill Level -->
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Niveau de jeu</mat-label>
+          <mat-select formControlName="skillLevel" [disabled]="!isEditing">
+            <mat-option value="">Non spécifié</mat-option>
+            @for (level of skillLevels; track level.value) {
+            <mat-option [value]="level.value">{{ level.label }}</mat-option>
+            }
+          </mat-select>
+          <mat-icon matPrefix>star</mat-icon>
+        </mat-form-field>
+
+        <!-- Action Buttons -->
+        <div class="button-group">
+          @if (!isEditing) {
+          <button
+            type="button"
+            mat-raised-button
+            color="primary"
+            (click)="toggleEdit()"
+          >
+            <mat-icon>edit</mat-icon>
+            Modifier le profil
+          </button>
+          } @else {
+          <button
+            type="submit"
+            mat-raised-button
+            color="primary"
+            [disabled]="profileForm.invalid || isLoading"
+          >
+            @if (isLoading) {
+            <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+            <mat-icon>save</mat-icon>
+            } Enregistrer
+          </button>
+          <button
+            type="button"
+            mat-stroked-button
+            (click)="toggleEdit()"
+            [disabled]="isLoading"
+          >
+            <mat-icon>cancel</mat-icon>
+            Annuler
+          </button>
+          }
+        </div>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-button color="warn" (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        Se déconnecter
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
