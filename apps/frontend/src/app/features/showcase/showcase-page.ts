@@ -66,10 +66,29 @@ export class ShowcasePage {
     id: 'poll-1',
     title: 'Best date for next one-shot campaign?',
     dates: ['2025-10-25', '2025-10-26', '2025-11-01'],
-    votes: [
-      { userId: 'user-1', username: 'alice_dm', votedDates: ['2025-10-25', '2025-10-26'] },
-      { userId: 'user-2', username: 'bob_warrior', votedDates: ['2025-10-25'] },
-      { userId: 'user-3', username: 'carol_newbie', votedDates: ['2025-10-26', '2025-11-01'] },
-    ],
+    votes: {} as Record<string, string>,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    groupId: 'group-1',
+    voteDetails: {
+      '2025-10-25': [
+        { userId: 'user-1', username: 'alice_dm' },
+        { userId: 'user-2', username: 'bob_warrior' },
+      ],
+      '2025-10-26': [
+        { userId: 'user-1', username: 'alice_dm' },
+        { userId: 'user-3', username: 'carol_newbie' },
+      ],
+      '2025-11-01': [
+        { userId: 'user-3', username: 'carol_newbie' },
+      ],
+    },
+    voteCounts: {
+      '2025-10-25': 2,
+      '2025-10-26': 2,
+      '2025-11-01': 1,
+    },
+    bestDate: '2025-10-25',
+    totalVotes: 3,
   };
 }
