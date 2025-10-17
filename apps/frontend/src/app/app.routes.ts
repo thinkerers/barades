@@ -1,8 +1,10 @@
 import { Route } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { AppLayout } from './core/layouts/app-layout';
+import { AboutPage } from './features/about/about-page';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
+import { ContactPage } from './features/contact/contact-page';
 import { GroupDetailComponent } from './features/groups/group-detail';
 import { GroupsListComponent } from './features/groups/groups-list';
 import { HomePage } from './features/home/home-page';
@@ -64,6 +66,14 @@ export const appRoutes: Route[] = [
       {
         path: 'showcase',
         component: ShowcasePage,
+      },
+      {
+        path: 'about',
+        component: AboutPage,
+      },
+      {
+        path: 'contact',
+        component: ContactPage,
       },
     ],
   },
