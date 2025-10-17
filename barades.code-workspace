@@ -35,7 +35,7 @@
     "editor.wordWrap": "on",
     "editor.bracketPairColorization.enabled": true,
     "editor.guides.bracketPairs": true,
-    
+
     // Files
     "files.eol": "\n",
     "files.trimTrailingWhitespace": true,
@@ -56,7 +56,7 @@
       "**/.angular/**": true,
       "**/coverage/**": true
     },
-    
+
     // Search
     "search.exclude": {
       "**/node_modules": true,
@@ -66,17 +66,17 @@
       "**/.nx": true,
       "**/package-lock.json": true
     },
-    
+
     // TypeScript
-    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.tsdk": "🏠 Barades (Root)/node_modules/typescript/lib",
     "typescript.enablePromptUseWorkspaceTsdk": true,
     "typescript.preferences.importModuleSpecifier": "relative",
     "typescript.updateImportsOnFileMove.enabled": "always",
-    
+
     // JavaScript/TypeScript validation
     "javascript.format.enable": false,
     "typescript.format.enable": false,
-    
+
     // ESLint
     "eslint.validate": [
       "javascript",
@@ -84,46 +84,44 @@
       "typescript",
       "typescriptreact"
     ],
-    "eslint.workingDirectories": [
-      { "mode": "auto" }
-    ],
-    
+    "eslint.workingDirectories": [{ "mode": "auto" }],
+
     // Prettier
     "prettier.enable": true,
     "prettier.requireConfig": false,
-    
+
     // Angular
     "angular.enable-strict-mode-prompt": false,
-    
+
     // Nx
     "nxConsole.enableTelemetry": false,
     "nxConsole.showNodeVersionOnStartup": false,
-    
+
     // Git
     "git.ignoreLimitWarning": true,
     "git.autofetch": true,
     "git.confirmSync": false,
     "git.enableSmartCommit": true,
-    
+
     // Terminal
     "terminal.integrated.defaultProfile.linux": "bash",
     "terminal.integrated.scrollback": 10000,
-    
+
     // Testing
     "jest.runMode": "on-demand",
-    
+
     // Prisma
     "[prisma]": {
       "editor.defaultFormatter": "Prisma.prisma",
       "editor.formatOnSave": true
     },
-    
+
     // HTML
     "[html]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
       "editor.formatOnSave": true
     },
-    
+
     // CSS/SCSS
     "[css]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -131,7 +129,7 @@
     "[scss]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    
+
     // JSON
     "[json]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -139,7 +137,7 @@
     "[jsonc]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
-    
+
     // Markdown
     "[markdown]": {
       "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -157,20 +155,20 @@
       "nrwl.angular-console",
       "esbenp.prettier-vscode",
       "dbaeumer.vscode-eslint",
-      
+
       // Angular
       "angular.ng-template",
-      
+
       // Prisma
       "prisma.prisma",
-      
+
       // Testing
       "orta.vscode-jest",
       "ms-playwright.playwright",
-      
+
       // Git
       "eamodio.gitlens",
-      
+
       // Utilities
       "streetsidesoftware.code-spell-checker",
       "wayou.vscode-todo-highlight",
@@ -178,10 +176,10 @@
       "usernamehw.errorlens",
       "christian-kohler.path-intellisense",
       "visualstudioexptteam.vscodeintellicode",
-      
+
       // Tailwind
       "bradlc.vscode-tailwindcss",
-      
+
       // Icons
       "pkief.material-icon-theme"
     ]
@@ -239,7 +237,10 @@
     "compounds": [
       {
         "name": "Debug full stack",
-        "configurations": ["Debug frontend with Chrome", "Debug backend with Nx"],
+        "configurations": [
+          "Debug frontend with Chrome",
+          "Debug backend with Nx"
+        ],
         "stopAll": true
       }
     ]
