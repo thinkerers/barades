@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Footer } from './footer';
 import { provideRouter } from '@angular/router';
+import { Footer } from './footer';
 
 describe('Footer', () => {
   let component: Footer;
@@ -9,7 +9,7 @@ describe('Footer', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Footer],
-      providers: [provideRouter([])]
+      providers: [provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Footer);
@@ -24,7 +24,7 @@ describe('Footer', () => {
   it('should display current year', () => {
     const currentYear = new Date().getFullYear();
     expect(component.currentYear).toBe(currentYear);
-    
+
     const compiled = fixture.nativeElement as HTMLElement;
     const copyright = compiled.querySelector('.footer-copyright');
     expect(copyright?.textContent).toContain(currentYear.toString());
@@ -33,7 +33,7 @@ describe('Footer', () => {
   it('should render footer sections', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     const sections = compiled.querySelectorAll('.footer-section');
-    expect(sections.length).toBe(4);
+    expect(sections.length).toBe(5); // Bar à Dés, Communauté, Ressources, Développeurs, Légal
   });
 
   it('should render social links', () => {
