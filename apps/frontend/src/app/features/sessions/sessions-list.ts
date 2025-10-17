@@ -2,7 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { EmptyStateComponent, LoadingSpinnerComponent } from '@org/ui';
+import {
+  EmptyStateComponent,
+  LoadingSpinnerComponent,
+  RadioGroupComponent,
+  RadioOption,
+  SearchInputComponent,
+} from '@org/ui';
 import { Session, SessionsService } from '../../core/services/sessions.service';
 import { SessionCardComponent } from './session-card';
 
@@ -15,6 +21,8 @@ import { SessionCardComponent } from './session-card';
     SessionCardComponent,
     LoadingSpinnerComponent,
     EmptyStateComponent,
+    SearchInputComponent,
+    RadioGroupComponent,
   ],
   selector: 'app-sessions-list',
   templateUrl: './sessions-list.html',
@@ -36,6 +44,13 @@ export class SessionsListPage implements OnInit {
 
   // Unique game systems for dropdown
   gameSystems: string[] = [];
+
+  // Radio options for session type filter
+  sessionTypeOptions: RadioOption[] = [
+    { value: 'all', label: 'Toutes', icon: '📋' },
+    { value: 'online', label: 'En ligne', icon: '💻' },
+    { value: 'onsite', label: 'Sur table', icon: '🎲' },
+  ];
 
   ngOnInit(): void {
     this.loadSessions();
@@ -115,6 +130,14 @@ export class SessionsListPage implements OnInit {
     this.sessionType = 'all';
     this.selectedGameSystem = '';
     this.onlyAvailable = false;
+    this.applyFilters();
+  }
+
+  /**
+   * Handle session type change from radio group
+   */
+  onSessionTypeChange(value: string): void {
+    this.sessionType = value as 'all' | 'online' | 'onsite';
     this.applyFilters();
   }
 

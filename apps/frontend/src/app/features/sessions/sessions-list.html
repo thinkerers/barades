@@ -46,57 +46,22 @@
       <!-- Search Bar -->
       <div class="filter-group">
         <label for="search">Recherche</label>
-        <input
-          type="text"
-          id="search"
-          [(ngModel)]="searchTerm"
-          (input)="applyFilters()"
+        <lib-search-input
+          [value]="searchTerm"
+          (valueChange)="searchTerm = $event; applyFilters()"
           placeholder="Nom, jeu, description..."
-          class="search-input"
-        />
+        ></lib-search-input>
       </div>
 
       <!-- Session Type Filter (Radio Buttons) -->
       <div class="filter-group">
         <div class="filter-label">Type de session</div>
-        <div class="radio-group">
-          <label class="radio-label">
-            <input
-              type="radio"
-              name="sessionType"
-              value="all"
-              [(ngModel)]="sessionType"
-              (change)="applyFilters()"
-            />
-            <span><mat-icon aria-label="Toutes">list</mat-icon> Toutes</span>
-          </label>
-          <label class="radio-label">
-            <input
-              type="radio"
-              name="sessionType"
-              value="online"
-              [(ngModel)]="sessionType"
-              (change)="applyFilters()"
-            />
-            <span
-              ><mat-icon aria-label="En ligne">computer</mat-icon> En
-              ligne</span
-            >
-          </label>
-          <label class="radio-label">
-            <input
-              type="radio"
-              name="sessionType"
-              value="onsite"
-              [(ngModel)]="sessionType"
-              (change)="applyFilters()"
-            />
-            <span
-              ><mat-icon aria-label="Sur table">casino</mat-icon> Sur
-              table</span
-            >
-          </label>
-        </div>
+        <lib-radio-group
+          [options]="sessionTypeOptions"
+          [value]="sessionType"
+          (valueChange)="onSessionTypeChange($event)"
+          name="sessionType"
+        ></lib-radio-group>
       </div>
       <!-- Game System Filter -->
       <div class="filter-group">
