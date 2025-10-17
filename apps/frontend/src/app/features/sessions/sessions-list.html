@@ -47,6 +47,7 @@
       <div class="filter-group">
         <label for="search">Recherche</label>
         <lib-search-input
+          inputId="search"
           [value]="searchTerm"
           (valueChange)="searchTerm = $event; applyFilters()"
           placeholder="Nom, jeu, description..."

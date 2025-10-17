@@ -4,6 +4,7 @@ import {
   Component,
   EventEmitter,
   Input,
+  OnDestroy,
   Output,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -16,9 +17,10 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./search-input.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SearchInputComponent {
+export class SearchInputComponent implements OnDestroy {
   @Input() value = '';
   @Input() placeholder = 'Rechercher...';
+  @Input() inputId?: string;
   @Input() debounce = 0;
   @Output() valueChange = new EventEmitter<string>();
 
@@ -43,5 +45,11 @@ export class SearchInputComponent {
       clearTimeout(this.debounceTimer);
     }
     this.valueChange.emit('');
+  }
+
+  ngOnDestroy(): void {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+    }
   }
 }

@@ -111,4 +111,34 @@ describe('SearchInputComponent', () => {
 
     expect(emitCount).toBe(2);
   });
+
+  it('should apply inputId to input element when provided', () => {
+    fixture = TestBed.createComponent(SearchInputComponent);
+    component = fixture.componentInstance;
+    component.inputId = 'custom-search-id';
+    fixture.detectChanges();
+
+    const input = fixture.nativeElement.querySelector('.search-input__field');
+    expect(input.id).toBe('custom-search-id');
+  });
+
+  it('should not have id attribute when inputId is not provided', () => {
+    const input = fixture.nativeElement.querySelector('.search-input__field');
+    expect(input.hasAttribute('id')).toBe(false);
+  });
+
+  it('should clear timer on destroy', () => {
+    fixture = TestBed.createComponent(SearchInputComponent);
+    component = fixture.componentInstance;
+    component.debounce = 300;
+    fixture.detectChanges();
+
+    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
+    component.onInput('test');
+
+    fixture.destroy();
+
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+    clearTimeoutSpy.mockRestore();
+  });
 });
