@@ -42,3 +42,8 @@ body {
   width: 100%;
   z-index: 1;
 }
+
+/* Prevent Tailwind's global border style from creating a notch seam */
+.mat-mdc-form-field .mdc-notched-outline__notch {
+  border-right: unset;
+}
