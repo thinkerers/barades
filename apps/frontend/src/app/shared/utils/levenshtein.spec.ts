@@ -1,4 +1,8 @@
-import { levenshteinDistance, calculateSimilarity, findClosestMatches } from './levenshtein';
+import {
+  calculateSimilarity,
+  findClosestMatches,
+  levenshteinDistance,
+} from '@org/ui';
 
 describe('Levenshtein Distance', () => {
   describe('levenshteinDistance', () => {
@@ -37,7 +41,10 @@ describe('Levenshtein Distance', () => {
     });
 
     it('should calculate partial similarity', () => {
-      const similarity = calculateSimilarity('Dungeons & Dragons', 'Dungeon & Dragons');
+      const similarity = calculateSimilarity(
+        'Dungeons & Dragons',
+        'Dungeon & Dragons'
+      );
       expect(similarity).toBeGreaterThan(0.9);
       expect(similarity).toBeLessThan(1);
     });
@@ -53,7 +60,7 @@ describe('Levenshtein Distance', () => {
       'Pathfinder 2e',
       'Call of Cthulhu 7e',
       'Vampire: The Masquerade',
-      'Cyberpunk RED'
+      'Cyberpunk RED',
     ];
 
     it('should find close matches for typos', () => {
@@ -87,20 +94,26 @@ describe('Levenshtein Distance', () => {
       const matches = findClosestMatches('Pathfinde', games, 0.5);
       if (matches.length > 1) {
         for (let i = 0; i < matches.length - 1; i++) {
-          expect(matches[i].similarity).toBeGreaterThanOrEqual(matches[i + 1].similarity);
+          expect(matches[i].similarity).toBeGreaterThanOrEqual(
+            matches[i + 1].similarity
+          );
         }
       }
     });
 
     it('should filter by threshold', () => {
       const matches = findClosestMatches('D&D', games, 0.8);
-      matches.forEach(match => {
+      matches.forEach((match) => {
         expect(match.similarity).toBeGreaterThanOrEqual(0.8);
       });
     });
 
     it('should detect "dungeon and dragon" as similar to "Dungeons & Dragons 5e"', () => {
-      const games = ['Dungeons & Dragons 5e', 'Pathfinder 2e', 'Call of Cthulhu'];
+      const games = [
+        'Dungeons & Dragons 5e',
+        'Pathfinder 2e',
+        'Call of Cthulhu',
+      ];
       const matches = findClosestMatches('dungeon and dragon', games, 0.6);
       console.log('Test "dungeon and dragon":', matches);
       expect(matches.length).toBeGreaterThan(0);
@@ -108,7 +121,11 @@ describe('Levenshtein Distance', () => {
     });
 
     it('should detect "Dungeon & Dragins" as similar to "Dungeons & Dragons 5e"', () => {
-      const games = ['Dungeons & Dragons 5e', 'Pathfinder 2e', 'Call of Cthulhu'];
+      const games = [
+        'Dungeons & Dragons 5e',
+        'Pathfinder 2e',
+        'Call of Cthulhu',
+      ];
       const matches = findClosestMatches('Dungeon & Dragins', games, 0.6);
       console.log('Test "Dungeon & Dragins":', matches);
       expect(matches.length).toBeGreaterThan(0);
@@ -116,7 +133,11 @@ describe('Levenshtein Distance', () => {
     });
 
     it('should detect "pathafinder" as similar to "Pathfinder 2e"', () => {
-      const games = ['Dungeons & Dragons 5e', 'Pathfinder 2e', 'Call of Cthulhu'];
+      const games = [
+        'Dungeons & Dragons 5e',
+        'Pathfinder 2e',
+        'Call of Cthulhu',
+      ];
       const matches = findClosestMatches('pathafinder', games, 0.6);
       console.log('Test "pathafinder":', matches);
       expect(matches.length).toBeGreaterThan(0);

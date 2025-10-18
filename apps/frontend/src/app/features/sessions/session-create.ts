@@ -7,9 +7,9 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router } from '@angular/router';
+import { GameSystemInputComponent } from '@org/ui';
 import { AuthService } from '../../core/services/auth.service';
 import { SessionsService } from '../../core/services/sessions.service';
-import { GameSystemInputComponent } from '../../shared/components/game-system-input/game-system-input.component';
 
 @Component({
   selector: 'app-session-create',

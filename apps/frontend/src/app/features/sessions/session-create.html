@@ -28,7 +28,7 @@
     <!-- Game & Title -->
     <div class="form-row">
       <div class="form-group">
-        <app-game-system-input
+        <lib-game-system-input
           formControlName="game"
           [gameSystems]="existingGames"
           [placeholder]="'ex: Dungeons & Dragons 5e, Pathfinder...'"
@@ -37,7 +37,7 @@
           [suggestionThreshold]="0.55"
           [errorMessage]="getErrorMessage('game') || 'Champ invalide'"
           [clearButtonAriaLabel]="'Effacer le système de jeu'"
-        ></app-game-system-input>
+        ></lib-game-system-input>
       </div>
 
       <div class="form-group">

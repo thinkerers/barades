@@ -15,7 +15,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { findClosestMatches } from '../../../shared/utils/levenshtein';
+import { findClosestMatches } from '../../utils/levenshtein';
 
 interface GameOption {
   value: string;
@@ -24,7 +24,7 @@ interface GameOption {
 }
 
 @Component({
-  selector: 'app-game-system-input',
+  selector: 'lib-game-system-input',
   standalone: true,
   imports: [
     CommonModule,
@@ -35,7 +35,7 @@ interface GameOption {
     MatButtonModule,
   ],
   templateUrl: './game-system-input.component.html',
-  styleUrl: './game-system-input.component.css',
+  styleUrls: ['./game-system-input.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GameSystemInputComponent

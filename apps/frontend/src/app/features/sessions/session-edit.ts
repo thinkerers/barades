@@ -8,9 +8,9 @@ import {
 } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
+import { findClosestMatches } from '@org/ui';
 import { AuthService } from '../../core/services/auth.service';
 import { Session, SessionsService } from '../../core/services/sessions.service';
-import { findClosestMatches } from '../../shared/utils/levenshtein';
 
 @Component({
   selector: 'app-session-edit',

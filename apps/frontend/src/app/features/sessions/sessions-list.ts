@@ -21,11 +21,11 @@ import {
   AsyncStateComponent,
   AsyncStateStatus,
   EmptyStateComponent,
+  GameSystemInputComponent,
+  findClosestMatches,
 } from '@org/ui';
 import { AuthService } from '../../core/services/auth.service';
 import { Session, SessionsService } from '../../core/services/sessions.service';
-import { GameSystemInputComponent } from '../../shared/components/game-system-input/game-system-input.component';
-import { findClosestMatches } from '../../shared/utils/levenshtein';
 import { SessionCardComponent } from './session-card';
 
 @Component({

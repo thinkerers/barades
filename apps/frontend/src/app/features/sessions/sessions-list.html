@@ -160,7 +160,7 @@
         </div>
 
         <div class="filters-card__field filters-card__field--game">
-          <app-game-system-input
+          <lib-game-system-input
             [(ngModel)]="selectedGameSystem"
             (valueChange)="onGameFilterChange($event)"
             [gameSystems]="gameSystems"
@@ -168,7 +168,7 @@
             [minSuggestionLength]="minGameSuggestionLength"
             [suggestionThreshold]="gameSuggestionThreshold"
             [clearButtonAriaLabel]="'Effacer le filtre système de jeu'"
-          ></app-game-system-input>
+          ></lib-game-system-input>
         </div>
       </div>
 
