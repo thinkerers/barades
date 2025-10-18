@@ -6,10 +6,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "nx serve backend",
-          "nx serve frontend"
-        ],
+        "commands": ["nx serve backend", "nx serve frontend"],
         "parallel": true
       },
       "description": "Run both frontend and backend in parallel"
