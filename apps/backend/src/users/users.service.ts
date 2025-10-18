@@ -68,4 +68,84 @@ export class UsersService {
 
     return updatedUser;
   }
+
+  /**
+   * Get action items for a user
+   * Returns upcoming sessions and pending reservations
+   */
+  async getActionItems(userId: string) {
+    const now = new Date();
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(now.getDate() + 7);
+
+    // Get upcoming sessions (next 7 days) where user is confirmed
+    const upcomingSessions = await this.prisma.reservation.findMany({
+      where: {
+        userId,
+        status: 'CONFIRMED',
+        session: {
+          date: {
+            gte: now,
+            lte: sevenDaysFromNow,
+          },
+        },
+      },
+      include: {
+        session: {
+          select: {
+            id: true,
+            title: true,
+            date: true,
+            game: true,
+            location: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        session: {
+          date: 'asc',
+        },
+      },
+      take: 5,
+    });
+
+    // Get pending reservations for sessions the user hosts
+    const pendingReservations = await this.prisma.reservation.findMany({
+      where: {
+        status: 'PENDING',
+        session: {
+          hostId: userId,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
+        session: {
+          select: {
+            id: true,
+            title: true,
+            date: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+      take: 5,
+    });
+
+    return {
+      upcomingSessions,
+      pendingReservations,
+    };
+  }
 }

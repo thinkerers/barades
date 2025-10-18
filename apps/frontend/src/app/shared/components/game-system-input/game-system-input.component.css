@@ -1,0 +1,31 @@
+:host {
+  display: block;
+}
+
+.game-system-input {
+  width: 100%;
+}
+
+.game-system-input__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.game-system-input__label {
+  font-weight: 500;
+  color: #f8fafc;
+}
+
+.game-system-input__similarity {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #a5b4fc;
+}
+
+.game-system-input__option--suggestion .game-system-input__label {
+  font-weight: 600;
+  color: #e0e7ff;
+}

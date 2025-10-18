@@ -23,6 +23,11 @@ export class TopBar {
     this.menuTrigger?.closeMenu();
   }
 
+  navigateToDashboard(): void {
+    this.closeMenu();
+    this.router.navigate(['/dashboard']);
+  }
+
   navigateToProfile(): void {
     this.closeMenu();
     this.router.navigate(['/profile']);

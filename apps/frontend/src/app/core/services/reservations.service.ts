@@ -1,5 +1,5 @@
-import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -28,17 +28,21 @@ export interface CreateReservationRequest {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ReservationsService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/reservations`;
 
-  createReservation(sessionId: string, userId: string, message?: string): Observable<Reservation> {
+  createReservation(
+    sessionId: string,
+    userId: string,
+    message?: string
+  ): Observable<Reservation> {
     const payload: CreateReservationRequest = {
       sessionId,
       userId,
-      message
+      message,
     };
 
     return this.http.post<Reservation>(this.apiUrl, payload);
@@ -55,5 +59,26 @@ export class ReservationsService {
 
   cancelReservation(id: string): Observable<Reservation> {
     return this.http.delete<Reservation>(`${this.apiUrl}/${id}`);
+  }
+
+  /**
+   * Get all pending reservations for sessions hosted by the current user
+   */
+  getPendingForMySessions(): Observable<Reservation[]> {
+    return this.http.get<Reservation[]>(
+      `${this.apiUrl}/pending/for-my-sessions`
+    );
+  }
+
+  /**
+   * Update reservation status (CONFIRMED or CANCELLED)
+   */
+  updateReservationStatus(
+    id: string,
+    status: 'CONFIRMED' | 'CANCELLED'
+  ): Observable<Reservation> {
+    return this.http.patch<Reservation>(`${this.apiUrl}/${id}/status`, {
+      status,
+    });
   }
 }

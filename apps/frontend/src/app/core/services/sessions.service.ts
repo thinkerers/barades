@@ -1,5 +1,5 @@
-import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -21,7 +21,7 @@ export interface Session {
   updatedAt: string;
   hostId: string;
   locationId: string | null;
-  
+
   // Relations incluses
   host?: {
     id: string;
@@ -48,7 +48,7 @@ export interface Session {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SessionsService {
   private readonly http = inject(HttpClient);
@@ -59,6 +59,13 @@ export class SessionsService {
    */
   getSessions(): Observable<Session[]> {
     return this.http.get<Session[]>(this.apiUrl);
+  }
+
+  /**
+   * Retrieve sessions hosted by the authenticated user
+   */
+  getSessionsHostedByMe(): Observable<Session[]> {
+    return this.http.get<Session[]>(`${this.apiUrl}/created-by-me`);
   }
 
   /**
@@ -87,5 +94,21 @@ export class SessionsService {
    */
   deleteSession(id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  /**
+   * Get statistics about sessions created by the current user
+   * Returns total count and recent count (last 7 days)
+   */
+  getCreatedByMeStats(): Observable<{
+    totalCount: number;
+    recentCount: number;
+    period: string;
+  }> {
+    return this.http.get<{
+      totalCount: number;
+      recentCount: number;
+      period: string;
+    }>(`${this.apiUrl}/stats/created-by-me`);
   }
 }

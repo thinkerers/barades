@@ -19,6 +19,16 @@ export class UsersController {
   }
 
   /**
+   * GET /users/me/action-items
+   * Get upcoming action items for the current user
+   * Includes: upcoming sessions and pending reservations
+   */
+  @Get('me/action-items')
+  async getActionItems(@CurrentUser('sub') userId: string) {
+    return this.usersService.getActionItems(userId);
+  }
+
+  /**
    * PATCH /users/me
    * Update current user profile
    */

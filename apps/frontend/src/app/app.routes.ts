@@ -5,6 +5,7 @@ import { AboutPage } from './features/about/about-page';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
 import { ContactPage } from './features/contact/contact-page';
+import { DashboardPage } from './features/dashboard/dashboard-page';
 import { GroupDetailComponent } from './features/groups/group-detail';
 import { GroupsListComponent } from './features/groups/groups-list';
 import { HomePage } from './features/home/home-page';
@@ -70,6 +71,11 @@ export const appRoutes: Route[] = [
       {
         path: 'profile',
         component: ProfilePage,
+        canActivate: [authGuard],
+      },
+      {
+        path: 'dashboard',
+        component: DashboardPage,
         canActivate: [authGuard],
       },
       {

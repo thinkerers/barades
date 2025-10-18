@@ -6,16 +6,15 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icon';
 import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { SessionsService } from '../../core/services/sessions.service';
-import { findClosestMatches } from '../../shared/utils/levenshtein';
+import { GameSystemInputComponent } from '../../shared/components/game-system-input/game-system-input.component';
 
 @Component({
   selector: 'app-session-create',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatIconModule],
+  imports: [CommonModule, ReactiveFormsModule, GameSystemInputComponent],
   templateUrl: './session-create.html',
   styleUrls: ['./session-create.css'],
 })
@@ -31,9 +30,6 @@ export class SessionCreateComponent implements OnInit {
 
   // Liste des jeux existants pour l'autocomplétion
   existingGames: string[] = [];
-
-  // Suggestions de correction pour le jeu
-  gameSuggestions: Array<{ value: string; similarity: number }> = [];
 
   levels = [
     { value: 'BEGINNER', label: 'Débutant' },
@@ -74,9 +70,6 @@ export class SessionCreateComponent implements OnInit {
     });
 
     // Écouter les changements du champ "game" pour détecter les fautes
-    this.sessionForm.get('game')?.valueChanges.subscribe((value) => {
-      this.checkGameSuggestions(value);
-    });
   }
 
   ngOnInit(): void {
@@ -95,38 +88,6 @@ export class SessionCreateComponent implements OnInit {
         // Continuer même si le chargement échoue
       },
     });
-  }
-
-  /**
-   * Vérifie si le jeu saisi est proche d'un jeu existant
-   * et propose des suggestions si nécessaire
-   */
-  checkGameSuggestions(value: string): void {
-    if (!value || value.trim().length < 3) {
-      this.gameSuggestions = [];
-      return;
-    }
-
-    console.log('🔍 Vérification suggestions pour:', value);
-    console.log('📚 Jeux existants:', this.existingGames);
-
-    // Trouver les jeux similaires avec seuil de 0.6 (60% de similarité)
-    this.gameSuggestions = findClosestMatches(
-      value,
-      this.existingGames,
-      0.6,
-      3
-    );
-
-    console.log('💡 Suggestions trouvées:', this.gameSuggestions);
-  }
-
-  /**
-   * Applique une suggestion au champ "game"
-   */
-  applySuggestion(game: string): void {
-    this.sessionForm.patchValue({ game });
-    this.gameSuggestions = [];
   }
 
   onSubmit(): void {

@@ -1,0 +1,59 @@
+<section class="dashboard">
+  <header class="dashboard__header">
+    <h1>Tableau de bord</h1>
+    <p class="dashboard__subtitle">
+      Visualisez un aperçu rapide de vos activités, sessions et groupes.
+    </p>
+  </header>
+
+  @if (loading()) {
+  <div class="dashboard__loading">
+    <p>Chargement des données...</p>
+  </div>
+  } @else if (error()) {
+  <div class="dashboard__error">
+    <p>{{ error() }}</p>
+    <button (click)="loadDashboardData()" class="dashboard__retry-button">
+      Réessayer
+    </button>
+  </div>
+  } @else {
+  <div class="dashboard__grid">
+    @for (stat of stats(); track stat.label) {
+    <div
+      class="dashboard__card"
+      [class.dashboard__card--interactive]="isStatInteractive(stat)"
+      (click)="isStatInteractive(stat) && onCardClick(stat.key)"
+      (keydown.enter)="onStatKeydown(stat, $event)"
+      (keydown.space)="onStatKeydown(stat, $event)"
+      [attr.tabindex]="isStatInteractive(stat) ? '0' : null"
+      [attr.role]="isStatInteractive(stat) ? 'button' : null"
+      [attr.aria-label]="getStatAriaLabel(stat)"
+    >
+      <h2>{{ stat.value }}</h2>
+      <p class="dashboard__card-label">{{ stat.label }}</p>
+      <p class="dashboard__card-trend">{{ stat.trend }}</p>
+    </div>
+    }
+  </div>
+
+  <section class="dashboard__actions">
+    <h2>Actions à venir</h2>
+    @if (upcomingActions().length === 0) {
+    <p class="dashboard__no-actions">Aucune action à venir</p>
+    } @else {
+    <ul>
+      @for (action of upcomingActions(); track action.title) {
+      <li class="dashboard__action-item">
+        <h3>{{ action.title }}</h3>
+        <p>{{ action.description }}</p>
+        <span class="dashboard__action-date">
+          À faire avant le {{ action.dueDate }}
+        </span>
+      </li>
+      }
+    </ul>
+    }
+  </section>
+  }
+</section>

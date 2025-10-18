@@ -68,6 +68,38 @@ export class SessionsService {
     });
   }
 
+  findAllCreatedByUser(userId: string) {
+    return this.prisma.session.findMany({
+      where: {
+        hostId: userId,
+      },
+      include: {
+        host: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
+        location: true,
+        reservations: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        date: 'asc',
+      },
+    });
+  }
+
   findOne(id: string) {
     return this.prisma.session.findUnique({
       where: { id },
@@ -155,5 +187,34 @@ export class SessionsService {
   remove(_id: string) {
     // TODO: Implement later
     throw new Error('Method not implemented yet');
+  }
+
+  /**
+   * Get statistics about sessions created by a specific user
+   * Returns total count and count of sessions created in the last 7 days
+   */
+  async getCreatedByMeStats(userId: string) {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const [totalCount, recentCount] = await Promise.all([
+      this.prisma.session.count({
+        where: {
+          hostId: userId,
+        },
+      }),
+      this.prisma.session.count({
+        where: {
+          hostId: userId,
+          createdAt: { gte: sevenDaysAgo },
+        },
+      }),
+    ]);
+
+    return {
+      totalCount,
+      recentCount,
+      period: 'last 7 days',
+    };
   }
 }

@@ -1,0 +1,56 @@
+<mat-form-field appearance="outline" class="game-system-input">
+  <mat-label>{{ label }}</mat-label>
+  <mat-icon matPrefix aria-hidden="true">{{ prefixIcon }}</mat-icon>
+  <input
+    matInput
+    [placeholder]="placeholder"
+    [value]="value"
+    (input)="onInputFromEvent($event)"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+    [matAutocomplete]="auto"
+    [required]="required"
+    [disabled]="isDisabled"
+    autocomplete="off"
+  />
+  <button
+    *ngIf="showClearButton"
+    mat-icon-button
+    matSuffix
+    type="button"
+    (click)="clearValue()"
+    [disabled]="!value.trim() || isDisabled"
+    [attr.aria-label]="clearButtonAriaLabel"
+  >
+    <mat-icon aria-hidden="true">close</mat-icon>
+  </button>
+
+  <mat-autocomplete
+    #auto="matAutocomplete"
+    (optionSelected)="selectOption($event.option.value)"
+  >
+    <ng-container
+      *ngFor="let option of filteredOptions; trackBy: trackByOption"
+    >
+      <mat-option [value]="option.value">
+        <span
+          class="game-system-input__option"
+          [class.game-system-input__option--suggestion]="option.fromSuggestion"
+        >
+          <span class="game-system-input__label">{{ option.value }}</span>
+          <span
+            *ngIf="option.similarity !== undefined"
+            class="game-system-input__similarity"
+          >
+            {{ option.similarity * 100 | number : '1.0-0' }}% similaire
+          </span>
+        </span>
+      </mat-option>
+    </ng-container>
+    <mat-option *ngIf="!filteredOptions.length && value.trim()" disabled>
+      Aucun jeu trouvé
+    </mat-option>
+  </mat-autocomplete>
+
+  <mat-error *ngIf="showError">{{ computedErrorMessage }}</mat-error>
+</mat-form-field>

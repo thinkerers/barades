@@ -282,4 +282,35 @@ export class GroupsService {
     // TODO: Implement later
     throw new Error('Method not implemented yet');
   }
+
+  /**
+   * Get statistics about groups managed by a specific user
+   * A user manages a group if they are the creator OR have ADMIN role
+   * Uses Set to avoid double-counting if user is both creator and admin
+   */
+  async getManagedByMeStats(userId: string) {
+    const [groupsAsCreator, groupsAsAdmin] = await Promise.all([
+      this.prisma.group.findMany({
+        where: { creatorId: userId },
+        select: { id: true },
+      }),
+      this.prisma.groupMember.findMany({
+        where: {
+          userId,
+          role: 'ADMIN',
+        },
+        select: { groupId: true },
+      }),
+    ]);
+
+    // Use Set to get distinct group IDs (avoid double-counting)
+    const managedGroupIds = new Set([
+      ...groupsAsCreator.map((g) => g.id),
+      ...groupsAsAdmin.map((m) => m.groupId),
+    ]);
+
+    return {
+      totalCount: managedGroupIds.size,
+    };
+  }
 }

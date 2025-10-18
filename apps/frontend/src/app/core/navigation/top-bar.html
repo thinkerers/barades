@@ -31,6 +31,10 @@
         yPosition="below"
         panelClass="top-bar__menu-panel"
       >
+        <button mat-menu-item (click)="navigateToDashboard()">
+          <mat-icon fontIcon="space_dashboard"></mat-icon>
+          <span>Dashboard</span>
+        </button>
         <button mat-menu-item (click)="navigateToProfile()">
           <mat-icon fontIcon="person"></mat-icon>
           <span>Mon profil</span>

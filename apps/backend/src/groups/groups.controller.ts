@@ -34,6 +34,16 @@ export class GroupsController {
     return this.groupsService.findAll(userId);
   }
 
+  /**
+   * Get statistics about groups managed by the current user
+   * Returns count of groups where user is either creator or has ADMIN role
+   */
+  @Get('stats/managed-by-me')
+  @UseGuards(JwtAuthGuard)
+  getManagedByMeStats(@CurrentUser() userId: string) {
+    return this.groupsService.getManagedByMeStats(userId);
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   findOne(@Param('id') id: string, @CurrentUser() userId: string) {

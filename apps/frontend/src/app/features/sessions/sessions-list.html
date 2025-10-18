@@ -1,9 +1,39 @@
 <div class="sessions-page">
   <header class="sessions-page__header">
-    <h1 class="sessions-page__title">Sessions de jeu</h1>
-    <p class="sessions-page__subtitle">
-      Découvrez les parties organisées près de chez vous ou en ligne
-    </p>
+    <h1 class="sessions-page__title">{{ pageTitle }}</h1>
+    <p class="sessions-page__subtitle">{{ pageSubtitle }}</p>
+
+    @if (isScopeFilterActive) {
+    <div
+      #scopeBanner
+      class="sessions-page__scope-banner"
+      role="status"
+      tabindex="-1"
+      aria-live="polite"
+    >
+      <mat-icon aria-hidden="true">person</mat-icon>
+      <span>{{ scopeBannerMessage }}</span>
+      <div class="sessions-page__scope-actions">
+        @if (comingFromDashboard) {
+        <button
+          type="button"
+          class="sessions-page__scope-action sessions-page__scope-action--secondary"
+          (click)="returnToDashboard()"
+        >
+          <mat-icon aria-hidden="true">arrow_back</mat-icon>
+          Retour au dashboard
+        </button>
+        }
+        <button
+          type="button"
+          class="sessions-page__scope-action"
+          (click)="clearScopeFilter()"
+        >
+          Voir toutes les sessions
+        </button>
+      </div>
+    </div>
+    }
   </header>
 
   <lib-async-state
@@ -11,112 +41,169 @@
     [loadingMessage]="'Chargement des sessions...'"
     [errorMessage]="error ?? defaultErrorMessage"
     (retry)="loadSessions()"
-    >
-    <div class="filters-panel">
-      <div class="filters-header">
-        <h3>
-          <mat-icon aria-label="Filtres">search</mat-icon> Filtres
+  >
+    <section class="filters-card mat-elevation-z8">
+      <header class="filters-card__header">
+        <div class="filters-card__title">
+          <mat-icon aria-hidden="true">filter_alt</mat-icon>
+          <h3>Filtres</h3>
           @if (getActiveFiltersCount() > 0) {
-            <span
-              class="active-filters-count"
-              >
-              {{ getActiveFiltersCount() }}
-            </span>
+          <span class="filters-card__badge">
+            {{ getActiveFiltersCount() }}
+          </span>
           }
-        </h3>
+        </div>
         <button
+          mat-button
+          type="button"
+          class="filters-card__reset"
           (click)="resetFilters()"
-          class="btn-clear-filters"
           [disabled]="getActiveFiltersCount() === 0"
-          >
-          <mat-icon aria-label="Réinitialiser">refresh</mat-icon>
+        >
+          <mat-icon aria-hidden="true">refresh</mat-icon>
           Réinitialiser
         </button>
-      </div>
+      </header>
 
-      <div class="filters-grid">
-        <!-- Search Bar -->
-        <div class="filter-group">
-          <label for="search">Recherche</label>
-          <lib-search-input
-            inputId="search"
-            [value]="searchTerm"
-            (valueChange)="searchTerm = $event; applyFilters()"
+      <div class="filters-card__grid">
+        <mat-form-field appearance="outline" class="filters-card__field">
+          <mat-label>Recherche</mat-label>
+          <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+          <input
+            matInput
+            id="search"
             placeholder="Nom, jeu, description..."
-          ></lib-search-input>
-        </div>
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="applyFilters()"
+            autocomplete="off"
+          />
+        </mat-form-field>
 
-        <!-- Session Type Filter (Radio Buttons) -->
-        <div class="filter-group">
-          <div class="filter-label">Type de session</div>
-          <lib-radio-group
-            [options]="sessionTypeOptions"
-            [value]="sessionType"
-            (valueChange)="onSessionTypeChange($event)"
-            name="sessionType"
-          ></lib-radio-group>
-        </div>
-        <!-- Game System Filter -->
-        <div class="filter-group">
-          <label for="game-filter">Système de jeu</label>
-          <select
-            id="game-filter"
-            [(ngModel)]="selectedGameSystem"
-            (change)="applyFilters()"
-            class="type-select"
-            >
-            <option value="">Tous les jeux</option>
-            @for (game of gameSystems; track game) {
-              <option [value]="game">
-                {{ game }}
-              </option>
+        <mat-form-field
+          appearance="outline"
+          class="filters-card__field filters-card__field--host"
+        >
+          <mat-label>Hôte</mat-label>
+          <mat-icon matPrefix aria-hidden="true">person_search</mat-icon>
+          <input
+            matInput
+            id="host-filter"
+            placeholder="Rechercher un hôte..."
+            [(ngModel)]="selectedHost"
+            (ngModelChange)="onHostFilterChange($event)"
+            (focus)="onHostFilterChange(selectedHost)"
+            [matAutocomplete]="hostAuto"
+            autocomplete="off"
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="clearHostFilter()"
+            [disabled]="!selectedHost.trim() && !isScopeFilterActive"
+            aria-label="Effacer le filtre hôte"
+          >
+            <mat-icon aria-hidden="true">close</mat-icon>
+          </button>
+          <mat-autocomplete
+            #hostAuto="matAutocomplete"
+            (optionSelected)="onHostOptionSelected($event.option.value)"
+          >
+            @for (host of filteredHostOptions; track host) {
+            <mat-option [value]="host">{{ host }}</mat-option>
+            } @if (!filteredHostOptions.length && selectedHost.trim()) {
+            <mat-option disabled>Aucun hôte trouvé</mat-option>
             }
-          </select>
+          </mat-autocomplete>
+          @if (isScopeFilterActive) {
+          <mat-hint align="start" class="filters-card__hint"
+            >Filtre appliqué depuis le dashboard</mat-hint
+          >
+          }
+        </mat-form-field>
+
+        <div class="filters-card__field filters-card__field--session-type">
+          <span class="filters-card__label">Type de session</span>
+          <div
+            class="filters-card__toggles"
+            role="group"
+            aria-label="Filtrer par type de session"
+          >
+            <button
+              type="button"
+              class="filter-toggle"
+              [class.filter-toggle--active]="sessionType === 'all'"
+              (click)="onSessionTypeChange('all')"
+            >
+              <mat-icon aria-hidden="true">dashboard</mat-icon>
+              <span>Toutes</span>
+            </button>
+            <button
+              type="button"
+              class="filter-toggle"
+              [class.filter-toggle--active]="sessionType === 'online'"
+              (click)="onSessionTypeChange('online')"
+            >
+              <mat-icon aria-hidden="true">computer</mat-icon>
+              <span>En ligne</span>
+            </button>
+            <button
+              type="button"
+              class="filter-toggle"
+              [class.filter-toggle--active]="sessionType === 'onsite'"
+              (click)="onSessionTypeChange('onsite')"
+            >
+              <mat-icon aria-hidden="true">groups</mat-icon>
+              <span>Sur table</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Availability Filter -->
-        <div class="filter-group">
-          <label class="checkbox-label checkbox-label--standalone">
-            <input
-              type="checkbox"
-              [(ngModel)]="onlyAvailable"
-              (change)="applyFilters()"
-              />
-            <span
-              ><mat-icon aria-label="Places disponibles">check_circle</mat-icon>
-              Uniquement les sessions avec places disponibles</span
-              >
-            </label>
-          </div>
+        <div class="filters-card__field filters-card__field--game">
+          <app-game-system-input
+            [(ngModel)]="selectedGameSystem"
+            (valueChange)="onGameFilterChange($event)"
+            [gameSystems]="gameSystems"
+            [maxSuggestions]="maxGameSuggestions"
+            [minSuggestionLength]="minGameSuggestionLength"
+            [suggestionThreshold]="gameSuggestionThreshold"
+            [clearButtonAriaLabel]="'Effacer le filtre système de jeu'"
+          ></app-game-system-input>
         </div>
       </div>
 
-      <div class="sessions-list">
-        <!-- Results count -->
-        <div class="sessions-list__header">
-          <h2>
-            Sessions disponibles
-            <span class="count"
-              >({{ filteredSessions.length }} / {{ sessions.length }})</span
-              >
-            </h2>
-          </div>
-
-          @if (filteredSessions.length === 0) {
-            <lib-empty-state
-              message="Aucune session ne correspond à vos critères de recherche."
-              actionLabel="Réinitialiser les filtres"
-              (action)="resetFilters()"
-            ></lib-empty-state>
-          }
-
-          <div class="sessions-list__cards">
-            @for (session of filteredSessions; track session) {
-              <app-session-card
-                [session]="session"
-              ></app-session-card>
-            }
-          </div>
+      <div class="filters-card__availability">
+        <div class="filters-card__availability-card">
+          <mat-checkbox [(ngModel)]="onlyAvailable" (change)="applyFilters()">
+            Uniquement les sessions avec places disponibles
+          </mat-checkbox>
         </div>
-      </lib-async-state>
+      </div>
+    </section>
+
+    <div class="sessions-list">
+      <div class="sessions-list__header">
+        <h2>
+          {{ isScopeFilterActive ? 'Mes sessions' : 'Sessions disponibles' }}
+          <span class="count"
+            >({{ filteredSessions.length }} / {{ sessions.length }})</span
+          >
+        </h2>
+      </div>
+
+      @if (filteredSessions.length === 0) {
+      <lib-empty-state
+        message="Aucune session ne correspond à vos critères de recherche."
+        actionLabel="Réinitialiser les filtres"
+        (action)="resetFilters()"
+      ></lib-empty-state>
+      }
+
+      <div class="sessions-list__cards">
+        @for (session of filteredSessions; track session) {
+        <app-session-card [session]="session"></app-session-card>
+        }
+      </div>
     </div>
+  </lib-async-state>
+</div>

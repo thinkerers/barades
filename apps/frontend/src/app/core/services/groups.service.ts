@@ -96,4 +96,14 @@ export class GroupsService {
     void id;
     throw new Error('Not implemented yet');
   }
+
+  /**
+   * Get statistics about groups managed by the current user
+   * Returns count of groups where user is creator or has ADMIN role
+   */
+  getManagedByMeStats(): Observable<{ totalCount: number }> {
+    return this.http.get<{ totalCount: number }>(
+      `${this.apiUrl}/stats/managed-by-me`
+    );
+  }
 }

@@ -24,6 +24,40 @@ export interface UserProfile {
   updatedAt: string;
 }
 
+export interface ActionItems {
+  upcomingSessions: Array<{
+    id: string;
+    userId: string;
+    sessionId: string;
+    status: string;
+    session: {
+      id: string;
+      title: string;
+      date: string;
+      game: string;
+      location: {
+        name: string;
+      } | null;
+    };
+  }>;
+  pendingReservations: Array<{
+    id: string;
+    userId: string;
+    sessionId: string;
+    status: string;
+    user: {
+      id: string;
+      username: string;
+      avatar: string | null;
+    };
+    session: {
+      id: string;
+      title: string;
+      date: string;
+    };
+  }>;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -43,5 +77,13 @@ export class UsersService {
    */
   updateMyProfile(dto: UpdateProfileDto): Observable<UserProfile> {
     return this.http.patch<UserProfile>(`${this.API_URL}/users/me`, dto);
+  }
+
+  /**
+   * Get action items for the current user
+   * Returns upcoming sessions and pending reservations
+   */
+  getActionItems(): Observable<ActionItems> {
+    return this.http.get<ActionItems>(`${this.API_URL}/users/me/action-items`);
   }
 }

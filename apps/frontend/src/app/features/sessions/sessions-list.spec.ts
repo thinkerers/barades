@@ -1,13 +1,13 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { SessionsListPage } from './sessions-list';
-import { SessionsService, Session } from '../../core/services/sessions.service';
-import { of, throwError } from 'rxjs';
-import { FormsModule } from '@angular/forms';
-import { SessionCardComponent } from './session-card';
-import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormsModule } from '@angular/forms';
+import { provideRouter } from '@angular/router';
+import { of, throwError } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { Session, SessionsService } from '../../core/services/sessions.service';
+import { SessionCardComponent } from './session-card';
+import { SessionsListPage } from './sessions-list';
 
 describe('SessionsListPage', () => {
   let component: SessionsListPage;
@@ -15,8 +15,10 @@ describe('SessionsListPage', () => {
   let mockSessionsService: jest.Mocked<SessionsService>;
 
   const mockAuthService = {
-    getCurrentUser: jest.fn().mockReturnValue({ id: 'user-1', username: 'TestUser' }),
-    isAuthenticated: jest.fn().mockReturnValue(true)
+    getCurrentUser: jest
+      .fn()
+      .mockReturnValue({ id: 'user-1', username: 'TestUser' }),
+    isAuthenticated: jest.fn().mockReturnValue(true),
   };
 
   const mockSessions: Session[] = [
@@ -24,7 +26,7 @@ describe('SessionsListPage', () => {
       id: '1',
       game: 'Dungeons & Dragons 5e',
       title: 'Les Mines de Phandelver',
-      description: 'Une aventure épique pour débutants dans l\'univers de D&D',
+      description: "Une aventure épique pour débutants dans l'univers de D&D",
       date: '2025-10-20T18:00:00.000Z',
       recurrenceRule: null,
       recurrenceEndDate: null,
@@ -40,7 +42,7 @@ describe('SessionsListPage', () => {
       host: {
         id: 'host-1',
         username: 'GameMaster42',
-        avatar: null
+        avatar: null,
       },
       location: {
         id: 'loc-1',
@@ -48,8 +50,8 @@ describe('SessionsListPage', () => {
         city: 'Brussels',
         type: 'GAME_STORE',
         lat: 50.8476,
-        lon: 4.3572
-      }
+        lon: 4.3572,
+      },
     },
     {
       id: '2',
@@ -71,14 +73,14 @@ describe('SessionsListPage', () => {
       host: {
         id: 'host-2',
         username: 'DragonMaster',
-        avatar: null
+        avatar: null,
       },
-      location: undefined
+      location: undefined,
     },
     {
       id: '3',
       game: 'Call of Cthulhu',
-      title: 'Les Ombres d\'Innsmouth',
+      title: "Les Ombres d'Innsmouth",
       description: 'Horreur et mystère au rendez-vous',
       date: '2025-10-22T20:00:00.000Z',
       recurrenceRule: null,
@@ -95,7 +97,7 @@ describe('SessionsListPage', () => {
       host: {
         id: 'host-3',
         username: 'CthulhuKeeper',
-        avatar: null
+        avatar: null,
       },
       location: {
         id: 'loc-2',
@@ -103,8 +105,8 @@ describe('SessionsListPage', () => {
         city: 'Antwerp',
         type: 'ASSOCIATION',
         lat: 51.2194,
-        lon: 4.4025
-      }
+        lon: 4.4025,
+      },
     },
     {
       id: '4',
@@ -126,10 +128,10 @@ describe('SessionsListPage', () => {
       host: {
         id: 'host-1',
         username: 'GameMaster42',
-        avatar: null
+        avatar: null,
       },
-      location: undefined
-    }
+      location: undefined,
+    },
   ];
 
   beforeEach(async () => {
@@ -138,7 +140,8 @@ describe('SessionsListPage', () => {
       getSession: jest.fn(),
       createSession: jest.fn(),
       updateSession: jest.fn(),
-      deleteSession: jest.fn()
+      deleteSession: jest.fn(),
+      getSessionsHostedByMe: jest.fn(),
     } as unknown as jest.Mocked<SessionsService>;
 
     await TestBed.configureTestingModule({
@@ -148,8 +151,8 @@ describe('SessionsListPage', () => {
         { provide: AuthService, useValue: mockAuthService },
         provideRouter([]),
         provideHttpClient(),
-        provideHttpClientTesting()
-      ]
+        provideHttpClientTesting(),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SessionsListPage);
@@ -185,6 +188,16 @@ describe('SessionsListPage', () => {
       expect(component.gameSystems.length).toBe(3);
     });
 
+    it('should populate host options from sessions', () => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      fixture.detectChanges();
+      expect(component.hostOptions).toEqual([
+        'CthulhuKeeper',
+        'DragonMaster',
+        'GameMaster42',
+      ]);
+    });
+
     it('should handle loading state', () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       expect(component.loading).toBe(true);
@@ -197,7 +210,9 @@ describe('SessionsListPage', () => {
       mockSessionsService.getSessions.mockReturnValue(throwError(() => error));
       fixture.detectChanges();
       expect(component.loading).toBe(false);
-      expect(component.error).toBe('Impossible de charger les sessions. Vérifiez que le backend est démarré.');
+      expect(component.error).toBe(
+        'Impossible de charger les sessions. Vérifiez que le backend est démarré.'
+      );
     });
   });
 
@@ -271,14 +286,14 @@ describe('SessionsListPage', () => {
       component.sessionType = 'online';
       component.applyFilters();
       expect(component.filteredSessions.length).toBe(2);
-      expect(component.filteredSessions.every(s => s.online)).toBe(true);
+      expect(component.filteredSessions.every((s) => s.online)).toBe(true);
     });
 
     it('should filter on-site sessions', () => {
       component.sessionType = 'onsite';
       component.applyFilters();
       expect(component.filteredSessions.length).toBe(2);
-      expect(component.filteredSessions.every(s => !s.online)).toBe(true);
+      expect(component.filteredSessions.every((s) => !s.online)).toBe(true);
     });
   });
 
@@ -298,7 +313,11 @@ describe('SessionsListPage', () => {
       component.selectedGameSystem = 'Dungeons & Dragons 5e';
       component.applyFilters();
       expect(component.filteredSessions.length).toBe(2);
-      expect(component.filteredSessions.every(s => s.game === 'Dungeons & Dragons 5e')).toBe(true);
+      expect(
+        component.filteredSessions.every(
+          (s) => s.game === 'Dungeons & Dragons 5e'
+        )
+      ).toBe(true);
     });
 
     it('should filter by Pathfinder', () => {
@@ -313,6 +332,17 @@ describe('SessionsListPage', () => {
       component.applyFilters();
       expect(component.filteredSessions.length).toBe(1);
       expect(component.filteredSessions[0].id).toBe('3');
+    });
+
+    it('should filter sessions using fuzzy match when input has typos', () => {
+      component.selectedGameSystem = 'dungeon and dragon';
+      component.applyFilters();
+      expect(component.filteredSessions.length).toBe(2);
+      expect(
+        component.filteredSessions.every(
+          (s) => s.game === 'Dungeons & Dragons 5e'
+        )
+      ).toBe(true);
     });
   });
 
@@ -332,13 +362,15 @@ describe('SessionsListPage', () => {
       component.onlyAvailable = true;
       component.applyFilters();
       expect(component.filteredSessions.length).toBe(3);
-      expect(component.filteredSessions.every(s => s.playersCurrent < s.playersMax)).toBe(true);
+      expect(
+        component.filteredSessions.every((s) => s.playersCurrent < s.playersMax)
+      ).toBe(true);
     });
 
     it('should exclude full sessions', () => {
       component.onlyAvailable = true;
       component.applyFilters();
-      const fullSession = component.filteredSessions.find(s => s.id === '2');
+      const fullSession = component.filteredSessions.find((s) => s.id === '2');
       expect(fullSession).toBeUndefined();
     });
   });
@@ -401,6 +433,36 @@ describe('SessionsListPage', () => {
     });
   });
 
+  describe('Host Filter', () => {
+    beforeEach(() => {
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+      fixture.detectChanges();
+    });
+
+    it('should filter sessions by full host name', () => {
+      component.onHostFilterChange('GameMaster42');
+      expect(component.filteredSessions.length).toBe(2);
+      expect(
+        component.filteredSessions.every(
+          (s) => s.host?.username === 'GameMaster42'
+        )
+      ).toBe(true);
+    });
+
+    it('should support partial host matches', () => {
+      component.onHostFilterChange('dragon');
+      expect(component.filteredSessions.length).toBe(1);
+      expect(component.filteredSessions[0].host?.username).toBe('DragonMaster');
+    });
+
+    it('should clear host filter when requested', () => {
+      component.onHostFilterChange('GameMaster42');
+      component.clearHostFilter();
+      expect(component.selectedHost).toBe('');
+      expect(component.filteredSessions.length).toBe(4);
+    });
+  });
+
   describe('Reset Filters', () => {
     beforeEach(() => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
@@ -412,6 +474,7 @@ describe('SessionsListPage', () => {
       component.sessionType = 'online';
       component.selectedGameSystem = 'Pathfinder 2e';
       component.onlyAvailable = true;
+      component.selectedHost = 'GameMaster42';
 
       component.resetFilters();
 
@@ -419,6 +482,7 @@ describe('SessionsListPage', () => {
       expect(component.sessionType).toBe('all');
       expect(component.selectedGameSystem).toBe('');
       expect(component.onlyAvailable).toBe(false);
+      expect(component.selectedHost).toBe('');
     });
 
     it('should restore all sessions after reset', () => {
@@ -474,6 +538,11 @@ describe('SessionsListPage', () => {
 
     it('should count availability as active filter', () => {
       component.onlyAvailable = true;
+      expect(component.getActiveFiltersCount()).toBe(1);
+    });
+
+    it('should count host selection as active filter', () => {
+      component.selectedHost = 'GameMaster42';
       expect(component.getActiveFiltersCount()).toBe(1);
     });
 
@@ -546,21 +615,25 @@ describe('SessionsListPage', () => {
       component.searchTerm = 'dragon';
       component.sessionType = 'online';
       fixture.detectChanges();
-      const compiled = fixture.nativeElement;
-      expect(compiled.textContent).toContain('2');
+      const badge = fixture.nativeElement.querySelector('.filters-card__badge');
+      expect(badge?.textContent?.trim()).toBe('2');
     });
 
     it('should disable reset button when no filters active', () => {
       fixture.detectChanges();
-      const button = fixture.nativeElement.querySelector('.btn-clear-filters');
-      expect(button.disabled).toBe(true);
+      const button = fixture.nativeElement.querySelector(
+        '.filters-card__reset'
+      ) as HTMLButtonElement | null;
+      expect(button?.disabled).toBe(true);
     });
 
     it('should enable reset button when filters active', () => {
       component.searchTerm = 'dragon';
       fixture.detectChanges();
-      const button = fixture.nativeElement.querySelector('.btn-clear-filters');
-      expect(button.disabled).toBe(false);
+      const button = fixture.nativeElement.querySelector(
+        '.filters-card__reset'
+      ) as HTMLButtonElement | null;
+      expect(button?.disabled).toBe(false);
     });
   });
 
@@ -576,7 +649,7 @@ describe('SessionsListPage', () => {
     it('should handle sessions with duplicate game names', () => {
       const duplicateSessions = [
         { ...mockSessions[0], id: '1' },
-        { ...mockSessions[0], id: '2' }
+        { ...mockSessions[0], id: '2' },
       ];
       mockSessionsService.getSessions.mockReturnValue(of(duplicateSessions));
       fixture.detectChanges();
