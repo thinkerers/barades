@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
@@ -11,7 +11,7 @@ import * as L from 'leaflet';
 
 @Component({
   selector: 'app-contact-page',
-  imports: [CommonModule, ReactiveFormsModule, MatIconModule],
+  imports: [ReactiveFormsModule, MatIconModule],
   templateUrl: './contact-page.html',
   styleUrl: './contact-page.css',
 })

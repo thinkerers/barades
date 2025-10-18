@@ -1,180 +1,193 @@
 <div class="poll-widget" data-testid="poll-widget">
   <!-- Create Poll Section -->
-  <div class="poll-widget__header" *ngIf="!poll">
-    <button 
-      *ngIf="isMember"
-      (click)="toggleCreateForm()" 
-      class="btn btn--primary btn--small"
-      type="button"
-      data-testid="create-poll-button"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
-      </svg>
-      {{ showCreateForm ? 'Annuler' : 'Créer un sondage' }}
-    </button>
-    <p *ngIf="!isMember" class="poll-widget__message">
-      Vous devez être membre du groupe pour créer un sondage
-    </p>
-  </div>
+  @if (!poll) {
+    <div class="poll-widget__header">
+      @if (isMember) {
+        <button
+          (click)="toggleCreateForm()"
+          class="btn btn--primary btn--small"
+          type="button"
+          data-testid="create-poll-button"
+          >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          {{ showCreateForm ? 'Annuler' : 'Créer un sondage' }}
+        </button>
+      }
+      @if (!isMember) {
+        <p class="poll-widget__message">
+          Vous devez être membre du groupe pour créer un sondage
+        </p>
+      }
+    </div>
+  }
 
   <!-- Create Poll Form -->
-  <div *ngIf="showCreateForm" class="poll-form" data-testid="poll-form">
-    <h3>Nouveau sondage de dates</h3>
-    
-    <div class="form-group">
-      <label for="poll-title">Titre</label>
-      <input
-        id="poll-title"
-        type="text"
-        [(ngModel)]="pollTitle"
-        placeholder="Ex: Prochaine session D&D"
-        class="form-control"
-        data-testid="poll-title-input"
-      />
-    </div>
-
-    <div class="form-group">
-      <label for="date-input">Ajouter des dates</label>
-      <div class="date-input-group">
+  @if (showCreateForm) {
+    <div class="poll-form" data-testid="poll-form">
+      <h3>Nouveau sondage de dates</h3>
+      <div class="form-group">
+        <label for="poll-title">Titre</label>
         <input
-          id="date-input"
-          type="datetime-local"
-          [(ngModel)]="newDateInput"
+          id="poll-title"
+          type="text"
+          [(ngModel)]="pollTitle"
+          placeholder="Ex: Prochaine session D&D"
           class="form-control"
-        />
-        <button 
-          (click)="addDate()" 
-          class="btn btn--secondary btn--small"
-          type="button"
-          [disabled]="!newDateInput"
-        >
-          Ajouter
-        </button>
+          data-testid="poll-title-input"
+          />
       </div>
-    </div>
-
-    <div *ngIf="selectedDates.length > 0" class="selected-dates">
-      <p class="selected-dates__label">Dates sélectionnées ({{ selectedDates.length }}) :</p>
-      <div class="dates-list">
-        <div *ngFor="let date of selectedDates" class="date-chip">
-          <span>{{ formatDate(date) }}</span>
-          <button 
-            (click)="removeDate(date)" 
-            class="date-chip__remove"
+      <div class="form-group">
+        <label for="date-input">Ajouter des dates</label>
+        <div class="date-input-group">
+          <input
+            id="date-input"
+            type="datetime-local"
+            [(ngModel)]="newDateInput"
+            class="form-control"
+            />
+          <button
+            (click)="addDate()"
+            class="btn btn--secondary btn--small"
             type="button"
-            aria-label="Supprimer"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            [disabled]="!newDateInput"
+            >
+            Ajouter
           </button>
         </div>
       </div>
+      @if (selectedDates.length > 0) {
+        <div class="selected-dates">
+          <p class="selected-dates__label">Dates sélectionnées ({{ selectedDates.length }}) :</p>
+          <div class="dates-list">
+            @for (date of selectedDates; track date) {
+              <div class="date-chip">
+                <span>{{ formatDate(date) }}</span>
+                <button
+                  (click)="removeDate(date)"
+                  class="date-chip__remove"
+                  type="button"
+                  aria-label="Supprimer"
+                  >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+      @if (error) {
+        <div class="error-message">
+          {{ error }}
+        </div>
+      }
+      <div class="form-actions">
+        <button
+          (click)="createPoll()"
+          class="btn btn--primary"
+          type="button"
+          [disabled]="creating || pollTitle.length === 0 || selectedDates.length < 2"
+          >
+          {{ creating ? 'Création...' : 'Créer le sondage' }}
+        </button>
+      </div>
     </div>
-
-    <div *ngIf="error" class="error-message">
-      {{ error }}
-    </div>
-
-    <div class="form-actions">
-      <button 
-        (click)="createPoll()" 
-        class="btn btn--primary"
-        type="button"
-        [disabled]="creating || pollTitle.length === 0 || selectedDates.length < 2"
-      >
-        {{ creating ? 'Création...' : 'Créer le sondage' }}
-      </button>
-    </div>
-  </div>
+  }
 
   <!-- Poll Display -->
-  <div *ngIf="poll" class="poll-display" data-testid="poll-display">
-    <div class="poll-display__header">
-      <h3>{{ poll.title }}</h3>
-      <span class="poll-display__stats">
-        {{ poll.totalVotes }} vote{{ poll.totalVotes !== 1 ? 's' : '' }}
-      </span>
-    </div>
-
-    <div class="poll-options">
-      <div 
-        *ngFor="let date of poll.dates" 
-        class="poll-option"
+  @if (poll) {
+    <div class="poll-display" data-testid="poll-display">
+      <div class="poll-display__header">
+        <h3>{{ poll.title }}</h3>
+        <span class="poll-display__stats">
+          {{ poll.totalVotes }} vote{{ poll.totalVotes !== 1 ? 's' : '' }}
+        </span>
+      </div>
+      <div class="poll-options">
+        @for (date of poll.dates; track date) {
+          <div
+            class="poll-option"
         [ngClass]="{ 
           'poll-option--selected': getUserVote() === date,
           'poll-option--best': isBestDate(date)
         }"
-        [attr.data-testid]="'poll-option-' + date"
-      >
-        <button 
-          (click)="vote(date)" 
-          class="poll-option__button"
-          type="button"
-          [disabled]="getUserVote() === date || !isMember"
-          [title]="!isMember ? 'Vous devez être membre du groupe pour voter' : ''"
-          data-testid="vote-button"
-        >
-          <div class="poll-option__content">
-            <div class="poll-option__date">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
-              <span>{{ formatDate(date) }}</span>
-            </div>
-            
-            <div class="poll-option__stats">
-              <span class="vote-count">{{ getVoteCount(date) }}</span>
-              <span class="vote-percentage">{{ getVotePercentage(date) }}%</span>
-            </div>
+            [attr.data-testid]="'poll-option-' + date"
+            >
+            <button
+              (click)="vote(date)"
+              class="poll-option__button"
+              type="button"
+              [disabled]="getUserVote() === date || !isMember"
+              [title]="!isMember ? 'Vous devez être membre du groupe pour voter' : ''"
+              data-testid="vote-button"
+              >
+              <div class="poll-option__content">
+                <div class="poll-option__date">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <span>{{ formatDate(date) }}</span>
+                </div>
+                <div class="poll-option__stats">
+                  <span class="vote-count">{{ getVoteCount(date) }}</span>
+                  <span class="vote-percentage">{{ getVotePercentage(date) }}%</span>
+                </div>
+              </div>
+              <div class="poll-option__bar">
+                <div
+                  class="poll-option__bar-fill"
+                  [style.width.%]="getVotePercentage(date)"
+                ></div>
+              </div>
+              @if (isBestDate(date) && poll.totalVotes! > 0) {
+                <div class="best-badge">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                  Meilleure option
+                </div>
+              }
+            </button>
+            @if (poll.voteDetails && poll.voteDetails[date].length > 0) {
+              <div class="voters-list">
+                @for (voter of poll.voteDetails[date]; track voter) {
+                  <span
+                    class="voter-tag"
+                    [title]="voter.username"
+                    >
+                    {{ voter.username }}
+                  </span>
+                }
+              </div>
+            }
           </div>
-
-          <div class="poll-option__bar">
-            <div 
-              class="poll-option__bar-fill" 
-              [style.width.%]="getVotePercentage(date)"
-            ></div>
-          </div>
-
-          <div *ngIf="isBestDate(date) && poll.totalVotes! > 0" class="best-badge">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-            </svg>
-            Meilleure option
-          </div>
-        </button>
-
-        <div *ngIf="poll.voteDetails && poll.voteDetails[date].length > 0" class="voters-list">
-          <span 
-            *ngFor="let voter of poll.voteDetails[date]" 
-            class="voter-tag"
-            [title]="voter.username"
-          >
-            {{ voter.username }}
-          </span>
-        </div>
+        }
       </div>
+      @if (getUserVote() && isMember) {
+        <div class="poll-actions">
+          <button
+            (click)="removeMyVote()"
+            class="btn btn--secondary btn--small"
+            type="button"
+            >
+            Retirer mon vote
+          </button>
+        </div>
+      }
+      <!-- Not a member message -->
+      @if (!isMember && poll) {
+        <div class="poll-widget__message poll-widget__message--info">
+          ℹ️ Vous devez être membre du groupe pour voter sur ce sondage
+        </div>
+      }
     </div>
-
-    <div *ngIf="getUserVote() && isMember" class="poll-actions">
-      <button 
-        (click)="removeMyVote()" 
-        class="btn btn--secondary btn--small"
-        type="button"
-      >
-        Retirer mon vote
-      </button>
-    </div>
-
-    <!-- Not a member message -->
-    <div *ngIf="!isMember && poll" class="poll-widget__message poll-widget__message--info">
-      ℹ️ Vous devez être membre du groupe pour voter sur ce sondage
-    </div>
-  </div>
+  }
 </div>

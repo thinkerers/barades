@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -13,7 +13,6 @@ import { AuthService } from '../../../core/services/auth.service';
   selector: 'app-login',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     RouterLink,
     MatFormFieldModule,
@@ -21,7 +20,7 @@ import { AuthService } from '../../../core/services/auth.service';
     MatButtonModule,
     MatCardModule,
     MatProgressSpinnerModule
-  ],
+],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })

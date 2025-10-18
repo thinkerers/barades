@@ -22,14 +22,15 @@
             placeholder="ex: D&D 5e, Cthulhu..."
             [formControl]="gameControl"
             [matAutocomplete]="autoGame"
-          />
+            />
           <mat-autocomplete #autoGame="matAutocomplete">
-            <mat-option
-              *ngFor="let game of filteredGames$ | async"
-              [value]="game"
-            >
-              {{ game }}
-            </mat-option>
+            @for (game of filteredGames$ | async; track game) {
+              <mat-option
+                [value]="game"
+                >
+                {{ game }}
+              </mat-option>
+            }
           </mat-autocomplete>
         </mat-form-field>
 
@@ -43,14 +44,15 @@
             placeholder="ex: Bruxelles, En ligne..."
             [formControl]="cityControl"
             [matAutocomplete]="autoCity"
-          />
+            />
           <mat-autocomplete #autoCity="matAutocomplete">
-            <mat-option
-              *ngFor="let city of filteredCities$ | async"
-              [value]="city"
-            >
-              {{ city }}
-            </mat-option>
+            @for (city of filteredCities$ | async; track city) {
+              <mat-option
+                [value]="city"
+                >
+                {{ city }}
+              </mat-option>
+            }
           </mat-autocomplete>
         </mat-form-field>
 
@@ -60,7 +62,7 @@
           color="primary"
           class="search-button"
           (click)="onSearch()"
-        >
+          >
           <mat-icon>search</mat-icon>
           <span>Rechercher</span>
         </button>
@@ -85,12 +87,13 @@
     [errorMessage]="error ?? defaultErrorMessage"
     [emptyMessage]="emptyMessage"
     (retry)="loadFeaturedSessions()"
-  >
+    >
     <div class="sessions-grid">
-      <app-session-card
-        *ngFor="let session of featuredSessions"
-        [session]="session"
-      ></app-session-card>
+      @for (session of featuredSessions; track session) {
+        <app-session-card
+          [session]="session"
+        ></app-session-card>
+      }
     </div>
   </lib-async-state>
 </section>

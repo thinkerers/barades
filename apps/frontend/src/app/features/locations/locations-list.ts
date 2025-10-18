@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,7 +12,7 @@ import {
 @Component({
   selector: 'app-locations-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, AsyncStateComponent],
+  imports: [FormsModule, MatIconModule, AsyncStateComponent],
   templateUrl: './locations-list.html',
   styleUrl: './locations-list.css',
 })

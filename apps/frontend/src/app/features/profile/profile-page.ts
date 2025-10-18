@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject, OnInit } from '@angular/core';
 import {
   FormBuilder,
@@ -25,7 +25,6 @@ import {
   selector: 'app-profile-page',
   standalone: true,
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatCardModule,
     MatFormFieldModule,
@@ -33,8 +32,8 @@ import {
     MatButtonModule,
     MatSelectModule,
     MatProgressSpinnerModule,
-    MatIconModule,
-  ],
+    MatIconModule
+],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.css',
 })

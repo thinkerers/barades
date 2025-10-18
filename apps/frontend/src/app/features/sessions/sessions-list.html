@@ -11,23 +11,24 @@
     [loadingMessage]="'Chargement des sessions...'"
     [errorMessage]="error ?? defaultErrorMessage"
     (retry)="loadSessions()"
-  >
+    >
     <div class="filters-panel">
       <div class="filters-header">
         <h3>
           <mat-icon aria-label="Filtres">search</mat-icon> Filtres
-          <span
-            *ngIf="getActiveFiltersCount() > 0"
-            class="active-filters-count"
-          >
-            {{ getActiveFiltersCount() }}
-          </span>
+          @if (getActiveFiltersCount() > 0) {
+            <span
+              class="active-filters-count"
+              >
+              {{ getActiveFiltersCount() }}
+            </span>
+          }
         </h3>
         <button
           (click)="resetFilters()"
           class="btn-clear-filters"
           [disabled]="getActiveFiltersCount() === 0"
-        >
+          >
           <mat-icon aria-label="Réinitialiser">refresh</mat-icon>
           Réinitialiser
         </button>
@@ -63,11 +64,13 @@
             [(ngModel)]="selectedGameSystem"
             (change)="applyFilters()"
             class="type-select"
-          >
+            >
             <option value="">Tous les jeux</option>
-            <option *ngFor="let game of gameSystems" [value]="game">
-              {{ game }}
-            </option>
+            @for (game of gameSystems; track game) {
+              <option [value]="game">
+                {{ game }}
+              </option>
+            }
           </select>
         </div>
 
@@ -78,40 +81,42 @@
               type="checkbox"
               [(ngModel)]="onlyAvailable"
               (change)="applyFilters()"
-            />
+              />
             <span
               ><mat-icon aria-label="Places disponibles">check_circle</mat-icon>
               Uniquement les sessions avec places disponibles</span
-            >
-          </label>
+              >
+            </label>
+          </div>
         </div>
       </div>
+
+      <div class="sessions-list">
+        <!-- Results count -->
+        <div class="sessions-list__header">
+          <h2>
+            Sessions disponibles
+            <span class="count"
+              >({{ filteredSessions.length }} / {{ sessions.length }})</span
+              >
+            </h2>
+          </div>
+
+          @if (filteredSessions.length === 0) {
+            <lib-empty-state
+              message="Aucune session ne correspond à vos critères de recherche."
+              actionLabel="Réinitialiser les filtres"
+              (action)="resetFilters()"
+            ></lib-empty-state>
+          }
+
+          <div class="sessions-list__cards">
+            @for (session of filteredSessions; track session) {
+              <app-session-card
+                [session]="session"
+              ></app-session-card>
+            }
+          </div>
+        </div>
+      </lib-async-state>
     </div>
-
-    <div class="sessions-list">
-      <!-- Results count -->
-      <div class="sessions-list__header">
-        <h2>
-          Sessions disponibles
-          <span class="count"
-            >({{ filteredSessions.length }} / {{ sessions.length }})</span
-          >
-        </h2>
-      </div>
-
-      <lib-empty-state
-        *ngIf="filteredSessions.length === 0"
-        message="Aucune session ne correspond à vos critères de recherche."
-        actionLabel="Réinitialiser les filtres"
-        (action)="resetFilters()"
-      ></lib-empty-state>
-
-      <div class="sessions-list__cards">
-        <app-session-card
-          *ngFor="let session of filteredSessions"
-          [session]="session"
-        ></app-session-card>
-      </div>
-    </div>
-  </lib-async-state>
-</div>
