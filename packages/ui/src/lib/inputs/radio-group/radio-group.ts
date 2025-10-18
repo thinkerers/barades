@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -16,7 +16,7 @@ export interface RadioOption {
 @Component({
   selector: 'lib-radio-group',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './radio-group.html',
   styleUrls: ['./radio-group.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

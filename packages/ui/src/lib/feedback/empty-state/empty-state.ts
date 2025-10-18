@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   ChangeDetectionStrategy,
   Component,
@@ -20,20 +20,21 @@ import {
 @Component({
   selector: 'lib-empty-state',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="empty-state">
       <p class="empty-state__message">{{ message }}</p>
-      <button
-        *ngIf="actionLabel"
-        type="button"
-        (click)="action.emit()"
-        [class]="buttonClass"
-      >
-        {{ actionLabel }}
-      </button>
+      @if (actionLabel) {
+        <button
+          type="button"
+          (click)="action.emit()"
+          [class]="buttonClass"
+          >
+          {{ actionLabel }}
+        </button>
+      }
     </div>
-  `,
+    `,
   styleUrls: ['./empty-state.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
