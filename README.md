@@ -96,7 +96,7 @@ npx nx run-many --target=build --all
 npx nx build frontend --configuration=production
 
 # Construire seulement l'API NestJS
-npx nx build backend --configuration=production
+npx nx build backend
 ```
 
 ---
@@ -146,6 +146,7 @@ npx nx run barades:journey-diagrams
 ```
 
 Les sources se trouvent dans `doc/diagrams/` :
+
 - `journey-signup.mmd` : Parcours membre (inscription → réservation)
 - `journey-group-poll.mmd` : Parcours organisateur (groupe → sondage)
 - `journey-offline.mmd` : Utilisation hors-ligne de la PWA
