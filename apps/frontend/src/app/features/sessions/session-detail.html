@@ -156,21 +156,33 @@
 
           <button
             class="button button--primary button--reserve"
-            [class.button--success]="isRegistered"
-            [disabled]="isFull() || isRegistered || reserving"
+            *ngIf="!isRegistered"
+            [disabled]="isFull() || reserving"
             (click)="onReserve()"
           >
-            <span *ngIf="!reserving && !isRegistered">Réserver ma place</span>
+            <span *ngIf="!reserving">Réserver ma place</span>
             <span *ngIf="reserving">Réservation...</span>
-            <span *ngIf="isRegistered"
-              ><mat-icon>check</mat-icon> Déjà inscrit</span
-            >
+          </button>
+
+          <button
+            class="button button--danger button--reserve"
+            *ngIf="isRegistered"
+            [disabled]="cancelling"
+            (click)="onCancelReservation()"
+          >
+            <span *ngIf="!cancelling">Se désinscrire</span>
+            <span *ngIf="cancelling">Désinscription...</span>
           </button>
 
           <div class="reservation-card__info">
-            <p class="info-text">
+            <p class="info-text" *ngIf="!isRegistered">
               <mat-icon class="info-icon">info</mat-icon>
               Vous recevrez une confirmation par email après votre réservation.
+            </p>
+            <p class="info-text" *ngIf="isRegistered">
+              <mat-icon class="info-icon">event_available</mat-icon>
+              Vous êtes inscrit à cette session. Vous pouvez vous désinscrire à
+              tout moment si vous avez un empêchement.
             </p>
           </div>
         </div>
