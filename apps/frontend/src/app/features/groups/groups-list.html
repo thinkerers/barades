@@ -33,8 +33,12 @@
 
       <!-- Groups Grid -->
       <div *ngIf="groups.length > 0" class="groups-grid">
-        <app-group-card *ngFor="let group of groups" [group]="group">
-        </app-group-card>
+        <lib-group-card
+          *ngFor="let group of groups"
+          [group]="group"
+          (primaryAction)="viewGroupDetails(group.id)"
+          (secondaryAction)="requestToJoin(group)"
+        ></lib-group-card>
       </div>
     </div>
   </app-async-state>

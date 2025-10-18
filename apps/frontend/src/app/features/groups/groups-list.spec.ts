@@ -1,15 +1,16 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { GroupsListComponent } from './groups-list';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
-import { GroupsService } from '../../core/services/groups.service';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { GroupsService } from '../../core/services/groups.service';
+import { GroupsListComponent } from './groups-list';
 
 describe('GroupsListComponent', () => {
   let component: GroupsListComponent;
   let fixture: ComponentFixture<GroupsListComponent>;
   let groupsService: GroupsService;
+  let router: Router;
 
   const mockGroups = [
     {
@@ -26,23 +27,24 @@ describe('GroupsListComponent', () => {
       creator: {
         id: '1',
         username: 'alice_dm',
-        avatar: 'https://i.pravatar.cc/150?img=1'
+        avatar: 'https://i.pravatar.cc/150?img=1',
       },
       _count: {
-        members: 5
-      }
-    }
+        members: 5,
+      },
+    },
   ];
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [GroupsListComponent, HttpClientTestingModule],
-      providers: [provideHttpClient(), provideRouter([])]
+      providers: [provideHttpClient(), provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(GroupsListComponent);
     component = fixture.componentInstance;
     groupsService = TestBed.inject(GroupsService);
+    router = TestBed.inject(Router);
   });
 
   it('should create', () => {
@@ -51,7 +53,8 @@ describe('GroupsListComponent', () => {
 
   it('should load groups on init', () => {
     jest.spyOn(groupsService, 'getGroups').mockReturnValue(of(mockGroups));
-    
+    jest.spyOn(router, 'navigate').mockResolvedValue(true);
+
     fixture.detectChanges();
 
     expect(component.groups).toEqual(mockGroups);
@@ -59,9 +62,9 @@ describe('GroupsListComponent', () => {
   });
 
   it('should handle error when loading groups fails', () => {
-    jest.spyOn(groupsService, 'getGroups').mockReturnValue(
-      throwError(() => new Error('Failed to load'))
-    );
+    jest
+      .spyOn(groupsService, 'getGroups')
+      .mockReturnValue(throwError(() => new Error('Failed to load')));
 
     fixture.detectChanges();
 
@@ -70,10 +73,23 @@ describe('GroupsListComponent', () => {
   });
 
   it('should retry loading groups', () => {
-    const spy = jest.spyOn(groupsService, 'getGroups').mockReturnValue(of(mockGroups));
-    
+    const spy = jest
+      .spyOn(groupsService, 'getGroups')
+      .mockReturnValue(of(mockGroups));
+
     component.retry();
 
     expect(spy).toHaveBeenCalled();
+  });
+
+  it('should navigate to group detail when primary action triggered', async () => {
+    jest.spyOn(groupsService, 'getGroups').mockReturnValue(of(mockGroups));
+    const navigateSpy = jest.spyOn(router, 'navigate').mockResolvedValue(true);
+
+    fixture.detectChanges();
+
+    component.viewGroupDetails('1');
+
+    expect(navigateSpy).toHaveBeenCalledWith(['/groups', '1']);
   });
 });

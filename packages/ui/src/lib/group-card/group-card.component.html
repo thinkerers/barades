@@ -1,0 +1,80 @@
+<article
+  class="group-card"
+  [class]="'group-card--' + getPlaystyleColor(group.playstyle)"
+  [attr.data-testid]="'group-card-' + group.id"
+>
+  <div
+    class="group-card__tag"
+    [ngClass]="'tag--' + getPlaystyleColor(group.playstyle)"
+  ></div>
+
+  <header class="group-card__header">
+    <h3 class="group-card__title" data-testid="group-card-title">
+      {{ group.name }}
+    </h3>
+    <div class="group-card__badges">
+      <span
+        class="group-card__playstyle"
+        [ngClass]="'playstyle--' + getPlaystyleColor(group.playstyle)"
+      >
+        {{ getPlaystyleLabel(group.playstyle) }}
+      </span>
+      <span *ngIf="!group.isPublic" class="group-card__visibility">
+        🔒 Privé
+      </span>
+    </div>
+  </header>
+
+  <div class="group-card__status" [ngClass]="getStatusClass()">
+    <span>{{ getStatusLabel() }}</span>
+  </div>
+
+  <p class="group-card__description">{{ group.description }}</p>
+
+  <div class="group-card__metadata">
+    <div class="group-card__meta-item" *ngIf="group.creator">
+      <svg class="icon" viewBox="0 0 24 24" width="18" height="18">
+        <path
+          fill="currentColor"
+          d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+        />
+      </svg>
+      <span class="creator">{{ group.creator?.username }}</span>
+    </div>
+
+    <div class="group-card__meta-item">
+      <svg class="icon" viewBox="0 0 24 24" width="18" height="18">
+        <path
+          fill="currentColor"
+          d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"
+        />
+      </svg>
+      <span>
+        {{ getMemberCount() }}
+        <span *ngIf="group.maxMembers != null"> / {{ group.maxMembers }}</span>
+        membre(s)
+      </span>
+    </div>
+  </div>
+
+  <div class="group-card__actions">
+    <button
+      type="button"
+      class="btn btn--primary"
+      [disabled]="primaryActionDisabled"
+      (click)="onPrimaryAction()"
+    >
+      {{ primaryActionLabel }}
+    </button>
+
+    <button
+      *ngIf="shouldShowSecondaryAction"
+      type="button"
+      class="btn btn--secondary"
+      [disabled]="isSecondaryActionDisabled"
+      (click)="onSecondaryAction()"
+    >
+      {{ secondaryActionLabel }}
+    </button>
+  </div>
+</article>

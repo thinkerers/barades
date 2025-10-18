@@ -1,8 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { AsyncStateComponent, AsyncStateStatus } from '@org/ui';
+import { Router } from '@angular/router';
+import {
+  AsyncStateComponent,
+  AsyncStateStatus,
+  GroupCardComponent,
+} from '@org/ui';
 import { Group, GroupsService } from '../../core/services/groups.service';
-import { GroupCardComponent } from './group-card';
 
 @Component({
   selector: 'app-groups-list',
@@ -13,6 +17,7 @@ import { GroupCardComponent } from './group-card';
 })
 export class GroupsListComponent implements OnInit {
   private groupsService = inject(GroupsService);
+  private router = inject(Router);
 
   groups: Group[] = [];
   loading = true;
@@ -55,5 +60,13 @@ export class GroupsListComponent implements OnInit {
     }
 
     return 'ready';
+  }
+
+  viewGroupDetails(groupId: string): void {
+    void this.router.navigate(['/groups', groupId]);
+  }
+
+  requestToJoin(group: Group): void {
+    console.info('Group join action requested', group);
   }
 }

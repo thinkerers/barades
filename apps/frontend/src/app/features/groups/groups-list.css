@@ -41,7 +41,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Error State */
@@ -102,102 +104,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 2rem;
-}
-
-/* Group Card */
-.group-card {
-  background-color: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.2s, transform 0.2s;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.group-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
-}
-
-.group-header {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.group-title-section {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.group-card h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--color-text-primary, #1a1a1a);
-}
-
-/* Playstyle Badge */
-.playstyle-badge {
-  display: inline-flex;
-  padding: 0.375rem 0.875rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.playstyle-red {
-  background-color: #fee2e2;
-  color: #dc2626;
-}
-
-.playstyle-green {
-  background-color: #dcfce7;
-  color: #16a34a;
-}
-
-.playstyle-purple {
-  background-color: #f3e8ff;
-  color: #9333ea;
-}
-
-.playstyle-blue {
-  background-color: #dbeafe;
-  color: #2563eb;
-}
-
-.playstyle-gray {
-  background-color: #f3f4f6;
-  color: #6b7280;
-}
-
-/* Recruiting Badge */
-.recruiting-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.recruiting-yes {
-  background-color: #dcfce7;
-  color: #16a34a;
-}
-
-.recruiting-no {
-  background-color: #fee2e2;
-  color: #dc2626;
-}
-
-.recruiting-badge svg {
-  flex-shrink: 0;
 }
 
 /* Group Description */

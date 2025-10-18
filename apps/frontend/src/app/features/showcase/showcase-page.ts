@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SessionCardComponent } from '../sessions/session-card';
-import { GroupCardComponent } from '../groups/group-card';
-import { PollWidgetComponent } from '../groups/poll-widget';
-import { Session } from '../../core/services/sessions.service';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { GroupCardComponent } from '@org/ui';
 import { Group } from '../../core/services/groups.service';
 import { Poll } from '../../core/services/polls.service';
+import { Session } from '../../core/services/sessions.service';
+import { PollWidgetComponent } from '../groups/poll-widget';
+import { SessionCardComponent } from '../sessions/session-card';
 
 @Component({
   selector: 'app-showcase-page',
@@ -25,7 +25,8 @@ export class ShowcasePage {
     id: 'showcase-1',
     game: 'D&D 5e',
     title: 'Dungeons & Dragons 5e',
-    description: 'Aventure épique pour débutants et intermédiaires. Plongez dans un monde de magie et de mystères avec des compagnons passionnés.',
+    description:
+      'Aventure épique pour débutants et intermédiaires. Plongez dans un monde de magie et de mystères avec des compagnons passionnés.',
     date: new Date('2025-10-19T14:00:00').toISOString(),
     recurrenceRule: null,
     recurrenceEndDate: null,
@@ -52,16 +53,29 @@ export class ShowcasePage {
       lon: 4.3657,
     },
     reservations: [
-      { id: '1', status: 'CONFIRMED', user: { id: 'u1', username: 'alice_dm', avatar: null } },
-      { id: '2', status: 'CONFIRMED', user: { id: 'u2', username: 'bob_warrior', avatar: null } },
-      { id: '3', status: 'CONFIRMED', user: { id: 'u3', username: 'carol_newbie', avatar: null } },
+      {
+        id: '1',
+        status: 'CONFIRMED',
+        user: { id: 'u1', username: 'alice_dm', avatar: null },
+      },
+      {
+        id: '2',
+        status: 'CONFIRMED',
+        user: { id: 'u2', username: 'bob_warrior', avatar: null },
+      },
+      {
+        id: '3',
+        status: 'CONFIRMED',
+        user: { id: 'u3', username: 'carol_newbie', avatar: null },
+      },
     ],
   };
 
   sampleGroup: Group = {
     id: 'group-1',
     name: 'Brussels Adventurers Guild',
-    description: 'Groupe convivial de joueurs basés à Bruxelles. Sessions régulières de D&D, Pathfinder et autres systèmes.',
+    description:
+      'Groupe convivial de joueurs basés à Bruxelles. Sessions régulières de D&D, Pathfinder et autres systèmes.',
     playstyle: 'CASUAL',
     isRecruiting: true,
     isPublic: true,
@@ -89,9 +103,7 @@ export class ShowcasePage {
         { userId: 'user-1', username: 'alice_dm' },
         { userId: 'user-3', username: 'carol_newbie' },
       ],
-      '2025-11-01': [
-        { userId: 'user-3', username: 'carol_newbie' },
-      ],
+      '2025-11-01': [{ userId: 'user-3', username: 'carol_newbie' }],
     },
     voteCounts: {
       '2025-10-25': 2,

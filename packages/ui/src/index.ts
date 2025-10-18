@@ -7,6 +7,9 @@ export * from './lib/feedback/empty-state/empty-state';
 export * from './lib/feedback/error-message/error-message';
 export * from './lib/feedback/loading-spinner/loading-spinner';
 
+// Group components
+export * from './lib/group-card/group-card.component';
+
 // Input components
 export * from './lib/inputs/radio-group/radio-group';
 export * from './lib/inputs/search-input/search-input';
