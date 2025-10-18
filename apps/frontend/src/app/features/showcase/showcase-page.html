@@ -408,6 +408,183 @@
         </div>
       </div>
     </section>
+
+    <!-- ============================================ -->
+    <!-- SECTION 10: HERO (UI LIBRARY COMPONENT) -->
+    <!-- ============================================ -->
+    <section class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+      <h2 class="text-3xl font-bold text-white mb-6">🌟 Hero (UI Library)</h2>
+      <p class="text-gray-400 text-sm mb-4">
+        ✅ Ce composant utilise
+        <code class="bg-gray-900 px-2 py-1 rounded text-indigo-400">Hero</code>
+        du package
+        <code class="bg-gray-900 px-2 py-1 rounded text-indigo-400"
+          >@org/ui</code
+        >
+      </p>
+      <div class="rounded-xl overflow-hidden border border-gray-700">
+        <lib-hero
+          title="Rassemblez vos aventuriers"
+          subtitle="Organisez des campagnes épiques et trouvez la session idéale pour votre groupe."
+          cta="Planifier une session"
+          (ctaClick)="onHeroCta()"
+        ></lib-hero>
+      </div>
+      @if (heroCtaCount > 0) {
+      <p class="text-sm text-indigo-300 mt-4">
+        Le CTA a été cliqué {{ heroCtaCount }} fois
+      </p>
+      }
+    </section>
+
+    <!-- ============================================ -->
+    <!-- SECTION 11: SEARCH & FILTERS (UI LIBRARY) -->
+    <!-- ============================================ -->
+    <section class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+      <h2 class="text-3xl font-bold text-white mb-6">
+        🔍 Formulaires intelligents (Components @org/ui)
+      </h2>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div class="bg-gray-900/70 border border-gray-700 rounded-xl p-6">
+          <h3 class="text-xl font-semibold text-white mb-4">
+            Champ de recherche
+          </h3>
+          <lib-search-input
+            inputId="showcase-search"
+            placeholder="Rechercher une session..."
+            [debounce]="250"
+            [(value)]="searchValue"
+          ></lib-search-input>
+          <p class="text-sm text-gray-400 mt-4">
+            Terme recherché :
+            <span class="text-indigo-300 font-semibold">
+              {{ searchValue || '—' }}
+            </span>
+          </p>
+        </div>
+
+        <div class="bg-gray-900/70 border border-gray-700 rounded-xl p-6">
+          <h3 class="text-xl font-semibold text-white mb-4">
+            Choix du style de jeu
+          </h3>
+          <lib-radio-group
+            name="showcase-playstyle"
+            [options]="playstyleOptions"
+            [(value)]="selectedPlaystyle"
+          ></lib-radio-group>
+          <p class="text-sm text-gray-400 mt-4">
+            Style sélectionné :
+            <span class="text-indigo-300 font-semibold">
+              {{ selectedPlaystyleLabel || '—' }}
+            </span>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- SECTION 12: FEEDBACK STATES (UI LIBRARY) -->
+    <!-- ============================================ -->
+    <section class="bg-gray-800 rounded-2xl p-8 border border-gray-700">
+      <h2 class="text-3xl font-bold text-white mb-6">
+        💬 Feedback & États de chargement (Components @org/ui)
+      </h2>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="bg-gray-900/70 border border-gray-700 rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-white mb-3">Loading Spinner</h3>
+          <lib-loading-spinner
+            message="Chargement des sessions..."
+          ></lib-loading-spinner>
+        </div>
+
+        <div class="bg-gray-900/70 border border-gray-700 rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-white mb-3">
+            Message d'erreur
+          </h3>
+          <lib-error-message
+            message="Impossible de charger les groupes."
+            icon="error_outline"
+            actionLabel="Réessayer"
+            (action)="onErrorAction()"
+          ></lib-error-message>
+          @if (errorActionCount > 0) {
+          <p class="text-xs text-gray-400 mt-3">
+            Action utilisée {{ errorActionCount }} fois
+          </p>
+          }
+        </div>
+
+        <div class="bg-gray-900/70 border border-gray-700 rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-white mb-3">Empty State</h3>
+          <lib-empty-state
+            message="Aucune session ne correspond à vos filtres."
+            actionLabel="Réinitialiser les filtres"
+            (action)="onEmptyAction()"
+          ></lib-empty-state>
+          @if (emptyActionCount > 0) {
+          <p class="text-xs text-gray-400 mt-3">
+            Action utilisée {{ emptyActionCount }} fois
+          </p>
+          }
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6 mt-8">
+        <div class="bg-gray-900/70 border border-gray-700 rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-white mb-3">
+            AsyncState - Loading
+          </h3>
+          <lib-async-state
+            [status]="'loading'"
+            loadingMessage="Chargement des sondages..."
+          ></lib-async-state>
+        </div>
+
+        <div class="bg-gray-900/70 border border-gray-700 rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-white mb-3">
+            AsyncState - Erreur
+          </h3>
+          <lib-async-state
+            [status]="'error'"
+            [errorMessage]="'Nous ne pouvons pas récupérer les sessions pour le moment.'"
+            (retry)="onAsyncRetry()"
+          ></lib-async-state>
+          @if (asyncRetryCount > 0) {
+          <p class="text-xs text-gray-400 mt-3">
+            Tentatives de rechargement : {{ asyncRetryCount }}
+          </p>
+          }
+        </div>
+
+        <div class="bg-gray-900/70 border border-gray-700 rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-white mb-3">
+            AsyncState - Vide
+          </h3>
+          <lib-async-state
+            [status]="'empty'"
+            [emptyMessage]="'Aucune session planifiée pour le moment.'"
+          ></lib-async-state>
+        </div>
+
+        <div class="bg-gray-900/70 border border-gray-700 rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-white mb-3">
+            AsyncState - Contenu prêt
+          </h3>
+          <lib-async-state [status]="'ready'">
+            <div class="space-y-2">
+              <p class="text-sm text-gray-300">Sessions disponibles :</p>
+              <ul class="text-sm text-gray-400 list-disc list-inside">
+                <li>
+                  {{ sampleSession.title }} • {{ sampleSession.location?.name }}
+                </li>
+                <li>Campagne hebdomadaire • 5 places restantes</li>
+              </ul>
+            </div>
+          </lib-async-state>
+        </div>
+      </div>
+    </section>
   </div>
 
   <!-- Footer info -->

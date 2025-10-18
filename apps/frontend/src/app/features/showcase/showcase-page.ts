@@ -1,6 +1,15 @@
-
 import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { GroupCardComponent } from '@org/ui';
+import {
+  AsyncStateComponent,
+  EmptyStateComponent,
+  ErrorMessageComponent,
+  GroupCardComponent,
+  Hero,
+  LoadingSpinnerComponent,
+  RadioGroupComponent,
+  RadioOption,
+  SearchInputComponent,
+} from '@org/ui';
 import { Group } from '../../core/services/groups.service';
 import { Poll } from '../../core/services/polls.service';
 import { Session } from '../../core/services/sessions.service';
@@ -12,13 +21,32 @@ import { SessionCardComponent } from '../sessions/session-card';
   imports: [
     SessionCardComponent,
     GroupCardComponent,
-    PollWidgetComponent
-],
+    PollWidgetComponent,
+    Hero,
+    SearchInputComponent,
+    RadioGroupComponent,
+    LoadingSpinnerComponent,
+    ErrorMessageComponent,
+    EmptyStateComponent,
+    AsyncStateComponent,
+  ],
   templateUrl: './showcase-page.html',
   styleUrl: './showcase-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ShowcasePage {
+  heroCtaCount = 0;
+  searchValue = '';
+  selectedPlaystyle = 'casual';
+  playstyleOptions: RadioOption[] = [
+    { value: 'casual', label: '🎲 Casual' },
+    { value: 'hardcore', label: '⚔️ Hardcore' },
+    { value: 'mixed', label: '🎭 Mixte' },
+  ];
+  emptyActionCount = 0;
+  errorActionCount = 0;
+  asyncRetryCount = 0;
+
   // Sample data for showcase (typed to match frontend service interfaces)
   sampleSession: Session = {
     id: 'showcase-1',
@@ -112,4 +140,28 @@ export class ShowcasePage {
     bestDate: '2025-10-25',
     totalVotes: 3,
   };
+
+  get selectedPlaystyleLabel(): string {
+    return (
+      this.playstyleOptions.find(
+        (option) => option.value === this.selectedPlaystyle
+      )?.label ?? ''
+    );
+  }
+
+  onHeroCta(): void {
+    this.heroCtaCount += 1;
+  }
+
+  onEmptyAction(): void {
+    this.emptyActionCount += 1;
+  }
+
+  onErrorAction(): void {
+    this.errorActionCount += 1;
+  }
+
+  onAsyncRetry(): void {
+    this.asyncRetryCount += 1;
+  }
 }
