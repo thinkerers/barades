@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: barades-backend
+    runtime: node
+    region: frankfurt
+    plan: free
+    buildCommand: npm install && npx nx build backend --configuration=production
+    startCommand: node dist/apps/backend/main.js
+    autoDeploy: false
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
