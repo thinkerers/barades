@@ -60,10 +60,12 @@ export const appRoutes: Route[] = [
       {
         path: 'groups',
         component: GroupsListComponent,
+        canActivate: [authGuard],
       },
       {
         path: 'groups/:id',
         component: GroupDetailComponent,
+        canActivate: [authGuard],
       },
       {
         path: 'profile',

@@ -4,10 +4,22 @@
     <p>Rejoignez une communauté de joueurs passionnés</p>
   </header>
 
+  <div *ngIf="isOffline" class="offline-banner" role="status">
+    <span class="offline-banner__icon" aria-hidden="true">!</span>
+    <div class="offline-banner__content">
+      <strong>Connexion perdue.</strong>
+      <span>Vérifiez votre réseau puis réessayez.</span>
+    </div>
+    <button type="button" class="offline-banner__retry" (click)="retry()">
+      Réessayer
+    </button>
+  </div>
+
   <app-async-state
     [status]="groupsState"
     [loadingMessage]="'Chargement des groupes...'"
     [errorMessage]="error ?? defaultErrorMessage"
+    [showRetry]="!isOffline"
     (retry)="retry()"
   >
     <div class="groups-list">

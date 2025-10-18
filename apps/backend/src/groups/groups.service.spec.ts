@@ -112,7 +112,9 @@ describe('GroupsService', () => {
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(mockGroupId);
       expect(result[0].isPublic).toBe(true);
-      expect(result[0].isRecruiting).toBe(true); // Mapped from recruiting
+      expect(result[0].isRecruiting).toBe(true);
+      expect(result[0].currentUserIsMember).toBe(false);
+      expect(result[0].members).toBeUndefined();
     });
 
     it('should return public groups and private groups where user is member', async () => {
@@ -126,6 +128,13 @@ describe('GroupsService', () => {
       expect(result).toHaveLength(2);
       expect(result.some((g) => g.id === mockGroupId)).toBe(true);
       expect(result.some((g) => g.id === 'group-private')).toBe(true);
+      const publicGroup = result.find((g) => g.id === mockGroupId);
+      const privateGroup = result.find((g) => g.id === 'group-private');
+
+      expect(publicGroup?.currentUserIsMember).toBe(false);
+      expect(publicGroup?.members).toBeUndefined();
+      expect(privateGroup?.currentUserIsMember).toBe(true);
+      expect(privateGroup?.members).toBeDefined();
     });
 
     it('should not return private groups where user is not a member', async () => {
@@ -138,6 +147,8 @@ describe('GroupsService', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(mockGroupId);
+      expect(result[0].currentUserIsMember).toBe(false);
+      expect(result[0].members).toBeUndefined();
     });
 
     it('should map recruiting to isRecruiting for all groups', async () => {
@@ -157,6 +168,8 @@ describe('GroupsService', () => {
 
       expect(result[0].isRecruiting).toBe(true);
       expect(result[1].isRecruiting).toBe(false);
+      expect(result[0].members).toBeUndefined();
+      expect(result[1].members).toBeUndefined();
     });
   });
 
@@ -167,7 +180,9 @@ describe('GroupsService', () => {
       const result = await service.findOne(mockGroupId);
 
       expect(result.id).toBe(mockGroupId);
-      expect(result.isRecruiting).toBe(true); // Mapped from recruiting
+      expect(result.isRecruiting).toBe(true);
+      expect(result.currentUserIsMember).toBe(false);
+      expect(result.members).toBeUndefined();
       expect(mockPrismaService.group.findUnique).toHaveBeenCalledWith({
         where: { id: mockGroupId },
         include: expect.objectContaining({
@@ -185,6 +200,8 @@ describe('GroupsService', () => {
 
       expect(result.id).toBe('group-private');
       expect(result.isRecruiting).toBe(false);
+      expect(result.currentUserIsMember).toBe(true);
+      expect(result.members).toBeDefined();
     });
 
     it('should throw ForbiddenException for private group when user is not authenticated', async () => {

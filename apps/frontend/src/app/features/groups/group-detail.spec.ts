@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -16,6 +17,8 @@ describe('GroupDetailComponent', () => {
   let authService: AuthService;
   let getCurrentUserIdSpy: jest.SpyInstance;
   let getCurrentUserSpy: jest.SpyInstance;
+  let getGroupSpy: jest.SpyInstance;
+  let getPollsSpy: jest.SpyInstance;
   let router: Router;
 
   const mockGroup = {
@@ -29,6 +32,7 @@ describe('GroupDetailComponent', () => {
     createdAt: '2025-01-01T00:00:00.000Z',
     updatedAt: '2025-01-01T00:00:00.000Z',
     creatorId: 'user-1',
+    currentUserIsMember: true,
     creator: {
       id: 'user-1',
       username: 'test_user',
@@ -73,6 +77,15 @@ describe('GroupDetailComponent', () => {
     ],
   };
 
+  const nonMemberGroup = {
+    ...mockGroup,
+    currentUserIsMember: false,
+  };
+
+  const joinableGroup = {
+    ...nonMemberGroup,
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
@@ -101,8 +114,11 @@ describe('GroupDetailComponent', () => {
     authService = TestBed.inject(AuthService);
     router = TestBed.inject(Router);
 
+    getGroupSpy = jest.spyOn(groupsService, 'getGroup');
+    getGroupSpy.mockReturnValue(of(nonMemberGroup));
+
     // Mock polls service by default
-    jest.spyOn(pollsService, 'getPolls').mockReturnValue(of([]));
+    getPollsSpy = jest.spyOn(pollsService, 'getPolls').mockReturnValue(of([]));
 
     // Mock auth service by default (user not authenticated)
     getCurrentUserIdSpy = jest
@@ -119,26 +135,98 @@ describe('GroupDetailComponent', () => {
 
   describe('ngOnInit', () => {
     it('should load group on init with valid id', () => {
-      const spy = jest
-        .spyOn(groupsService, 'getGroup')
-        .mockReturnValue(of(mockGroup));
+      getGroupSpy.mockReturnValue(of(mockGroup));
 
       fixture.detectChanges();
 
-      expect(spy).toHaveBeenCalledWith('1');
+      expect(getGroupSpy).toHaveBeenCalledWith('1');
       expect(component.group).toEqual(mockGroup);
       expect(component.loading).toBe(false);
+      expect(getPollsSpy).toHaveBeenCalledWith('1');
     });
 
     it('should handle error when loading group fails', () => {
-      jest
-        .spyOn(groupsService, 'getGroup')
-        .mockReturnValue(throwError(() => new Error('Failed to load')));
+      getGroupSpy.mockReturnValue(
+        throwError(() => new Error('Failed to load'))
+      );
 
       fixture.detectChanges();
 
-      expect(component.error).toBeTruthy();
+      expect(component.error).toBe(component.defaultErrorMessage);
       expect(component.loading).toBe(false);
+    });
+
+    it('should display specific message for 404 errors', () => {
+      getGroupSpy.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 404 }))
+      );
+
+      fixture.detectChanges();
+
+      expect(component.error).toBe(
+        'Ce groupe est introuvable ou n’existe plus.'
+      );
+    });
+
+    it('should schedule auto retry for transient server issues', () => {
+      jest.useFakeTimers();
+
+      getGroupSpy
+        .mockReturnValueOnce(
+          throwError(() => new HttpErrorResponse({ status: 503 }))
+        )
+        .mockReturnValue(of(mockGroup));
+
+      try {
+        fixture.detectChanges();
+
+        expect(component.error).toContain(
+          'Nos serveurs sont momentanément indisponibles'
+        );
+        expect(component.autoRetrySeconds).toBeGreaterThan(0);
+
+        jest.advanceTimersByTime(15000);
+
+        expect(getGroupSpy).toHaveBeenCalledTimes(2);
+        expect(component.group).toEqual(mockGroup);
+        expect(component.error).toBeNull();
+        expect(component.autoRetrySeconds).toBeNull();
+        expect(getPollsSpy).toHaveBeenCalledTimes(1);
+        expect(getPollsSpy).toHaveBeenCalledWith('1');
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('should detect offline state and show offline message', () => {
+      const originalDescriptor = Object.getOwnPropertyDescriptor(
+        Navigator.prototype,
+        'onLine'
+      );
+
+      Object.defineProperty(Navigator.prototype, 'onLine', {
+        configurable: true,
+        get: () => false,
+      });
+
+      getGroupSpy.mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 0 }))
+      );
+
+      fixture.detectChanges();
+
+      expect(component.isOffline).toBe(true);
+      expect(component.error).toBe(
+        'Connexion perdue. Vérifiez votre réseau puis réessayez.'
+      );
+
+      if (originalDescriptor) {
+        Object.defineProperty(
+          Navigator.prototype,
+          'onLine',
+          originalDescriptor
+        );
+      }
     });
 
     it('should set error when id is missing', () => {
@@ -170,7 +258,7 @@ describe('GroupDetailComponent', () => {
 
   describe('Member management', () => {
     beforeEach(() => {
-      jest.spyOn(groupsService, 'getGroup').mockReturnValue(of(mockGroup));
+      getGroupSpy.mockReturnValueOnce(of(mockGroup));
       fixture.detectChanges();
     });
 
@@ -214,24 +302,42 @@ describe('GroupDetailComponent', () => {
     };
 
     beforeEach(() => {
-      jest.spyOn(groupsService, 'getGroup').mockReturnValue(of(mockGroup));
+      getGroupSpy.mockReturnValueOnce(of(joinableGroup));
       getCurrentUserIdSpy.mockReturnValue(mockCurrentUser.id);
       getCurrentUserSpy.mockReturnValue(mockCurrentUser);
       fixture.detectChanges();
     });
 
     it('should allow joining when recruiting and not full', () => {
-      component.group = { ...mockGroup, isRecruiting: true, maxMembers: 10 };
+      if (!component.group) {
+        throw new Error('Group should be defined');
+      }
+      component.group = {
+        ...component.group,
+        isRecruiting: true,
+        maxMembers: 10,
+      };
+      component.isMember = false;
       expect(component.canJoin()).toBe(true);
     });
 
     it('should not allow joining when not recruiting', () => {
-      component.group = { ...mockGroup, isRecruiting: false };
+      if (!component.group) {
+        throw new Error('Group should be defined');
+      }
+      component.group = { ...component.group, isRecruiting: false };
       expect(component.canJoin()).toBe(false);
     });
 
     it('should not allow joining when group is full', () => {
-      component.group = { ...mockGroup, isRecruiting: true, maxMembers: 2 };
+      if (!component.group) {
+        throw new Error('Group should be defined');
+      }
+      component.group = {
+        ...component.group,
+        isRecruiting: true,
+        maxMembers: 2,
+      };
       expect(component.canJoin()).toBe(false);
     });
 
@@ -247,6 +353,7 @@ describe('GroupDetailComponent', () => {
         .spyOn(groupsService, 'joinGroup')
         .mockReturnValue(of(joinResponse));
 
+      component.isMember = false;
       component.joinGroup();
 
       expect(joinSpy).toHaveBeenCalledWith('1');
@@ -254,6 +361,7 @@ describe('GroupDetailComponent', () => {
       expect(component.isMember).toBe(true);
       expect(component.joinError).toBeNull();
       expect(component.group?._count?.members).toBe(6);
+      expect(component.group?.currentUserIsMember).toBe(true);
       expect(
         component.group?.members?.some((m) => m.userId === mockCurrentUser.id)
       ).toBe(true);
@@ -266,6 +374,7 @@ describe('GroupDetailComponent', () => {
           throwError(() => ({ error: { message: 'Vous êtes déjà membre.' } }))
         );
 
+      component.isMember = false;
       component.joinGroup();
 
       expect(component.joinInProgress).toBe(false);
@@ -300,7 +409,7 @@ describe('GroupDetailComponent', () => {
         avatar: null,
       });
 
-      jest.spyOn(groupsService, 'getGroup').mockReturnValue(
+      getGroupSpy.mockReturnValueOnce(
         of({
           ...mockGroup,
           members: [
@@ -358,6 +467,7 @@ describe('GroupDetailComponent', () => {
       expect(component.isMember).toBe(false);
       expect(component.leaveError).toBeNull();
       expect(component.group?._count?.members).toBe(2);
+      expect(component.group?.currentUserIsMember).toBe(false);
       expect(
         component.group?.members?.some(
           (member) => member.userId === mockCurrentUser.id
@@ -407,7 +517,7 @@ describe('GroupDetailComponent', () => {
 
   describe('Template rendering', () => {
     beforeEach(() => {
-      jest.spyOn(groupsService, 'getGroup').mockReturnValue(of(mockGroup));
+      getGroupSpy.mockReturnValueOnce(of(mockGroup));
       fixture.detectChanges();
     });
 
@@ -439,6 +549,18 @@ describe('GroupDetailComponent', () => {
     });
 
     it('should show join button when can join', () => {
+      if (!component.group) {
+        throw new Error('Group should be defined');
+      }
+      component.group = {
+        ...component.group,
+        currentUserIsMember: false,
+        isRecruiting: true,
+        maxMembers: 10,
+      };
+      component.isMember = false;
+      fixture.detectChanges();
+
       const compiled = fixture.nativeElement as HTMLElement;
       const joinButton = compiled.querySelector(
         '.section-actions .btn--primary'
@@ -487,7 +609,7 @@ describe('GroupDetailComponent', () => {
   describe('Membership detection', () => {
     it('should detect user is a member when userId matches', () => {
       jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-1');
-      jest.spyOn(groupsService, 'getGroup').mockReturnValue(of(mockGroup));
+      getGroupSpy.mockReturnValueOnce(of(mockGroup));
 
       component.ngOnInit();
 
@@ -497,7 +619,7 @@ describe('GroupDetailComponent', () => {
 
     it('should detect user is NOT a member when userId does not match', () => {
       jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-999');
-      jest.spyOn(groupsService, 'getGroup').mockReturnValue(of(mockGroup));
+      getGroupSpy.mockReturnValueOnce(of(nonMemberGroup));
 
       component.ngOnInit();
 
@@ -507,7 +629,7 @@ describe('GroupDetailComponent', () => {
 
     it('should detect user is NOT a member when not authenticated', () => {
       jest.spyOn(authService, 'getCurrentUserId').mockReturnValue(null);
-      jest.spyOn(groupsService, 'getGroup').mockReturnValue(of(mockGroup));
+      getGroupSpy.mockReturnValueOnce(of(nonMemberGroup));
 
       component.ngOnInit();
 
@@ -518,6 +640,7 @@ describe('GroupDetailComponent', () => {
     it('should correctly check membership with nested user structure', () => {
       const groupWithMembers = {
         ...mockGroup,
+        currentUserIsMember: undefined,
         members: [
           {
             userId: 'user-alice',
@@ -541,9 +664,7 @@ describe('GroupDetailComponent', () => {
       };
 
       jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-bob');
-      jest
-        .spyOn(groupsService, 'getGroup')
-        .mockReturnValue(of(groupWithMembers));
+      getGroupSpy.mockReturnValueOnce(of(groupWithMembers));
 
       component.ngOnInit();
 
@@ -553,11 +674,12 @@ describe('GroupDetailComponent', () => {
     it('should handle group with no members', () => {
       const groupNoMembers = {
         ...mockGroup,
+        currentUserIsMember: undefined,
         members: [],
       };
 
       jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-1');
-      jest.spyOn(groupsService, 'getGroup').mockReturnValue(of(groupNoMembers));
+      getGroupSpy.mockReturnValueOnce(of(groupNoMembers));
 
       component.ngOnInit();
 
@@ -567,13 +689,12 @@ describe('GroupDetailComponent', () => {
     it('should handle group with undefined members', () => {
       const groupUndefinedMembers = {
         ...mockGroup,
+        currentUserIsMember: undefined,
         members: undefined,
       };
 
       jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-1');
-      jest
-        .spyOn(groupsService, 'getGroup')
-        .mockReturnValue(of(groupUndefinedMembers));
+      getGroupSpy.mockReturnValueOnce(of(groupUndefinedMembers));
 
       component.ngOnInit();
 

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ErrorMessageComponent } from '@org/ui';
 import { AuthService } from '../../core/services/auth.service';
@@ -51,7 +52,7 @@ interface GroupDetail extends Group {
   templateUrl: './group-detail.html',
   styleUrl: './group-detail.css',
 })
-export class GroupDetailComponent implements OnInit {
+export class GroupDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private groupsService = inject(GroupsService);
@@ -63,30 +64,64 @@ export class GroupDetailComponent implements OnInit {
   activePoll: Poll | null = null;
   loading = true;
   error: string | null = null;
+  isOffline = false;
+  autoRetrySeconds: number | null = null;
   currentUserId: string | null = null;
   isMember = false;
   joinInProgress = false;
   joinError: string | null = null;
   leaveInProgress = false;
   leaveError: string | null = null;
+  private currentGroupId: string | null = null;
+  private autoRetryInterval: ReturnType<typeof setInterval> | null = null;
+  private readonly autoRetryDelayMs = 15000;
+  private readonly offlineHandler = () => {
+    this.isOffline = true;
+  };
+  private readonly onlineHandler = () => {
+    this.isOffline = false;
+    if (!this.loading && this.error) {
+      this.retryLoading();
+    }
+  };
+  private pendingErrorBaseMessage: string | null = null;
+  private initialPollsLoaded = false;
+  readonly defaultErrorMessage =
+    'Impossible de charger les détails du groupe. Veuillez réessayer.';
 
   ngOnInit(): void {
     // Récupérer l'utilisateur connecté
     this.currentUserId = this.authService.getCurrentUserId();
+    this.isOffline =
+      typeof navigator !== 'undefined' && navigator.onLine === false;
+    window.addEventListener('offline', this.offlineHandler);
+    window.addEventListener('online', this.onlineHandler);
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
+      this.currentGroupId = id;
       this.loadGroup(id);
-      this.loadPolls(id);
     } else {
       this.error = 'ID de groupe invalide';
       this.loading = false;
     }
   }
 
-  private loadGroup(id: string): void {
+  ngOnDestroy(): void {
+    window.removeEventListener('offline', this.offlineHandler);
+    window.removeEventListener('online', this.onlineHandler);
+    this.clearAutoRetry();
+  }
+
+  private loadGroup(
+    id: string,
+    options: { refreshPolls?: boolean } = {}
+  ): void {
+    const { refreshPolls = false } = options;
     this.loading = true;
     this.error = null;
+    this.pendingErrorBaseMessage = null;
+    this.clearAutoRetry();
     this.joinInProgress = false;
     this.joinError = null;
     this.leaveInProgress = false;
@@ -95,16 +130,24 @@ export class GroupDetailComponent implements OnInit {
     this.groupsService.getGroup(id).subscribe({
       next: (data) => {
         this.group = data as GroupDetail;
-        // Vérifier si l'utilisateur est membre (comparer avec userId)
-        this.isMember =
-          this.group.members?.some((m) => m.userId === this.currentUserId) ||
-          false;
+        const isMemberFromApi =
+          typeof data.currentUserIsMember === 'boolean'
+            ? data.currentUserIsMember
+            : this.group.members?.some((m) => m.userId === this.currentUserId);
+
+        this.isMember = Boolean(isMemberFromApi);
         this.loading = false;
+        this.error = null;
+        this.isOffline = false;
+        if (!this.initialPollsLoaded || refreshPolls) {
+          this.initialPollsLoaded = true;
+          this.loadPolls(id);
+        }
       },
       error: (err) => {
         console.error('Error loading group:', err);
-        this.error = 'Impossible de charger les détails du groupe.';
         this.loading = false;
+        this.handleGroupError(err);
       },
     });
   }
@@ -133,6 +176,15 @@ export class GroupDetailComponent implements OnInit {
         console.error('Error loading poll details:', err);
       },
     });
+  }
+
+  retryLoading(): void {
+    if (!this.currentGroupId) {
+      return;
+    }
+
+    this.clearAutoRetry();
+    this.loadGroup(this.currentGroupId, { refreshPolls: true });
   }
 
   onPollCreated(poll: Poll): void {
@@ -229,6 +281,7 @@ export class GroupDetailComponent implements OnInit {
           members: updatedMembers,
           isRecruiting: response.isRecruiting,
           maxMembers: response.maxMembers ?? currentGroup.maxMembers ?? null,
+          currentUserIsMember: true,
           _count: {
             members: response.memberCount,
           },
@@ -279,6 +332,7 @@ export class GroupDetailComponent implements OnInit {
           members: remainingMembers,
           isRecruiting: response.isRecruiting,
           maxMembers: response.maxMembers ?? currentGroup.maxMembers ?? null,
+          currentUserIsMember: false,
           _count: {
             members: response.memberCount,
           },
@@ -298,6 +352,124 @@ export class GroupDetailComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/groups']);
+  }
+
+  private handleGroupError(error: unknown): void {
+    const httpError = error instanceof HttpErrorResponse ? error : null;
+
+    if (this.detectOffline(httpError)) {
+      this.error = 'Connexion perdue. Vérifiez votre réseau puis réessayez.';
+      return;
+    }
+
+    const message = this.resolveServerMessage(httpError);
+    this.error = message;
+
+    if (httpError && this.shouldAutoRetry(httpError)) {
+      this.scheduleAutoRetry(message);
+    }
+  }
+
+  private detectOffline(error: HttpErrorResponse | null): boolean {
+    const isOfflineError =
+      (typeof navigator !== 'undefined' && navigator.onLine === false) ||
+      error?.status === 0;
+
+    if (isOfflineError) {
+      this.isOffline = true;
+      return true;
+    }
+
+    this.isOffline = false;
+    return false;
+  }
+
+  private resolveServerMessage(httpError: HttpErrorResponse | null): string {
+    if (!httpError) {
+      return this.defaultErrorMessage;
+    }
+
+    switch (httpError.status) {
+      case 401:
+        return 'Votre session a expiré. Veuillez vous reconnecter pour accéder au groupe.';
+      case 403:
+        return "Vous n'avez pas accès à ce groupe.";
+      case 404:
+        return 'Ce groupe est introuvable ou n’existe plus.';
+      case 429:
+        return 'Trop de tentatives. Nous réessaierons automatiquement dans un instant.';
+      case 503:
+      case 504:
+        return 'Nos serveurs sont momentanément indisponibles. Nous réessaierons automatiquement.';
+      default:
+        if (httpError.status >= 500) {
+          return 'Une erreur est survenue sur nos serveurs. Réessayons dans un instant.';
+        }
+        if (httpError.status === 408) {
+          return 'Le chargement est plus long que prévu. Patientez un instant ou réessayez.';
+        }
+    }
+
+    if (httpError.error?.message) {
+      return httpError.error.message;
+    }
+
+    return this.defaultErrorMessage;
+  }
+
+  private shouldAutoRetry(error: HttpErrorResponse): boolean {
+    if (error.status === 429) {
+      return true;
+    }
+
+    if (error.status >= 500 || error.status === 503 || error.status === 504) {
+      return true;
+    }
+
+    return false;
+  }
+
+  private scheduleAutoRetry(baseMessage: string): void {
+    this.clearAutoRetry();
+    this.pendingErrorBaseMessage = baseMessage;
+    this.autoRetrySeconds = Math.ceil(this.autoRetryDelayMs / 1000);
+    this.error = this.composeErrorMessage();
+
+    this.autoRetryInterval = setInterval(() => {
+      if (this.autoRetrySeconds === null) {
+        return;
+      }
+
+      this.autoRetrySeconds -= 1;
+
+      if (this.autoRetrySeconds <= 0) {
+        this.clearAutoRetry();
+        this.retryLoading();
+      } else {
+        this.error = this.composeErrorMessage();
+      }
+    }, 1000);
+  }
+
+  private composeErrorMessage(): string {
+    if (!this.pendingErrorBaseMessage) {
+      return this.error ?? this.defaultErrorMessage;
+    }
+
+    if (this.autoRetrySeconds === null) {
+      return this.pendingErrorBaseMessage;
+    }
+
+    return `${this.pendingErrorBaseMessage} Nouvelle tentative dans ${this.autoRetrySeconds} s.`;
+  }
+
+  private clearAutoRetry(): void {
+    if (this.autoRetryInterval) {
+      clearInterval(this.autoRetryInterval);
+      this.autoRetryInterval = null;
+    }
+    this.autoRetrySeconds = null;
+    this.pendingErrorBaseMessage = null;
   }
 
   formatDate(dateString: string): string {

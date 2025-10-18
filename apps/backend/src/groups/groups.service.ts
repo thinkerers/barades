@@ -63,10 +63,18 @@ export class GroupsService {
         });
 
     // Map recruiting to isRecruiting for frontend consistency
-    return filteredGroups.map((group) => ({
-      ...group,
-      isRecruiting: group.recruiting,
-    }));
+    return filteredGroups.map((group) => {
+      const isMember =
+        Boolean(userId) &&
+        group.members.some((member) => member.userId === userId);
+
+      return {
+        ...group,
+        members: isMember ? group.members : undefined,
+        currentUserIsMember: isMember,
+        isRecruiting: group.recruiting,
+      };
+    });
   }
 
   async findOne(id: string, userId?: string) {
@@ -115,9 +123,14 @@ export class GroupsService {
       }
     }
 
+    const isMember =
+      !!userId && group.members.some((member) => member.userId === userId);
+
     // Map recruiting to isRecruiting for frontend consistency
     return {
       ...group,
+      members: isMember ? group.members : undefined,
+      currentUserIsMember: isMember,
       isRecruiting: group.recruiting,
     };
   }

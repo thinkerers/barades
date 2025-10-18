@@ -1,6 +1,6 @@
 # 🎯 PLANNING RÉVISÉ FINAL - TFE Bar à Dés
 
-**DEADLINE ABSOLUE** : 20 octobre 2025 - Code en ligne + Rapport imprimé déposé  
+**DEADLINE ABSOLUE** : 20 octobre 2025 - Code en ligne + Rapport imprimé déposé
 **TEMPS DISPONIBLE** : 64 heures (12 oct 15h35 → 20 oct 12h00)
 
 ---
@@ -15,26 +15,29 @@
 
 ## 📊 ALLOCATION TEMPS RÉVISÉE
 
-| Phase | Heures | % | Deadline |
-|-------|--------|---|----------|
-| **Développement app** | 40h | 62% | 18 oct 18h |
-| **Documents préparatoires** | 6h | 9% | 17-18 oct |
-| **Rédaction rapport** | 14h | 22% | 19 oct 20h |
-| **Impression/Dépôt** | 4h | 7% | 20 oct 12h |
-| **TOTAL** | 64h | 100% | |
+| Phase                       | Heures | %    | Deadline   |
+| --------------------------- | ------ | ---- | ---------- |
+| **Développement app**       | 40h    | 62%  | 18 oct 18h |
+| **Documents préparatoires** | 6h     | 9%   | 17-18 oct  |
+| **Rédaction rapport**       | 14h    | 22%  | 19 oct 20h |
+| **Impression/Dépôt**        | 4h     | 7%   | 20 oct 12h |
+| **TOTAL**                   | 64h    | 100% |            |
 
 ---
 
 ## 📅 PLANNING DÉTAILLÉ JOUR PAR JOUR
 
 ### 🔴 AUJOURD'HUI : 12 OCT (15h35-19h30 = 4h)
+
 **PHASE 1A : SETUP ARCHITECTURE**
 
 **15h35-16h00** : Préparation (25 min)
+
 - [x] Créer compte Supabase (supabase.com)
 - [x] Lire `SETUP_RAPIDE.md`
 
 **16h00-17h30** : Setup Nx (1h30)
+
 ```bash
 npx create-nx-workspace@latest barades-nx \
   --preset=angular-nest \
@@ -42,20 +45,24 @@ npx create-nx-workspace@latest barades-nx \
   --style=scss \
   --nxCloud=skip
 ```
+
 - [x] Installer dépendances (Angular Material, Prisma, Leaflet)
 - [x] Configurer Tailwind CSS
 
 **17h30-18h30** : Configuration (1h)
+
 - [x] Setup Prisma + .env Supabase
 - [x] Copier CSS prototype → `styles.scss`
 - [x] Créer structure dossiers
 
 **18h30-19h30** : Premiers composants (1h)
+
 - [x] Générer Header/Footer
 - [x] Routing de base
 - [x] Test compilation (`nx serve frontend`)
 
 **19h30** : Commit Git
+
 ```bash
 git add .
 git commit -m "feat: initial Nx setup"
@@ -66,9 +73,11 @@ git commit -m "feat: initial Nx setup"
 ---
 
 ### 📌 JOUR 2 : 13 OCT (8h) - ✅ TERMINÉ
+
 **PHASE 1B + 2A : BACKEND BASE + BDD**
 
 **Matin (8h-12h)** : Base de données ✅
+
 - [x] **8h-10h** : Schéma Prisma complet + relations
   ```prisma
   User, Session, Location, Group, Reservation, GroupMember, Poll (nouveau!)
@@ -89,6 +98,7 @@ git commit -m "feat: initial Nx setup"
   - 10 réservations (mix PENDING/CONFIRMED)
 
 **Après-midi (14h-18h)** : Backend API ✅
+
 - [x] **14h-15h30** : Modules NestJS de base (sessions, locations, groups)
   - Générer resources : `npx @nestjs/cli generate resource`
   - Structure controllers + services + entities
@@ -111,11 +121,13 @@ git commit -m "feat: initial Nx setup"
 ---
 
 ### 📌 JOUR 3 : 14 OCT (8h) - ✅ TERMINÉ
+
 **PHASE 2B : MIGRATION FRONTEND ANGULAR COMPLÈTE**
 
 **Réalisations effectives** :
 
 **Matin (8h-12h)** : Migration composants ✅
+
 - [x] **8h-10h** : Services Angular pour API
   - ✅ SessionsService avec HttpClient (GET + POST/PATCH/DELETE implémentés)
   - ✅ LocationsService avec HttpClient (GET implémentés, CRUD stubs Jour 4)
@@ -128,6 +140,7 @@ git commit -m "feat: initial Nx setup"
   - ✅ GroupsListComponent (60 lignes) : liste groupes avec playstyle badges
 
 **Après-midi (14h-18h)** : Intégration Leaflet + Navigation ✅
+
 - [x] **14h-16h** : Intégration Leaflet maps
   - ✅ Installation leaflet@1.9.4 + @types/leaflet
   - ✅ Configuration Nx : assets CSS + images markers
@@ -148,6 +161,7 @@ git commit -m "feat: initial Nx setup"
   - ✅ Responsive grid (2 colonnes mobile → 4 colonnes desktop)
 
 **Tests unitaires** : ✅
+
 - ✅ 22 tests passants (9 fichiers .spec.ts)
   - sessions-list.spec.ts : 3 tests (création, état initial)
   - locations-list.spec.ts : 4 tests (création, load, erreur, labels)
@@ -155,9 +169,10 @@ git commit -m "feat: initial Nx setup"
   - footer.spec.ts : 4 tests (création, année, sections, social links)
   - top-bar.spec.ts : 1 test (création)
   - side-nav.spec.ts : 1 test (création)
-  - + 3 fichiers générés par Nx : app.spec.ts (2), home-page.spec.ts (1), app-layout.spec.ts (1)
+  - - 3 fichiers générés par Nx : app.spec.ts (2), home-page.spec.ts (1), app-layout.spec.ts (1)
 
 **Documentation TFE** : ✅
+
 - [x] 8 fichiers de rapport créés (~3 439 lignes) :
   1. rapport-jour3-00-index.md (index + métriques)
   2. rapport-jour3-01-overview.md (architecture Angular)
@@ -169,11 +184,13 @@ git commit -m "feat: initial Nx setup"
   8. rapport-jour3-07-issues.md (Problèmes rencontrés)
 
 **Commits Git** : ✅
+
 - [x] `e431ced` - feat(frontend): Day 3 - migrate Sessions/Locations/Groups pages
 - [x] `4417bdb` - feat(frontend): add Footer component
 - [x] `9063f58` - docs(jour3): add complete Day 3 migration documentation
 
-**✅ Livrable J3** : 
+**✅ Livrable J3** :
+
 - ✅ Frontend Angular 100% fonctionnel avec 3 pages (Sessions, Locations, Groups)
 - ✅ Navigation complète (TopBar, SideNav, Footer)
 - ✅ Carte Leaflet intégrée avec markers et popups
@@ -181,6 +198,7 @@ git commit -m "feat: initial Nx setup"
 - ✅ Documentation TFE complète et versionnée
 
 **📝 Notes** :
+
 - DTOs backend reportés au Jour 4 (focus migration frontend prioritaire)
 - Backend CRUD (POST/PATCH/DELETE) implémenté pour SessionsService, stubbed pour Locations/Groups
 - Leaflet map toujours visible (pas de toggle map/list dans cette version)
@@ -189,11 +207,13 @@ git commit -m "feat: initial Nx setup"
 ---
 
 ### 📌 JOUR 4 : 15 OCT (8h) - ✅ TERMINÉ (Backend + Frontend Auth complet!)
+
 **PHASE 3 : AUTHENTIFICATION COMPLÈTE (BACKEND + FRONTEND)**
 
 **Réalisations effectives** :
 
 **Backend NestJS** (4h effectives) :
+
 - [x] **Architecture custom sans Passport.js** (approche Trilon)
   - Article de référence : https://trilon.io/blog/nestjs-authentication-without-passport
   - Choix pédagogique : code explicite pour TFE, contrôle total sur JWT
@@ -224,6 +244,7 @@ git commit -m "feat: initial Nx setup"
 - [x] **SessionsModule** : Import AuthModule + @UseGuards(JwtAuthGuard) sur POST
 
 **Frontend Angular** (4h effectives - COMPLÉTÉ malgré prévision de report!) :
+
 - [x] **AuthService** (127 lignes)
   - ✅ signup(), login(), logout() avec HttpClient
   - ✅ Gestion JWT dans localStorage
@@ -253,10 +274,12 @@ git commit -m "feat: initial Nx setup"
   - ✅ `/api` → `http://localhost:3000`
 
 **Dépendances installées** :
+
 - ✅ Backend : `@nestjs/jwt@11.0.1`, `argon2@0.44.0`
 - ✅ Frontend : Angular Material 20.2.8 (déjà présent)
 
 **Documentation** :
+
 - [x] Rapport complet Jour 4 (4 fichiers, ~2200 lignes)
   - `rapport-jour4-00-index.md` : Vue d'ensemble + architecture
   - `rapport-jour4-01-frontend.md` : Détails implémentation Angular
@@ -265,6 +288,7 @@ git commit -m "feat: initial Nx setup"
 - [x] Mise à jour `doc/rapport-jour2-03-securite.md` avec architecture custom
 
 **Commits Git** : ✅
+
 - [x] `246b190` - feat(auth): implement custom JWT authentication without Passport
 - [x] `9e57400` - docs: update planning Day 1-3 completed
 - [x] `ea4c7fa` - docs: add Day 4 report (backend)
@@ -274,7 +298,8 @@ git commit -m "feat: initial Nx setup"
 - [x] `a0f06bd` - chore(prisma): remove redundant update-user-auth.sql
 - [x] `b3f3ee0` - docs(sql): add status note to enable-rls.sql
 
-**✅ Livrable J4** : 
+**✅ Livrable J4** :
+
 - ✅ Backend auth 100% fonctionnel (signup, login, JWT, guards)
 - ✅ Frontend auth 100% fonctionnel (login, register, guard, interceptor)
 - ✅ Tests validés (backend curl + frontend Jest)
@@ -282,6 +307,7 @@ git commit -m "feat: initial Nx setup"
 - ✅ Code propre et documenté (~1089 lignes de code auth)
 
 **📝 Notes** :
+
 - Architecture custom justifiée : ~30 lignes d'abstraction Passport vs contrôle total
 - Argon2 choisi pour sécurité renforcée (vs bcrypt)
 - JWT expiration : 1h (pas de refresh token pour MVP)
@@ -291,9 +317,11 @@ git commit -m "feat: initial Nx setup"
 ---
 
 ### 📌 JOUR 5 : 16 OCT (8h) - ✅ TERMINÉ
+
 **PHASE 4A : SESSIONS + MAP**
 
 **Réalisations effectives** :
+
 - ✅ `SessionsListPage` refactorée avec filtres combinables (type, disponibilités, recherche multi champs, description incluse) et compteur de filtres actifs.
 - ✅ `SessionCardComponent` finalisé (badges statut, host/location optionnels, couleurs dynamiques `session.tagColor`, styles BEM, helpers `getTagColorClass`/`isFull`).
 - ✅ `LocationsListComponent` enrichi : filtres croisés, markers typés, popups HTML avancés, géolocalisation utilisateur + auto-zoom vers le lieu le plus proche, synchronisation liste ↔ carte avec surbrillance.
@@ -305,11 +333,13 @@ git commit -m "feat: initial Nx setup"
 ---
 
 ### 📌 JOUR 6 : 17 OCT (8h + 2h soir) - ✅ EN COURS
+
 **PHASE 4B : GROUPES + EMAILS + DOCUMENTS PRÉPARATOIRES**
 
 **Réalisations effectives** :
 
 **Matin (8h-12h)** : Groupes + Planning ✅
+
 - [x] **8h-10h** : GroupsListComponent + GroupCardComponent
   - ✅ Liste groupes avec filtres par playstyle (CASUAL, HARDCORE, MIXED)
   - ✅ GroupCardComponent avec badges, descriptions, compteur membres
@@ -324,6 +354,7 @@ git commit -m "feat: initial Nx setup"
   - ⚠️ Page standalone `/plan/:id` : non implémentée (vote intégré dans GroupDetail)
 
 **Après-midi (14h-18h)** : 🔥 SYSTÈME EMAIL (CRITIQUE!) ✅
+
 - [x] **14h-15h** : NestJS + Resend.com integration complète
   - ✅ EmailService avec 3 méthodes (confirmation, host notification, reminder)
   - ✅ Configuration RESEND_API_KEY dans .env
@@ -339,6 +370,7 @@ git commit -m "feat: initial Nx setup"
   - ✅ Templates HTML rendus correctement
 
 **Soir (20h-22h)** : 📋 DOCUMENTS PRÉPARATOIRES (2h)
+
 - [ ] **20h-21h** : 🎨 **CHARTE GRAPHIQUE** (Canva) ⏳
   - Moodboard (3-4 images inspiration)
   - Logo "Bar à Dés" (simple, lisible)
@@ -352,13 +384,15 @@ git commit -m "feat: initial Nx setup"
   - Structure Besoins → Features (template disponible lignes 671+)
   - Export PNG haute résolution
 
-**✅ Livrable J6** : 
+**✅ Livrable J6** :
+
 - ✅ Emails 100% fonctionnels avec 3 templates professionnels
 - ✅ Groupes avec système de poll/vote complet (backend + frontend + tests E2E)
 - ✅ 57 tests E2E passants, 0 erreurs TypeScript
 - ⏳ Charte graphique + Impact mapping (2h restantes ce soir)
 
 **📝 Notes importantes** :
+
 - Système email ET polls déjà complets (1 jour d'avance sur planning!)
 - Flatpickr shift-select : existe dans prototype HTML (doc/context/index.html lignes 2251+), migration Angular optionnelle
 - Page standalone planning : feature bonus, vote intégré dans GroupDetail suffit pour MVP
@@ -367,16 +401,19 @@ git commit -m "feat: initial Nx setup"
 ---
 
 ### 📌 JOUR 7 : 18 OCT (10h)
+
 **PHASE 5 : PWA + DÉPLOIEMENT + WIREFRAMES + RAPPORT DÉBUT + FEATURES BONUS**
 
 **Matin (8h-12h)** : Déploiement + Bonus
+
 - [ ] **8h-9h** : Service Worker + Manifest PWA
 - [ ] **9h-10h** : Build production
 - [ ] **10h-11h** : Déployer Vercel (frontend) + Render (backend)
 - [ ] **11h-12h** : Tests prod + corrections bugs critiques
-- [ ] *(Bonus si temps)* : Forum communautaire (catégories, topics, replies) OU FAQ dynamique avec recherche live
+- [ ] _(Bonus si temps)_ : Forum communautaire (catégories, topics, replies) OU FAQ dynamique avec recherche live
 
 **Après-midi (14h-18h)** : Polish + Wireframes
+
 - [ ] **14h-15h** : Tests production + responsive mobile
 - [ ] **15h-16h** : Polish UI/UX (animations, transitions, loading states)
 - [ ] **16h-18h** : 📐 **WIREFRAMES FORMALISÉS** (2h)
@@ -385,9 +422,10 @@ git commit -m "feat: initial Nx setup"
   - User flows (parcours inscription → réservation → notification email)
   - Sitemap (architecture pages : 11 routes principales)
   - Export PDF
-- [ ] *(Option bonus si avance)* : `npx nx g @nx/angular:setup-ssr frontend` puis `npx nx g @nx/angular:setup-app-shell frontend` (App Shell / SSR)
+- [ ] _(Option bonus si avance)_ : `npx nx g @nx/angular:setup-ssr frontend` puis `npx nx g @nx/angular:setup-app-shell frontend` (App Shell / SSR)
 
 **Soir (20h-22h)** : Rapport Introduction (2h)
+
 - [ ] **20h-22h** : **Introduction** (3 pages)
   - Contexte : problématique organisation JdR (coordination joueurs, recherche lieux)
   - Objectifs : connecter communauté, faciliter logistique, système planning collaboratif
@@ -399,9 +437,11 @@ git commit -m "feat: initial Nx setup"
 ---
 
 ### 📌 JOUR 8 : 19 OCT (12h - JOURNÉE MARATHON RAPPORT)
+
 **PHASE 6 : RÉDACTION RAPPORT COMPLÈTE**
 
 **Matin (8h-12h)** : Développement (4h → 12 pages)
+
 - [ ] **8h-9h30** : **Analyse & Planification** (4 pages)
   - Planning d'exécution (Gantt visuel)
   - Impact mapping (intégrer PNG créé J6)
@@ -428,6 +468,7 @@ git commit -m "feat: initial Nx setup"
   - System de planning : algorithme calcul meilleure date (max votes), génération liens partageables
 
 **Après-midi (14h-18h)** : Conclusion + Finitions (4h → 8 pages)
+
 - [ ] **14h-15h30** : **Mise en œuvre** (4 pages)
   - Étapes de réalisation (prototype HTML → architecture Nx → migration composants)
   - Difficultés rencontrées
@@ -457,6 +498,7 @@ git commit -m "feat: initial Nx setup"
 - [ ] **17h30-18h** : **Table des matières** + numérotation
 
 **Soir (20h-22h)** : Relecture + Annexes (2h)
+
 - [ ] **20h-21h** : **Annexes**
   - Charte graphique (PDF J6) : logo, palette, typo, composants UI
   - Wireframes (PDF J7) : 11+ écrans annotés, user flows, sitemap
@@ -491,9 +533,11 @@ git commit -m "feat: initial Nx setup"
 ---
 
 ### 📌 JOUR 9 : 20 OCT (4h) - JOUR DE REMISE
+
 **PHASE 7 : IMPRESSION + DÉPÔT**
 
 **Matin (8h-12h)** : Finalisation
+
 - [ ] **8h-8h30** : Dernières corrections mineures
 - [ ] **8h30-9h** : Export PDF final (vérif toutes pages OK)
 - [ ] **9h-10h30** : 🖨️ **IMPRESSION 3 EXEMPLAIRES RELIÉS**
@@ -512,6 +556,7 @@ git commit -m "feat: initial Nx setup"
 ## 📋 CHECKLIST FINALE LIVRABLES
 
 ### Code & Application
+
 - [x] Workspace Nx avec Angular + NestJS ✅
 - [ ] Frontend Angular déployé sur Vercel ⏳
 - [ ] Backend NestJS déployé sur Render ⏳
@@ -528,9 +573,10 @@ git commit -m "feat: initial Nx setup"
 - [x] Responsive mobile + desktop + tablette ✅
 - [ ] URL accessible publiquement (HTTPS) ⏳
 - [x] Compte de test fonctionnel (5 users seed: alice_dm, bob_warrior, carol_newbie, dave_veteran, eve_explorer - password: password123) ✅
-- [ ] *(Bonus si temps)* Forum communautaire OU FAQ dynamique ⚠️
+- [ ] _(Bonus si temps)_ Forum communautaire OU FAQ dynamique ⚠️
 
 ### Documents Préparatoires (Annexes)
+
 - [x] 📊 **Schéma BDD (ERD)** - Créé Jour 2 ✅ (7 tables, relations complètes)
 - [ ] 🎨 **Charte graphique** - À créer Jour 6 soir ⏳
 - [ ] 🗺️ **Impact mapping** - À créer Jour 6 soir ⏳
@@ -538,6 +584,7 @@ git commit -m "feat: initial Nx setup"
 - [x] 📅 **Planning d'exécution** - Déjà fait (`PLANNING_FINAL_REVISE.md`) ✅
 
 ### Rapport TFE (30+ pages)
+
 - [ ] **Page de garde**
 - [ ] **Table des matières**
 - [ ] **Introduction** (3 pages) - Jour 7 soir
@@ -550,6 +597,7 @@ git commit -m "feat: initial Nx setup"
 - [ ] **Annexes** (non compté) - Jour 8 soir
 
 ### Impression & Dépôt
+
 - [ ] 3 exemplaires reliés imprimés
 - [ ] PDF uploadé sur itslearning
 - [ ] Code + PDF sur GitHub
@@ -562,25 +610,29 @@ git commit -m "feat: initial Nx setup"
 ### 🔴 ABSOLUMENT OBLIGATOIRE
 
 1. **Système email fonctionnel** (Jour 6 après-midi)
+
    - Sans ça → -30 pts minimum
    - Utiliser Resend.com (gratuit, 100 emails/jour, templates HTML simples)
-   
+
 2. **Système poll dates complet** (Jour 6 matin)
+
    - Feature complexe : shift-select, calcul auto meilleure date, liens partageables
    - Justifie "Gestion planning collaboratif" dans le rapport
    - Démo impressionnante pour jury
-   
+
 3. **Documents préparatoires créés** (Jours 6-7)
+
    - Charte graphique : 1h (Jour 6 soir) → logo, palette, typo, composants
    - Impact mapping : 1h (Jour 6 soir) → acteurs, besoins, features
    - Wireframes : 2h (Jour 7 après-midi) → 11+ écrans annotés, user flows, sitemap
    - Sans ça → -20 pts minimum
 
-3. **Site en ligne AVANT Jour 8** (Jour 7)
+4. **Site en ligne AVANT Jour 8** (Jour 7)
+
    - Jour 8 = 100% rédaction rapport
    - Pas le temps de débugger déploiement le Jour 8
 
-4. **Rapport terminé Jour 8 soir** (19 oct 22h)
+5. **Rapport terminé Jour 8 soir** (19 oct 22h)
    - Jour 9 matin = impression uniquement
    - Pas de rédaction de dernière minute
 
@@ -588,13 +640,13 @@ git commit -m "feat: initial Nx setup"
 
 ## 🎯 RÉPARTITION TEMPS DOCUMENTS PRÉPARATOIRES
 
-| Document | Quand | Durée | Outil | Livrable |
-|----------|-------|-------|-------|----------|
-| **ERD BDD** | Jour 2, 10h30 | 30 min | dbdiagram.io | PNG exporté |
-| **Charte graphique** | Jour 6, 20h | 1h | Canva | PDF 2-3 pages |
-| **Impact mapping** | Jour 6, 21h | 1h | MindMeister | PNG exporté |
-| **Wireframes** | Jour 7, 16h | 2h | Figma + screenshots | PDF 5-10 pages |
-| **Planning** | Déjà fait | ✅ | Markdown | Ce fichier |
+| Document             | Quand         | Durée  | Outil               | Livrable       |
+| -------------------- | ------------- | ------ | ------------------- | -------------- |
+| **ERD BDD**          | Jour 2, 10h30 | 30 min | dbdiagram.io        | PNG exporté    |
+| **Charte graphique** | Jour 6, 20h   | 1h     | Canva               | PDF 2-3 pages  |
+| **Impact mapping**   | Jour 6, 21h   | 1h     | MindMeister         | PNG exporté    |
+| **Wireframes**       | Jour 7, 16h   | 2h     | Figma + screenshots | PDF 5-10 pages |
+| **Planning**         | Déjà fait     | ✅     | Markdown            | Ce fichier     |
 
 **TOTAL** : 4h30 de création documents (planifié explicitement)
 
@@ -605,12 +657,14 @@ git commit -m "feat: initial Nx setup"
 ### Charte Graphique (Structure Canva - 1h)
 
 **Page 1 : Identité**
+
 - Logo "Bar à Dés" (créé avec typo bold + icône dé stylisé)
 - Nom du projet + sous-titre
 - Baseline : "Votre plateforme de Jeu de Rôle"
 - Moodboard (3-4 images ambiance JdR/dark theme)
 
 **Page 2 : Couleurs**
+
 ```
 Primaire : #4f46e5 (Indigo) - CTA, liens, hover states
 Secondaire : #111827 (Dark Gray) - Background principal
@@ -623,6 +677,7 @@ Texte : #d1d5db (Light Gray) - Texte principal
 ```
 
 **Page 3 : Typographie**
+
 - Famille : Inter (Google Fonts)
 - Titres (H1-H2) : Inter Bold (700), 32-48px
 - Sous-titres (H3) : Inter SemiBold (600), 24px
@@ -630,6 +685,7 @@ Texte : #d1d5db (Light Gray) - Texte principal
 - Accents/Tags : Inter Medium (500), 12-14px
 
 **Page 4 : Composants UI**
+
 - Screenshots annotés :
   - Bouton primaire (indigo, rounded, hover effect)
   - Carte session (glass-card avec glassmorphism)
@@ -714,6 +770,7 @@ Texte : #d1d5db (Light Gray) - Texte principal
 ### Wireframes (Structure Figma - 2h)
 
 **À créer** :
+
 1. **Page d'accueil** (screenshot + annotations)
 2. **Liste sessions** (screenshot + flow filtres)
 3. **Carte interactive** (screenshot + interactions)
@@ -722,6 +779,7 @@ Texte : #d1d5db (Light Gray) - Texte principal
 6. **User flow complet** : Inscription → Recherche → Réservation
 
 **Annotations à ajouter** :
+
 - Zones cliquables (cercles rouges)
 - Actions déclenchées (flèches)
 - Composants réutilisables (encadrés)
@@ -733,12 +791,14 @@ Texte : #d1d5db (Light Gray) - Texte principal
 ### 🎯 **Phase 2 : Améliorations UX (Sprint 1 semaine)**
 
 1. **Location Images Gallery**
+
    - Table `location_images` avec foreign key vers `Location`
    - Carousel de photos dans la popup Leaflet
    - Upload multiple d'images côté admin
    - **Valeur** : Meilleure présentation des lieux partenaires
 
 2. **Système de Ratings & Reviews**
+
    - Table `ratings` : user_id, location_id, event_id, score, comment
    - Notation 1-5 étoiles après chaque session
    - Agrégation moyenne pour locations (déjà présent : `Location.rating`)
@@ -753,6 +813,7 @@ Texte : #d1d5db (Light Gray) - Texte principal
 ### 🎮 **Phase 3 : Features Jeu de Rôle (Sprint 2 semaines)**
 
 4. **Fiches de Personnages**
+
    - Table `characters` : name, user_id, game_type, stats (JSON)
    - Formulaire création perso par système (D&D, Pathfinder, etc.)
    - Partage de fiche avec le groupe
@@ -767,6 +828,7 @@ Texte : #d1d5db (Light Gray) - Texte principal
 ### 💰 **Phase 4 : Monétisation (Sprint 1 semaine)**
 
 6. **Liens Affiliés Produits**
+
    - Tables `affiliate_links` + `affiliate_purchases`
    - Tracking des clics et commissions (Amazon, Philibert, etc.)
    - Section "Matériel recommandé" par jeu
@@ -774,7 +836,7 @@ Texte : #d1d5db (Light Gray) - Texte principal
 
 7. **Abonnement Premium**
    - Stripe integration pour paiements
-   - Features premium : 
+   - Features premium :
      - Groupes illimités (vs 3 gratuit)
      - Historique sessions illimité
      - Badge "Supporter" sur profil
@@ -784,6 +846,7 @@ Texte : #d1d5db (Light Gray) - Texte principal
 ### 📊 **Phase 5 : Analytics & Admin (Sprint 1 semaine)**
 
 8. **Dashboard Admin**
+
    - Plausible Analytics integration (privacy-friendly)
    - Métriques : DAU, sessions créées/semaine, taux conversion
    - Modération : signalement contenus, ban users
@@ -798,12 +861,14 @@ Texte : #d1d5db (Light Gray) - Texte principal
 ### 🌍 **Phase 6 : Scale & Performance (Sprint 2 semaines)**
 
 10. **Migration PostgreSQL → Supabase Edge Functions**
+
     - Déplacer logique lourde côté DB (calcul poll dates, matchmaking)
     - Row-Level Security (RLS) pour sécurité renforcée
     - Realtime subscriptions pour live updates (alternative WebSockets)
     - **Valeur** : Scalabilité, coûts réduits
 
 11. **Progressive Web App Avancée**
+
     - Mode offline complet (IndexedDB sync)
     - Installation native iOS/Android
     - Background sync réservations
@@ -859,6 +924,7 @@ Phase 6 (Scale - 2 semaines)
 > **Phase 1 (MVP)** : 7 tables couvrant les fonctionnalités essentielles (authentification, sessions, carte, groupes, sondages de dates, emails de confirmation).
 >
 > **Phases 2-6 (Post-TFE)** : Intégration progressive de features avancées identifiées lors de la conception initiale mais volontairement reportées :
+>
 > - **UX** : galeries photos lieux, ratings, chat temps réel
 > - **Jeu de Rôle** : fiches de personnages, disponibilités avancées
 > - **Business** : liens affiliés, abonnements premium
@@ -870,19 +936,20 @@ Phase 6 (Scale - 2 semaines)
 
 ## 🚨 ZONES DE RISQUE
 
-| Risque | Probabilité | Impact | Prévention |
-|--------|-------------|--------|------------|
-| **Débordement temps dev** | 🟡 MEDIUM | 🔴 HIGH | Stopper dev strictement 18 oct 18h |
-| **Documents pas créés** | 🔴 HIGH | 🔴 HIGH | Planifié explicitement J6 soir + J7 PM |
-| **Rapport pas fini** | 🟡 MEDIUM | 🔴 CRITICAL | 12h dédiées J8 (pas de code!) |
-| **Bugs déploiement** | 🟡 MEDIUM | 🟡 MEDIUM | Déployer J7 (buffer 1 jour) |
-| **Impression ratée** | 🟢 LOW | 🔴 HIGH | PDF prêt J8 soir, imprimerie repérée J9 matin |
+| Risque                    | Probabilité | Impact      | Prévention                                    |
+| ------------------------- | ----------- | ----------- | --------------------------------------------- |
+| **Débordement temps dev** | 🟡 MEDIUM   | 🔴 HIGH     | Stopper dev strictement 18 oct 18h            |
+| **Documents pas créés**   | 🔴 HIGH     | 🔴 HIGH     | Planifié explicitement J6 soir + J7 PM        |
+| **Rapport pas fini**      | 🟡 MEDIUM   | 🔴 CRITICAL | 12h dédiées J8 (pas de code!)                 |
+| **Bugs déploiement**      | 🟡 MEDIUM   | 🟡 MEDIUM   | Déployer J7 (buffer 1 jour)                   |
+| **Impression ratée**      | 🟢 LOW      | 🔴 HIGH     | PDF prêt J8 soir, imprimerie repérée J9 matin |
 
 ---
 
 ## ✅ VALIDATION QUOTIDIENNE
 
 Chaque soir à 20h, vérifier :
+
 - [ ] Livrable du jour terminé ?
 - [ ] Commit Git fait ?
 - [ ] Planning jour suivant clair ?
@@ -892,9 +959,11 @@ Chaque soir à 20h, vérifier :
 
 **VOUS AVEZ TOUT CE QU'IL FAUT POUR RÉUSSIR ! 💪**
 
+**Rappel test UX** : Avant la remise finale, exécuter `npx nx test frontend --testFile=apps/frontend/src/app/features/groups/groups-list.spec.ts` puis `npx nx test frontend --testFile=apps/frontend/src/app/features/groups/group-detail.spec.ts` pour valider les nouveaux comportements offline/erreur.
+
 **Prochaine action** : Lancer setup Nx MAINTENANT (voir `SETUP_RAPIDE.md`)
 
 ---
 
-**Dernière mise à jour** : 12 octobre 2025, 16h30  
+**Dernière mise à jour** : 12 octobre 2025, 16h30
 **Ce planning garantit** : Code finalisé J7 + Tous documents créés J6-J7 + Rapport terminé J8

@@ -14,6 +14,7 @@ export interface Group {
   createdAt: string;
   updatedAt: string;
   creatorId: string;
+  currentUserIsMember?: boolean;
   creator?: {
     id: string;
     username: string;

@@ -1,4 +1,4 @@
-import { provideHttpClient } from '@angular/common/http';
+import { HttpErrorResponse, provideHttpClient } from '@angular/common/http';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -25,6 +25,7 @@ describe('GroupsListComponent', () => {
       createdAt: '2025-01-01T00:00:00.000Z',
       updatedAt: '2025-01-01T00:00:00.000Z',
       creatorId: '1',
+      currentUserIsMember: false,
       creator: {
         id: '1',
         username: 'alice_dm',
@@ -82,8 +83,48 @@ describe('GroupsListComponent', () => {
 
     fixture.detectChanges();
 
-    expect(component.error).toBeTruthy();
+    expect(component.error).toBe(component.defaultErrorMessage);
     expect(component.loading).toBe(false);
+  });
+
+  it('should surface friendly message for 404 errors', () => {
+    jest
+      .spyOn(groupsService, 'getGroups')
+      .mockReturnValue(
+        throwError(() => new HttpErrorResponse({ status: 404 }))
+      );
+
+    fixture.detectChanges();
+
+    expect(component.error).toBe('Aucun groupe disponible pour le moment.');
+  });
+
+  it('should auto retry after transient server errors', () => {
+    jest.useFakeTimers();
+
+    const getGroupsSpy = jest.spyOn(groupsService, 'getGroups');
+    getGroupsSpy
+      .mockReturnValueOnce(
+        throwError(() => new HttpErrorResponse({ status: 503 }))
+      )
+      .mockReturnValue(of(mockGroups));
+
+    try {
+      fixture.detectChanges();
+
+      expect(component.error).toContain(
+        'Nos serveurs sont momentanément indisponibles'
+      );
+      expect(component.autoRetrySeconds).toBeGreaterThan(0);
+
+      jest.advanceTimersByTime(15000);
+
+      expect(getGroupsSpy).toHaveBeenCalledTimes(2);
+      expect(component.error).toBeNull();
+      expect(component.groups).toEqual(mockGroups);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('should retry loading groups', () => {
@@ -124,9 +165,11 @@ describe('GroupsListComponent', () => {
       username: 'member123',
     });
 
-    component.groups = [...mockGroups];
+    component.groups = mockGroups.map((group) => ({ ...group }));
 
-    component.requestToJoin(mockGroups[0]);
+    const targetGroup = component.groups[0];
+
+    component.requestToJoin(targetGroup);
 
     expect(groupsService.joinGroup).toHaveBeenCalledWith('1');
     expect(component.hasJoined('1')).toBe(true);
@@ -134,6 +177,7 @@ describe('GroupsListComponent', () => {
     expect(component.isJoining('1')).toBe(false);
     expect(component.groups[0]._count?.members).toBe(6);
     expect(component.groups[0].isRecruiting).toBe(true);
+    expect(component.groups[0].currentUserIsMember).toBe(true);
     expect(
       component.groups[0].members?.some(
         (member) => member.userId === 'member-123'
@@ -161,6 +205,7 @@ describe('GroupsListComponent', () => {
     const memberGroup = {
       ...mockGroups[0],
       id: '2',
+      currentUserIsMember: true,
       members: [
         {
           userId: 'user-current',

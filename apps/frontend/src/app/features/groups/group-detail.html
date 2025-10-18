@@ -1,4 +1,19 @@
 <div class="group-detail-container">
+  <div *ngIf="isOffline" class="offline-banner" role="status">
+    <span class="offline-banner__icon" aria-hidden="true">!</span>
+    <div class="offline-banner__content">
+      <strong>Connexion perdue.</strong>
+      <span>Vérifiez votre réseau puis réessayez.</span>
+    </div>
+    <button
+      type="button"
+      class="offline-banner__retry"
+      (click)="retryLoading()"
+    >
+      Réessayer
+    </button>
+  </div>
+
   <!-- Loading State -->
   <div *ngIf="loading" class="loading-state">
     <div class="spinner"></div>
@@ -9,10 +24,19 @@
   <lib-error-message
     *ngIf="error && !loading"
     [message]="error"
-    actionLabel="Retour aux groupes"
-    (action)="goBack()"
+    [actionLabel]="isOffline ? undefined : 'Réessayer'"
+    (action)="retryLoading()"
   >
   </lib-error-message>
+  <div *ngIf="error && !loading" class="error-secondary-actions">
+    <button
+      type="button"
+      class="error-secondary-actions__button"
+      (click)="goBack()"
+    >
+      Retour aux groupes
+    </button>
+  </div>
 
   <!-- Group Details -->
   <div *ngIf="group && !loading" class="group-detail">
