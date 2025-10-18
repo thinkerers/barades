@@ -1,7 +1,11 @@
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { GroupsService } from './groups.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import { GroupsService } from './groups.service';
 
 describe('GroupsService', () => {
   let service: GroupsService;
@@ -69,6 +73,10 @@ describe('GroupsService', () => {
       update: jest.fn(),
       delete: jest.fn(),
     },
+    groupMember: {
+      create: jest.fn(),
+      delete: jest.fn(),
+    },
   };
 
   beforeEach(async () => {
@@ -116,8 +124,8 @@ describe('GroupsService', () => {
       const result = await service.findAll(mockUserId);
 
       expect(result).toHaveLength(2);
-      expect(result.some(g => g.id === mockGroupId)).toBe(true);
-      expect(result.some(g => g.id === 'group-private')).toBe(true);
+      expect(result.some((g) => g.id === mockGroupId)).toBe(true);
+      expect(result.some((g) => g.id === 'group-private')).toBe(true);
     });
 
     it('should not return private groups where user is not a member', async () => {
@@ -134,10 +142,10 @@ describe('GroupsService', () => {
 
     it('should map recruiting to isRecruiting for all groups', async () => {
       const groupRecruiting = { ...mockPublicGroup, recruiting: true };
-      const groupNotRecruiting = { 
-        ...mockPublicGroup, 
+      const groupNotRecruiting = {
+        ...mockPublicGroup,
         id: 'group-2',
-        recruiting: false 
+        recruiting: false,
       };
 
       mockPrismaService.group.findMany.mockResolvedValue([
@@ -193,12 +201,12 @@ describe('GroupsService', () => {
     it('should throw ForbiddenException for private group when user is not a member', async () => {
       mockPrismaService.group.findUnique.mockResolvedValue(mockPrivateGroup);
 
-      await expect(service.findOne('group-private', 'other-user')).rejects.toThrow(
-        ForbiddenException
-      );
-      await expect(service.findOne('group-private', 'other-user')).rejects.toThrow(
-        'This group is private and you are not a member.'
-      );
+      await expect(
+        service.findOne('group-private', 'other-user')
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.findOne('group-private', 'other-user')
+      ).rejects.toThrow('This group is private and you are not a member.');
     });
 
     it('should throw NotFoundException when group does not exist', async () => {
@@ -219,6 +227,260 @@ describe('GroupsService', () => {
       const result = await service.findOne(mockGroupId);
 
       expect(result.isRecruiting).toBe(false);
+    });
+  });
+
+  describe('joinGroup', () => {
+    type GroupStub = typeof mockPublicGroup & { maxMembers?: number | null };
+
+    const buildMember = (id: string) => ({
+      userId: id,
+      user: {
+        id,
+        username: `${id}-username`,
+        avatar: null,
+      },
+    });
+
+    const buildGroup = (overrides: Partial<GroupStub> = {}): GroupStub => ({
+      id: mockGroupId,
+      name: 'Public Gaming Group',
+      games: ['D&D', 'Pathfinder'],
+      location: 'Brussels',
+      playstyle: 'STORY_DRIVEN',
+      description: 'A public group for RPG fans',
+      recruiting: true,
+      isPublic: true,
+      avatar: 'avatar.jpg',
+      createdAt: new Date('2025-01-01'),
+      updatedAt: new Date('2025-01-01'),
+      creatorId: 'creator-1',
+      creator: {
+        id: 'creator-1',
+        username: 'dm_master',
+        avatar: null,
+      },
+      members: [],
+      polls: [],
+      _count: {
+        members: 0,
+      },
+      ...overrides,
+    });
+
+    it('should throw NotFoundException when group does not exist', async () => {
+      mockPrismaService.group.findUnique.mockResolvedValue(null);
+
+      await expect(service.joinGroup(mockGroupId, mockUserId)).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it('should throw ForbiddenException when group is private', async () => {
+      mockPrismaService.group.findUnique.mockResolvedValue(
+        buildGroup({ isPublic: false })
+      );
+
+      await expect(service.joinGroup(mockGroupId, mockUserId)).rejects.toThrow(
+        ForbiddenException
+      );
+    });
+
+    it('should throw BadRequestException when group is not recruiting', async () => {
+      mockPrismaService.group.findUnique.mockResolvedValue(
+        buildGroup({ recruiting: false })
+      );
+
+      await expect(service.joinGroup(mockGroupId, mockUserId)).rejects.toThrow(
+        BadRequestException
+      );
+    });
+
+    it('should throw BadRequestException when user is already a member', async () => {
+      mockPrismaService.group.findUnique.mockResolvedValue(
+        buildGroup({
+          members: [buildMember(mockUserId)],
+          _count: { members: 1 },
+        })
+      );
+
+      await expect(service.joinGroup(mockGroupId, mockUserId)).rejects.toThrow(
+        BadRequestException
+      );
+    });
+
+    it('should throw BadRequestException when group is full', async () => {
+      mockPrismaService.group.findUnique.mockResolvedValue(
+        buildGroup({
+          _count: { members: 2 },
+          members: [buildMember('other-1'), buildMember('other-2')],
+          maxMembers: 2,
+        })
+      );
+
+      await expect(service.joinGroup(mockGroupId, mockUserId)).rejects.toThrow(
+        BadRequestException
+      );
+    });
+
+    it('should create a membership and return success payload', async () => {
+      mockPrismaService.group.findUnique.mockResolvedValue(buildGroup());
+      mockPrismaService.groupMember.create.mockResolvedValue({});
+
+      const result = await service.joinGroup(mockGroupId, mockUserId);
+
+      expect(mockPrismaService.groupMember.create).toHaveBeenCalledWith({
+        data: {
+          groupId: mockGroupId,
+          userId: mockUserId,
+        },
+      });
+      expect(mockPrismaService.group.update).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        joined: true,
+        groupId: mockGroupId,
+        memberCount: 1,
+        maxMembers: null,
+        isRecruiting: true,
+      });
+    });
+
+    it('should close recruiting when max members reached', async () => {
+      mockPrismaService.group.findUnique.mockResolvedValue(
+        buildGroup({
+          _count: { members: 1 },
+          members: [buildMember('member-1')],
+          maxMembers: 2,
+        })
+      );
+      mockPrismaService.groupMember.create.mockResolvedValue({});
+      mockPrismaService.group.update.mockResolvedValue({});
+
+      const result = await service.joinGroup(mockGroupId, mockUserId);
+
+      expect(mockPrismaService.group.update).toHaveBeenCalledWith({
+        where: { id: mockGroupId },
+        data: { recruiting: false },
+      });
+      expect(result).toEqual({
+        joined: true,
+        groupId: mockGroupId,
+        memberCount: 2,
+        maxMembers: 2,
+        isRecruiting: false,
+      });
+    });
+  });
+
+  describe('leaveGroup', () => {
+    type GroupStub = typeof mockPublicGroup & { maxMembers?: number | null };
+
+    const buildMember = (id: string) => ({
+      userId: id,
+      user: {
+        id,
+        username: `${id}-username`,
+        avatar: null,
+      },
+    });
+
+    const buildGroup = (overrides: Partial<GroupStub> = {}): GroupStub => ({
+      id: mockGroupId,
+      name: 'Public Gaming Group',
+      games: ['D&D', 'Pathfinder'],
+      location: 'Brussels',
+      playstyle: 'STORY_DRIVEN',
+      description: 'A public group for RPG fans',
+      recruiting: true,
+      isPublic: true,
+      avatar: 'avatar.jpg',
+      createdAt: new Date('2025-01-01'),
+      updatedAt: new Date('2025-01-01'),
+      creatorId: 'creator-1',
+      creator: {
+        id: 'creator-1',
+        username: 'dm_master',
+        avatar: null,
+      },
+      members: [],
+      polls: [],
+      _count: {
+        members: 0,
+      },
+      ...overrides,
+    });
+
+    it('should throw NotFoundException when group does not exist', async () => {
+      mockPrismaService.group.findUnique.mockResolvedValue(null);
+
+      await expect(service.leaveGroup(mockGroupId, mockUserId)).rejects.toThrow(
+        NotFoundException
+      );
+    });
+
+    it('should throw BadRequestException when user is not a member', async () => {
+      mockPrismaService.group.findUnique.mockResolvedValue(buildGroup());
+
+      await expect(service.leaveGroup(mockGroupId, mockUserId)).rejects.toThrow(
+        BadRequestException
+      );
+    });
+
+    it('should remove membership and return success payload', async () => {
+      mockPrismaService.group.findUnique.mockResolvedValue(
+        buildGroup({
+          members: [buildMember(mockUserId), buildMember('other-1')],
+          _count: { members: 2 },
+          recruiting: true,
+        })
+      );
+      mockPrismaService.groupMember.delete.mockResolvedValue({});
+
+      const result = await service.leaveGroup(mockGroupId, mockUserId);
+
+      expect(mockPrismaService.groupMember.delete).toHaveBeenCalledWith({
+        where: {
+          userId_groupId: {
+            userId: mockUserId,
+            groupId: mockGroupId,
+          },
+        },
+      });
+      expect(mockPrismaService.group.update).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        left: true,
+        groupId: mockGroupId,
+        memberCount: 1,
+        maxMembers: null,
+        isRecruiting: true,
+      });
+    });
+
+    it('should reopen recruiting when capacity allows', async () => {
+      mockPrismaService.group.findUnique.mockResolvedValue(
+        buildGroup({
+          members: [buildMember(mockUserId), buildMember('other-1')],
+          _count: { members: 2 },
+          recruiting: false,
+          maxMembers: 2,
+        })
+      );
+      mockPrismaService.groupMember.delete.mockResolvedValue({});
+      mockPrismaService.group.update.mockResolvedValue({});
+
+      const result = await service.leaveGroup(mockGroupId, mockUserId);
+
+      expect(mockPrismaService.group.update).toHaveBeenCalledWith({
+        where: { id: mockGroupId },
+        data: { recruiting: true },
+      });
+      expect(result).toEqual({
+        left: true,
+        groupId: mockGroupId,
+        memberCount: 1,
+        maxMembers: 2,
+        isRecruiting: true,
+      });
     });
   });
 });

@@ -3,12 +3,16 @@ import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ErrorMessageComponent } from '@org/ui';
 import { AuthService } from '../../core/services/auth.service';
-import { Group, GroupsService } from '../../core/services/groups.service';
+import {
+  Group,
+  GroupMemberSummary,
+  GroupsService,
+  LeaveGroupResponse,
+} from '../../core/services/groups.service';
 import { Poll, PollsService } from '../../core/services/polls.service';
 import { PollWidgetComponent } from './poll-widget';
 
-interface GroupMember {
-  userId: string;
+interface GroupMember extends GroupMemberSummary {
   user: {
     id: string;
     username: string;
@@ -61,6 +65,10 @@ export class GroupDetailComponent implements OnInit {
   error: string | null = null;
   currentUserId: string | null = null;
   isMember = false;
+  joinInProgress = false;
+  joinError: string | null = null;
+  leaveInProgress = false;
+  leaveError: string | null = null;
 
   ngOnInit(): void {
     // Récupérer l'utilisateur connecté
@@ -79,6 +87,10 @@ export class GroupDetailComponent implements OnInit {
   private loadGroup(id: string): void {
     this.loading = true;
     this.error = null;
+    this.joinInProgress = false;
+    this.joinError = null;
+    this.leaveInProgress = false;
+    this.leaveError = null;
 
     this.groupsService.getGroup(id).subscribe({
       next: (data) => {
@@ -164,18 +176,124 @@ export class GroupDetailComponent implements OnInit {
   }
 
   canJoin(): boolean {
-    return this.group?.isRecruiting === true && !this.isFull();
+    return (
+      !this.isMember && this.group?.isRecruiting === true && !this.isFull()
+    );
   }
 
   joinGroup(): void {
-    if (!this.canJoin()) return;
-    console.log('Join group functionality to be implemented');
-    // TODO: Implement join group API call
+    if (!this.group || !this.canJoin() || this.joinInProgress) {
+      return;
+    }
+
+    this.joinError = null;
+    this.joinInProgress = true;
+
+    const currentGroup = this.group;
+
+    this.groupsService.joinGroup(currentGroup.id).subscribe({
+      next: (response) => {
+        this.joinInProgress = false;
+        this.isMember = true;
+        this.leaveError = null;
+
+        const existingMembers = currentGroup.members ?? [];
+        const alreadyPresent = existingMembers.some(
+          (member) => member.userId === this.currentUserId
+        );
+
+        let updatedMembers = existingMembers;
+
+        if (!alreadyPresent) {
+          const currentUser = this.authService.getCurrentUser();
+          const joinedAt = new Date().toISOString();
+          const userId = currentUser?.id ?? this.currentUserId ?? '';
+
+          if (userId) {
+            const newMember: GroupMember = {
+              userId,
+              user: {
+                id: userId,
+                username: currentUser?.username ?? 'Vous',
+                avatar: currentUser?.avatar ?? null,
+              },
+              joinedAt,
+            };
+
+            updatedMembers = [...existingMembers, newMember];
+          }
+        }
+
+        const updatedGroup: GroupDetail = {
+          ...currentGroup,
+          members: updatedMembers,
+          isRecruiting: response.isRecruiting,
+          maxMembers: response.maxMembers ?? currentGroup.maxMembers ?? null,
+          _count: {
+            members: response.memberCount,
+          },
+        };
+
+        this.group = updatedGroup;
+      },
+      error: (err) => {
+        console.error('Error joining group:', err);
+        this.joinInProgress = false;
+        this.joinError =
+          err?.error?.message ??
+          'Impossible de rejoindre le groupe pour le moment.';
+      },
+    });
   }
 
   leaveGroup(): void {
-    console.log('Leave group functionality to be implemented');
-    // TODO: Implement leave group API call
+    if (!this.group || !this.isMember || this.leaveInProgress) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Êtes-vous sûr de vouloir quitter ce groupe ?'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.leaveError = null;
+    this.leaveInProgress = true;
+
+    const currentGroup = this.group;
+
+    this.groupsService.leaveGroup(currentGroup.id).subscribe({
+      next: (response: LeaveGroupResponse) => {
+        this.leaveInProgress = false;
+        this.isMember = false;
+        this.joinError = null;
+
+        const remainingMembers = (currentGroup.members ?? []).filter(
+          (member) => member.userId !== this.currentUserId
+        );
+
+        const updatedGroup: GroupDetail = {
+          ...currentGroup,
+          members: remainingMembers,
+          isRecruiting: response.isRecruiting,
+          maxMembers: response.maxMembers ?? currentGroup.maxMembers ?? null,
+          _count: {
+            members: response.memberCount,
+          },
+        };
+
+        this.group = updatedGroup;
+      },
+      error: (err) => {
+        console.error('Error leaving group:', err);
+        this.leaveInProgress = false;
+        this.leaveError =
+          err?.error?.message ??
+          'Impossible de quitter le groupe pour le moment.';
+      },
+    });
   }
 
   goBack(): void {

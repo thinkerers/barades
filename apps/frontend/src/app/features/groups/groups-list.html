@@ -33,12 +33,30 @@
 
       <!-- Groups Grid -->
       <div *ngIf="groups.length > 0" class="groups-grid">
-        <lib-group-card
-          *ngFor="let group of groups"
-          [group]="group"
-          (primaryAction)="viewGroupDetails(group.id)"
-          (secondaryAction)="requestToJoin(group)"
-        ></lib-group-card>
+        <ng-container *ngFor="let group of groups">
+          <lib-group-card
+            [group]="group"
+            [secondaryActionLabel]="hasJoined(group.id) ? 'Rejoint' : 'Rejoindre'"
+            [secondaryActionDisabled]="hasJoined(group.id)"
+            [secondaryActionLoading]="isJoining(group.id)"
+            (primaryAction)="viewGroupDetails(group.id)"
+            (secondaryAction)="requestToJoin(group)"
+          ></lib-group-card>
+
+          <p
+            *ngIf="isRecentlyJoined(group.id)"
+            class="group-feedback group-feedback--success"
+          >
+            Vous avez rejoint ce groupe.
+          </p>
+
+          <p
+            *ngIf="getJoinError(group.id)"
+            class="group-feedback group-feedback--error"
+          >
+            {{ getJoinError(group.id) }}
+          </p>
+        </ng-container>
       </div>
     </div>
   </app-async-state>

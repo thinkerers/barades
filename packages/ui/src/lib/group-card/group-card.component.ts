@@ -43,6 +43,7 @@ export class GroupCardComponent {
   @Input() secondaryActionLabel = 'Rejoindre';
   @Input() showSecondaryAction: boolean | undefined;
   @Input() secondaryActionDisabled: boolean | undefined;
+  @Input() secondaryActionLoading = false;
 
   @Output() primaryAction = new EventEmitter<void>();
   @Output() secondaryAction = new EventEmitter<void>();
@@ -115,6 +116,10 @@ export class GroupCardComponent {
   }
 
   get isSecondaryActionDisabled(): boolean {
+    if (this.secondaryActionLoading) {
+      return true;
+    }
+
     if (this.secondaryActionDisabled !== undefined) {
       return this.secondaryActionDisabled;
     }

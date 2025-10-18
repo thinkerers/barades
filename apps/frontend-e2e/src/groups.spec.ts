@@ -9,7 +9,7 @@ test.describe('Groups Navigation', () => {
     const groupCard = page.locator('.group-card', { has: groupHeading });
     await expect(groupCard).toBeVisible();
 
-    await groupCard.getByRole('link', { name: 'Voir les détails' }).click();
+    await groupCard.getByRole('button', { name: 'Voir les détails' }).click();
     await expect(page).toHaveURL(/\/groups\/.+/);
   };
 

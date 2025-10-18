@@ -1,9 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-import { GroupsService } from './groups.service';
-import { CreateGroupDto } from './dto/create-group.dto';
-import { UpdateGroupDto } from './dto/update-group.dto';
-import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { OptionalUser } from '../auth/decorators/optional-user.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
+import { CreateGroupDto } from './dto/create-group.dto';
+import { JoinGroupDto } from './dto/join-group.dto';
+import { UpdateGroupDto } from './dto/update-group.dto';
+import { GroupsService } from './groups.service';
 
 @Controller('groups')
 @UseGuards(OptionalJwtAuthGuard)
@@ -23,6 +35,22 @@ export class GroupsController {
   @Get(':id')
   findOne(@Param('id') id: string, @OptionalUser() userId?: string) {
     return this.groupsService.findOne(id, userId);
+  }
+
+  @Post(':id/join')
+  @UseGuards(JwtAuthGuard)
+  join(
+    @Param('id') id: string,
+    @Body() joinGroupDto: JoinGroupDto,
+    @CurrentUser() userId: string
+  ) {
+    return this.groupsService.joinGroup(id, userId, joinGroupDto);
+  }
+
+  @Delete(':id/join')
+  @UseGuards(JwtAuthGuard)
+  leave(@Param('id') id: string, @CurrentUser() userId: string) {
+    return this.groupsService.leaveGroup(id, userId);
   }
 
   @Patch(':id')

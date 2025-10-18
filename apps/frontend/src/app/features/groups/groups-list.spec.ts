@@ -3,6 +3,7 @@ import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { AuthService } from '../../core/services/auth.service';
 import { GroupsService } from '../../core/services/groups.service';
 import { GroupsListComponent } from './groups-list';
 
@@ -35,10 +36,23 @@ describe('GroupsListComponent', () => {
     },
   ];
 
+  const authServiceMock = {
+    getCurrentUserId: jest.fn(),
+    getCurrentUser: jest.fn(),
+  };
+
   beforeEach(async () => {
+    jest.clearAllMocks();
+    authServiceMock.getCurrentUserId.mockReturnValue(null);
+    authServiceMock.getCurrentUser.mockReturnValue(null);
+
     await TestBed.configureTestingModule({
       imports: [GroupsListComponent, HttpClientTestingModule],
-      providers: [provideHttpClient(), provideRouter([])],
+      providers: [
+        provideHttpClient(),
+        provideRouter([]),
+        { provide: AuthService, useValue: authServiceMock },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(GroupsListComponent);
@@ -91,5 +105,80 @@ describe('GroupsListComponent', () => {
     component.viewGroupDetails('1');
 
     expect(navigateSpy).toHaveBeenCalledWith(['/groups', '1']);
+  });
+
+  it('should request to join a group and update local state on success', () => {
+    const joinResponse = {
+      joined: true,
+      groupId: '1',
+      memberCount: 6,
+      maxMembers: 10,
+      isRecruiting: true,
+    } as const;
+
+    jest.spyOn(groupsService, 'joinGroup').mockReturnValue(of(joinResponse));
+    authServiceMock.getCurrentUserId.mockReturnValue('member-123');
+    authServiceMock.getCurrentUser.mockReturnValue({
+      id: 'member-123',
+      email: 'member@example.com',
+      username: 'member123',
+    });
+
+    component.groups = [...mockGroups];
+
+    component.requestToJoin(mockGroups[0]);
+
+    expect(groupsService.joinGroup).toHaveBeenCalledWith('1');
+    expect(component.hasJoined('1')).toBe(true);
+    expect(component.isRecentlyJoined('1')).toBe(true);
+    expect(component.isJoining('1')).toBe(false);
+    expect(component.groups[0]._count?.members).toBe(6);
+    expect(component.groups[0].isRecruiting).toBe(true);
+    expect(
+      component.groups[0].members?.some(
+        (member) => member.userId === 'member-123'
+      )
+    ).toBe(true);
+  });
+
+  it('should capture error when join request fails', () => {
+    jest
+      .spyOn(groupsService, 'joinGroup')
+      .mockReturnValue(throwError(() => new Error('Failed')));
+
+    component.groups = [...mockGroups];
+
+    component.requestToJoin(mockGroups[0]);
+
+    expect(component.isJoining('1')).toBe(false);
+    expect(component.hasJoined('1')).toBe(false);
+    expect(component.getJoinError('1')).toBe(
+      'Impossible de rejoindre le groupe pour le moment.'
+    );
+  });
+
+  it('should mark groups as joined when user is already a member', () => {
+    const memberGroup = {
+      ...mockGroups[0],
+      id: '2',
+      members: [
+        {
+          userId: 'user-current',
+          user: {
+            id: 'user-current',
+            username: 'current_user',
+            avatar: null,
+          },
+        },
+      ],
+    };
+
+    authServiceMock.getCurrentUserId.mockReturnValue('user-current');
+    jest.spyOn(groupsService, 'getGroups').mockReturnValue(of([memberGroup]));
+
+    fixture.detectChanges();
+
+    expect(component.hasJoined('2')).toBe(true);
+    expect(component.isJoining('2')).toBe(false);
   });
 });

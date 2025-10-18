@@ -74,7 +74,7 @@
       [disabled]="isSecondaryActionDisabled"
       (click)="onSecondaryAction()"
     >
-      {{ secondaryActionLabel }}
+      {{ secondaryActionLoading ? 'Rejoindre...' : secondaryActionLabel }}
     </button>
   </div>
 </article>

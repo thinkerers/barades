@@ -30,7 +30,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-state svg {
@@ -397,10 +399,22 @@
   box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
 }
 
+.btn--danger {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+}
+
 .btn--primary:hover {
   background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
   box-shadow: 0 4px 8px rgba(79, 70, 229, 0.4);
   transform: translateY(-1px);
+}
+
+.join-error {
+  margin: 0.5rem 0 0;
+  color: #fca5a5;
+  font-size: 0.875rem;
 }
 
 .btn--secondary {

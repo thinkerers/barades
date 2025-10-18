@@ -19,9 +19,35 @@ export interface Group {
     username: string;
     avatar: string | null;
   };
+  members?: GroupMemberSummary[];
   _count?: {
     members: number;
   };
+}
+
+export interface GroupMemberSummary {
+  userId: string;
+  user?: {
+    id: string;
+    username: string;
+    avatar: string | null;
+  } | null;
+}
+
+export interface JoinGroupResponse {
+  joined: boolean;
+  groupId: string;
+  memberCount: number;
+  maxMembers: number | null;
+  isRecruiting: boolean;
+}
+
+export interface LeaveGroupResponse {
+  left: boolean;
+  groupId: string;
+  memberCount: number;
+  maxMembers: number | null;
+  isRecruiting: boolean;
 }
 
 @Injectable({
@@ -37,6 +63,20 @@ export class GroupsService {
 
   getGroup(id: string): Observable<Group> {
     return this.http.get<Group>(`${this.apiUrl}/${id}`);
+  }
+
+  joinGroup(
+    id: string,
+    payload?: { message?: string }
+  ): Observable<JoinGroupResponse> {
+    return this.http.post<JoinGroupResponse>(
+      `${this.apiUrl}/${id}/join`,
+      payload ?? {}
+    );
+  }
+
+  leaveGroup(id: string): Observable<LeaveGroupResponse> {
+    return this.http.delete<LeaveGroupResponse>(`${this.apiUrl}/${id}/join`);
   }
 
   // TODO Day 4: Implement POST/PATCH/DELETE
