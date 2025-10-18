@@ -9,7 +9,8 @@
     "e2e": "nx affected --target=e2e",
     "e2e:all": "nx run-many --target=e2e --all",
     "lint": "nx affected --target=lint --parallel=3",
-    "lint:all": "nx run-many --target=lint --all --parallel=3"
+    "lint:all": "nx run-many --target=lint --all --parallel=3",
+    "spell-check": "cspell \"**/*.{ts,tsx,js,jsx,md,json}\" --no-progress"
   },
   "private": true,
   "prisma": {
@@ -58,6 +59,7 @@
     "@angular/cli": "~20.2.0",
     "@angular/compiler-cli": "~20.2.0",
     "@angular/language-service": "~20.2.0",
+    "@cspell/dict-fr-fr": "^2.3.2",
     "@eslint/js": "^9.8.0",
     "@mermaid-js/mermaid-cli": "^11.12.0",
     "@nestjs/schematics": "^11.0.0",
@@ -86,6 +88,7 @@
     "@typescript-eslint/utils": "^8.40.0",
     "angular-eslint": "^20.2.0",
     "autoprefixer": "^10.4.0",
+    "cspell": "^9.2.1",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-playwright": "^1.6.2",

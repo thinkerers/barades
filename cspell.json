@@ -1,0 +1,44 @@
+{
+  "version": "0.2",
+  "language": "en,fr",
+  "dictionaries": ["typescript", "node", "npm", "softwareTerms", "fr-fr"],
+  "dictionaryDefinitions": [
+    {
+      "name": "fr-fr",
+      "path": "./node_modules/@cspell/dict-fr-fr/cspell-ext.json"
+    }
+  ],
+  "ignorePaths": [
+    "node_modules",
+    "dist",
+    "coverage",
+    ".nx",
+    ".angular",
+    "test-results",
+    "*.min.js",
+    "package-lock.json",
+    ".git"
+  ],
+  "words": [
+    "barades",
+    "rôlistes",
+    "nestjs",
+    "resend",
+    "leaflet",
+    "supabase",
+    "argon",
+    "playwright",
+    "storybook",
+    "tailwindcss",
+    "postgis",
+    "roleplay",
+    "gameplay",
+    "thinkerers",
+    "levenshtein",
+    "geocoding",
+    "geolocalisation",
+    "passwordless",
+    "wireframes",
+    "monorepo"
+  ]
+}
