@@ -13,6 +13,14 @@
         "parallel": true
       },
       "description": "Run both frontend and backend in parallel"
+    },
+    "journey-diagrams": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/scripts/render-mermaid.mjs"
+      },
+      "outputs": ["{workspaceRoot}/doc/diagrams"],
+      "description": "Render Mermaid user journey diagrams into SVG"
     }
   }
 }
