@@ -3,9 +3,9 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import {
+  AsyncStateComponent,
+  AsyncStateStatus,
   EmptyStateComponent,
-  ErrorMessageComponent,
-  LoadingSpinnerComponent,
   RadioGroupComponent,
   RadioOption,
   SearchInputComponent,
@@ -20,11 +20,10 @@ import { SessionCardComponent } from './session-card';
     FormsModule,
     MatIconModule,
     SessionCardComponent,
-    LoadingSpinnerComponent,
     EmptyStateComponent,
-    ErrorMessageComponent,
     SearchInputComponent,
     RadioGroupComponent,
+    AsyncStateComponent,
   ],
   selector: 'app-sessions-list',
   templateUrl: './sessions-list.html',
@@ -37,6 +36,8 @@ export class SessionsListPage implements OnInit {
   filteredSessions: Session[] = [];
   loading = true;
   error: string | null = null;
+  readonly defaultErrorMessage =
+    'Impossible de charger les sessions. Vérifiez que le backend est démarré.';
 
   // Filter properties
   searchTerm = '';
@@ -77,11 +78,22 @@ export class SessionsListPage implements OnInit {
       },
       error: (err) => {
         console.error('Error loading sessions:', err);
-        this.error =
-          'Impossible de charger les sessions. Vérifiez que le backend est démarré.';
+        this.error = this.defaultErrorMessage;
         this.loading = false;
       },
     });
+  }
+
+  get sessionsState(): AsyncStateStatus {
+    if (this.loading) {
+      return 'loading';
+    }
+
+    if (this.error) {
+      return 'error';
+    }
+
+    return 'ready';
   }
 
   /**

@@ -1,5 +1,5 @@
-import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -8,7 +8,13 @@ export interface Location {
   name: string;
   address: string | null;
   city: string;
-  type: 'GAME_STORE' | 'CAFE' | 'BAR' | 'COMMUNITY_CENTER' | 'PRIVATE' | 'OTHER';
+  type:
+    | 'GAME_STORE'
+    | 'CAFE'
+    | 'BAR'
+    | 'COMMUNITY_CENTER'
+    | 'PRIVATE'
+    | 'OTHER';
   rating: number;
   amenities: string[];
   capacity: number | null;
@@ -22,7 +28,7 @@ export interface Location {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class LocationsService {
   private http = inject(HttpClient);
@@ -37,15 +43,19 @@ export class LocationsService {
   }
 
   // TODO Day 4: Implement POST/PATCH/DELETE
-  createLocation(_data: Partial<Location>): Observable<Location> {
+  createLocation(data: Partial<Location>): Observable<Location> {
+    void data;
     throw new Error('Not implemented yet');
   }
 
-  updateLocation(_id: string, _data: Partial<Location>): Observable<Location> {
+  updateLocation(id: string, data: Partial<Location>): Observable<Location> {
+    void id;
+    void data;
     throw new Error('Not implemented yet');
   }
 
-  deleteLocation(_id: string): Observable<void> {
+  deleteLocation(id: string): Observable<void> {
+    void id;
     throw new Error('Not implemented yet');
   }
 }

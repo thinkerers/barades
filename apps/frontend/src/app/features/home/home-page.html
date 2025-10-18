@@ -79,23 +79,20 @@
     </a>
   </div>
 
-  <!-- Loader -->
-  <div *ngIf="loading" class="featured-sessions__loader">
-    <p>Chargement des sessions...</p>
-  </div>
-
-  <!-- Error -->
-  <div *ngIf="error" class="featured-sessions__error">
-    <p>{{ error }}</p>
-  </div>
-
-  <!-- Sessions Grid with SessionCard component -->
-  <div *ngIf="!loading && !error" class="sessions-grid">
-    <app-session-card
-      *ngFor="let session of featuredSessions"
-      [session]="session"
-    ></app-session-card>
-  </div>
+  <app-async-state
+    [status]="featuredSessionsState"
+    [loadingMessage]="'Chargement des sessions...'"
+    [errorMessage]="error ?? defaultErrorMessage"
+    [emptyMessage]="emptyMessage"
+    (retry)="loadFeaturedSessions()"
+  >
+    <div class="sessions-grid">
+      <app-session-card
+        *ngFor="let session of featuredSessions"
+        [session]="session"
+      ></app-session-card>
+    </div>
+  </app-async-state>
 </section>
 
 <!-- Section CTA -->

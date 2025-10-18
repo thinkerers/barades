@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
+import { AsyncStateComponent, AsyncStateStatus } from '@org/ui';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { Session, SessionsService } from '../../core/services/sessions.service';
@@ -24,6 +25,7 @@ import { SessionCardComponent } from '../sessions/session-card';
     MatIconModule,
     MatButtonModule,
     SessionCardComponent,
+    AsyncStateComponent,
   ],
   selector: 'app-home-page',
   templateUrl: './home-page.html',
@@ -68,6 +70,9 @@ export class HomePage implements OnInit {
   featuredSessions: Session[] = [];
   loading = false;
   error: string | null = null;
+  readonly defaultErrorMessage =
+    'Impossible de charger les sessions en vedette.';
+  readonly emptyMessage = 'Aucune session disponible pour le moment.';
 
   constructor() {
     // Configuration des filtres pour l'autocomplete
@@ -98,10 +103,22 @@ export class HomePage implements OnInit {
       },
       error: (err) => {
         console.error('Error loading featured sessions:', err);
-        this.error = 'Impossible de charger les sessions en vedette.';
+        this.error = this.defaultErrorMessage;
         this.loading = false;
       },
     });
+  }
+
+  get featuredSessionsState(): AsyncStateStatus {
+    if (this.loading) {
+      return 'loading';
+    }
+
+    if (this.error) {
+      return 'error';
+    }
+
+    return this.featuredSessions.length ? 'ready' : 'empty';
   }
 
   private _filterGames(value: string): string[] {

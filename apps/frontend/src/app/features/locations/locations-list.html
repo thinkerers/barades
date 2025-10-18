@@ -4,23 +4,15 @@
     <p>Découvrez les lieux où se déroulent les sessions</p>
   </header>
 
-  <!-- Loading State -->
-  <div *ngIf="loading" class="loading-container">
-    <div class="spinner"></div>
-    <p>Chargement des lieux...</p>
-  </div>
-
-  <!-- Error State -->
-  <lib-error-message
-    *ngIf="error && !loading"
-    [message]="error"
-    actionLabel="Réessayer"
-    (action)="retry()"
-  >
-  </lib-error-message>
+  <app-async-state
+    [status]="locationsState"
+    [loadingMessage]="loadingMessage"
+    [errorMessage]="error ?? defaultErrorMessage"
+    (retry)="retry()"
+  ></app-async-state>
 
   <!-- Map and List - Always rendered but hidden during loading -->
-  <div class="content-wrapper" [class.hidden]="loading || error">
+  <div class="content-wrapper" [class.hidden]="locationsState !== 'ready'">
     <!-- Filters Panel -->
     <div class="filters-panel">
       <h3><mat-icon>search</mat-icon> Filtres</h3>

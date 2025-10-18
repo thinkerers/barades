@@ -177,22 +177,27 @@ describe('HomePage', () => {
 
   it('should display loading state while fetching sessions', () => {
     component.loading = true;
+    component.error = null;
+    component.featuredSessions = [];
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    const loader = compiled.querySelector('.featured-sessions__loader');
-    expect(loader).toBeTruthy();
-    expect(loader?.textContent).toContain('Chargement');
+    const spinner = compiled.querySelector('lib-loading-spinner');
+    expect(spinner).toBeTruthy();
+    expect(spinner?.textContent).toContain('Chargement des sessions...');
   });
 
   it('should display error state when session loading fails', () => {
     component.loading = false;
     component.error = 'Test error message';
+    component.featuredSessions = [];
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    const errorDiv = compiled.querySelector('.featured-sessions__error');
-    expect(errorDiv).toBeTruthy();
-    expect(errorDiv?.textContent).toContain('Test error message');
+    const errorMessage = compiled.querySelector(
+      'lib-error-message .error-text'
+    );
+    expect(errorMessage).toBeTruthy();
+    expect(errorMessage?.textContent).toContain('Test error message');
   });
 });

@@ -1,13 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { ErrorMessageComponent } from '@org/ui';
+import { AsyncStateComponent, AsyncStateStatus } from '@org/ui';
 import { Group, GroupsService } from '../../core/services/groups.service';
 import { GroupCardComponent } from './group-card';
 
 @Component({
   selector: 'app-groups-list',
   standalone: true,
-  imports: [CommonModule, GroupCardComponent, ErrorMessageComponent],
+  imports: [CommonModule, GroupCardComponent, AsyncStateComponent],
   templateUrl: './groups-list.html',
   styleUrl: './groups-list.css',
 })
@@ -17,6 +17,8 @@ export class GroupsListComponent implements OnInit {
   groups: Group[] = [];
   loading = true;
   error: string | null = null;
+  readonly defaultErrorMessage =
+    'Impossible de charger les groupes. Veuillez réessayer.';
 
   ngOnInit(): void {
     this.loadGroups();
@@ -33,7 +35,7 @@ export class GroupsListComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading groups:', err);
-        this.error = 'Impossible de charger les groupes. Veuillez réessayer.';
+        this.error = this.defaultErrorMessage;
         this.loading = false;
       },
     });
@@ -41,5 +43,17 @@ export class GroupsListComponent implements OnInit {
 
   retry(): void {
     this.loadGroups();
+  }
+
+  get groupsState(): AsyncStateStatus {
+    if (this.loading) {
+      return 'loading';
+    }
+
+    if (this.error) {
+      return 'error';
+    }
+
+    return 'ready';
   }
 }

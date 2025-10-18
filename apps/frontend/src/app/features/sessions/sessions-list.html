@@ -6,117 +6,112 @@
     </p>
   </header>
 
-  <!-- Loading State -->
-  <lib-loading-spinner
-    *ngIf="loading"
-    message="Chargement des sessions..."
-  ></lib-loading-spinner>
-
-  <!-- Error State -->
-  <lib-error-message
-    *ngIf="error && !loading"
-    [message]="error"
-    actionLabel="Réessayer"
-    (action)="loadSessions()"
+  <app-async-state
+    [status]="sessionsState"
+    [loadingMessage]="'Chargement des sessions...'"
+    [errorMessage]="error ?? defaultErrorMessage"
+    (retry)="loadSessions()"
   >
-  </lib-error-message>
-
-  <!-- Filters Panel -->
-  <div *ngIf="!loading && !error" class="filters-panel">
-    <div class="filters-header">
-      <h3>
-        <mat-icon aria-label="Filtres">search</mat-icon> Filtres
-        <span *ngIf="getActiveFiltersCount() > 0" class="active-filters-count">
-          {{ getActiveFiltersCount() }}
-        </span>
-      </h3>
-      <button
-        (click)="resetFilters()"
-        class="btn-clear-filters"
-        [disabled]="getActiveFiltersCount() === 0"
-      >
-        <mat-icon aria-label="Réinitialiser">refresh</mat-icon> Réinitialiser
-      </button>
-    </div>
-
-    <div class="filters-grid">
-      <!-- Search Bar -->
-      <div class="filter-group">
-        <label for="search">Recherche</label>
-        <lib-search-input
-          inputId="search"
-          [value]="searchTerm"
-          (valueChange)="searchTerm = $event; applyFilters()"
-          placeholder="Nom, jeu, description..."
-        ></lib-search-input>
-      </div>
-
-      <!-- Session Type Filter (Radio Buttons) -->
-      <div class="filter-group">
-        <div class="filter-label">Type de session</div>
-        <lib-radio-group
-          [options]="sessionTypeOptions"
-          [value]="sessionType"
-          (valueChange)="onSessionTypeChange($event)"
-          name="sessionType"
-        ></lib-radio-group>
-      </div>
-      <!-- Game System Filter -->
-      <div class="filter-group">
-        <label for="game-filter">Système de jeu</label>
-        <select
-          id="game-filter"
-          [(ngModel)]="selectedGameSystem"
-          (change)="applyFilters()"
-          class="type-select"
-        >
-          <option value="">Tous les jeux</option>
-          <option *ngFor="let game of gameSystems" [value]="game">
-            {{ game }}
-          </option>
-        </select>
-      </div>
-
-      <!-- Availability Filter -->
-      <div class="filter-group">
-        <label class="checkbox-label checkbox-label--standalone">
-          <input
-            type="checkbox"
-            [(ngModel)]="onlyAvailable"
-            (change)="applyFilters()"
-          />
+    <div class="filters-panel">
+      <div class="filters-header">
+        <h3>
+          <mat-icon aria-label="Filtres">search</mat-icon> Filtres
           <span
-            ><mat-icon aria-label="Places disponibles">check_circle</mat-icon>
-            Uniquement les sessions avec places disponibles</span
+            *ngIf="getActiveFiltersCount() > 0"
+            class="active-filters-count"
           >
-        </label>
+            {{ getActiveFiltersCount() }}
+          </span>
+        </h3>
+        <button
+          (click)="resetFilters()"
+          class="btn-clear-filters"
+          [disabled]="getActiveFiltersCount() === 0"
+        >
+          <mat-icon aria-label="Réinitialiser">refresh</mat-icon>
+          Réinitialiser
+        </button>
+      </div>
+
+      <div class="filters-grid">
+        <!-- Search Bar -->
+        <div class="filter-group">
+          <label for="search">Recherche</label>
+          <lib-search-input
+            inputId="search"
+            [value]="searchTerm"
+            (valueChange)="searchTerm = $event; applyFilters()"
+            placeholder="Nom, jeu, description..."
+          ></lib-search-input>
+        </div>
+
+        <!-- Session Type Filter (Radio Buttons) -->
+        <div class="filter-group">
+          <div class="filter-label">Type de session</div>
+          <lib-radio-group
+            [options]="sessionTypeOptions"
+            [value]="sessionType"
+            (valueChange)="onSessionTypeChange($event)"
+            name="sessionType"
+          ></lib-radio-group>
+        </div>
+        <!-- Game System Filter -->
+        <div class="filter-group">
+          <label for="game-filter">Système de jeu</label>
+          <select
+            id="game-filter"
+            [(ngModel)]="selectedGameSystem"
+            (change)="applyFilters()"
+            class="type-select"
+          >
+            <option value="">Tous les jeux</option>
+            <option *ngFor="let game of gameSystems" [value]="game">
+              {{ game }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Availability Filter -->
+        <div class="filter-group">
+          <label class="checkbox-label checkbox-label--standalone">
+            <input
+              type="checkbox"
+              [(ngModel)]="onlyAvailable"
+              (change)="applyFilters()"
+            />
+            <span
+              ><mat-icon aria-label="Places disponibles">check_circle</mat-icon>
+              Uniquement les sessions avec places disponibles</span
+            >
+          </label>
+        </div>
       </div>
     </div>
-  </div>
-  <!-- Sessions List -->
-  <div *ngIf="!loading && !error" class="sessions-list">
-    <!-- Results count -->
-    <div class="sessions-list__header">
-      <h2>
-        Sessions disponibles
-        <span class="count"
-          >({{ filteredSessions.length }} / {{ sessions.length }})</span
-        >
-      </h2>
-    </div>
 
-    <lib-empty-state
-      *ngIf="filteredSessions.length === 0"
-      message="Aucune session ne correspond à vos critères de recherche."
-      actionLabel="Réinitialiser les filtres"
-      (action)="resetFilters()"
-    ></lib-empty-state>
+    <div class="sessions-list">
+      <!-- Results count -->
+      <div class="sessions-list__header">
+        <h2>
+          Sessions disponibles
+          <span class="count"
+            >({{ filteredSessions.length }} / {{ sessions.length }})</span
+          >
+        </h2>
+      </div>
 
-    <div class="sessions-list__cards">
-      <app-session-card
-        *ngFor="let session of filteredSessions"
-        [session]="session"
-      ></app-session-card>
+      <lib-empty-state
+        *ngIf="filteredSessions.length === 0"
+        message="Aucune session ne correspond à vos critères de recherche."
+        actionLabel="Réinitialiser les filtres"
+        (action)="resetFilters()"
+      ></lib-empty-state>
+
+      <div class="sessions-list__cards">
+        <app-session-card
+          *ngFor="let session of filteredSessions"
+          [session]="session"
+        ></app-session-card>
+      </div>
     </div>
-  </div>
+  </app-async-state>
 </div>

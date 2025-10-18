@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
-import { ErrorMessageComponent } from '@org/ui';
+import { AsyncStateComponent, AsyncStateStatus } from '@org/ui';
 import * as L from 'leaflet';
 import {
   Location,
@@ -12,7 +12,7 @@ import {
 @Component({
   selector: 'app-locations-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, ErrorMessageComponent],
+  imports: [CommonModule, FormsModule, MatIconModule, AsyncStateComponent],
   templateUrl: './locations-list.html',
   styleUrl: './locations-list.css',
 })
@@ -23,6 +23,9 @@ export class LocationsListComponent implements OnInit {
   filteredLocations: Location[] = [];
   loading = true;
   error: string | null = null;
+  readonly loadingMessage = 'Chargement des lieux...';
+  readonly defaultErrorMessage =
+    'Impossible de charger les lieux. Veuillez réessayer.';
 
   // Filter properties
   searchTerm = '';
@@ -100,7 +103,7 @@ export class LocationsListComponent implements OnInit {
       },
       error: (err) => {
         console.error('[LocationsList] Error loading locations:', err);
-        this.error = 'Impossible de charger les lieux. Veuillez réessayer.';
+        this.error = this.defaultErrorMessage;
         this.loading = false;
       },
     });
@@ -460,6 +463,18 @@ export class LocationsListComponent implements OnInit {
 
   retry(): void {
     this.loadLocations();
+  }
+
+  get locationsState(): AsyncStateStatus {
+    if (this.loading) {
+      return 'loading';
+    }
+
+    if (this.error) {
+      return 'error';
+    }
+
+    return 'ready';
   }
 
   /**

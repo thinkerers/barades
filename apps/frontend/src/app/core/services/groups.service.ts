@@ -1,5 +1,5 @@
-import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -25,7 +25,7 @@ export interface Group {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class GroupsService {
   private http = inject(HttpClient);
@@ -40,15 +40,19 @@ export class GroupsService {
   }
 
   // TODO Day 4: Implement POST/PATCH/DELETE
-  createGroup(_data: Partial<Group>): Observable<Group> {
+  createGroup(data: Partial<Group>): Observable<Group> {
+    void data;
     throw new Error('Not implemented yet');
   }
 
-  updateGroup(_id: string, _data: Partial<Group>): Observable<Group> {
+  updateGroup(id: string, data: Partial<Group>): Observable<Group> {
+    void id;
+    void data;
     throw new Error('Not implemented yet');
   }
 
-  deleteGroup(_id: string): Observable<void> {
+  deleteGroup(id: string): Observable<void> {
+    void id;
     throw new Error('Not implemented yet');
   }
 }

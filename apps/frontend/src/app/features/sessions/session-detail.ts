@@ -2,13 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AsyncStateComponent, AsyncStateStatus } from '@org/ui';
 import { AuthService } from '../../core/services/auth.service';
 import { ReservationsService } from '../../core/services/reservations.service';
 import { Session, SessionsService } from '../../core/services/sessions.service';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [CommonModule, MatIconModule, AsyncStateComponent],
   selector: 'app-session-detail',
   templateUrl: './session-detail.html',
   styleUrl: './session-detail.css',
@@ -19,16 +20,21 @@ export class SessionDetailComponent implements OnInit {
   private readonly sessionsService = inject(SessionsService);
   private readonly reservationsService = inject(ReservationsService);
   private readonly authService = inject(AuthService);
+  private sessionId: string | null = null;
 
   session: Session | null = null;
   loading = true;
   error: string | null = null;
   isRegistered = false;
   reserving = false;
+  readonly loadingMessage = 'Chargement de la session...';
+  readonly defaultErrorMessage =
+    "Impossible de charger la session. Elle n'existe peut-être pas.";
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
+      this.sessionId = id;
       this.loadSession(id);
     } else {
       this.error = 'ID de session invalide';
@@ -37,6 +43,7 @@ export class SessionDetailComponent implements OnInit {
   }
 
   loadSession(id: string): void {
+    this.sessionId = id;
     this.loading = true;
     this.error = null;
 
@@ -48,11 +55,32 @@ export class SessionDetailComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading session:', err);
-        this.error =
-          "Impossible de charger la session. Elle n'existe peut-être pas.";
+        this.error = this.defaultErrorMessage;
         this.loading = false;
       },
     });
+  }
+
+  get viewState(): AsyncStateStatus {
+    if (this.loading) {
+      return 'loading';
+    }
+
+    if (this.error) {
+      return 'error';
+    }
+
+    return this.session ? 'ready' : 'empty';
+  }
+
+  retry(): void {
+    if (this.sessionId) {
+      this.loadSession(this.sessionId);
+    }
+  }
+
+  get canRetry(): boolean {
+    return !!this.sessionId;
   }
 
   checkIfRegistered(): void {
