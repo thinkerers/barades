@@ -10,7 +10,7 @@ export type AsyncStateStatus = 'loading' | 'error' | 'empty' | 'ready';
 
 @Component({
   standalone: true,
-  selector: 'app-async-state',
+  selector: 'lib-async-state',
   templateUrl: './async-state.component.html',
   styleUrl: './async-state.component.css',
   imports: [

@@ -79,7 +79,7 @@
     </a>
   </div>
 
-  <app-async-state
+  <lib-async-state
     [status]="featuredSessionsState"
     [loadingMessage]="'Chargement des sessions...'"
     [errorMessage]="error ?? defaultErrorMessage"
@@ -92,7 +92,7 @@
         [session]="session"
       ></app-session-card>
     </div>
-  </app-async-state>
+  </lib-async-state>
 </section>
 
 <!-- Section CTA -->

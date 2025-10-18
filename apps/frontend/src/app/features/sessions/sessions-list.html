@@ -6,7 +6,7 @@
     </p>
   </header>
 
-  <app-async-state
+  <lib-async-state
     [status]="sessionsState"
     [loadingMessage]="'Chargement des sessions...'"
     [errorMessage]="error ?? defaultErrorMessage"
@@ -113,5 +113,5 @@
         ></app-session-card>
       </div>
     </div>
-  </app-async-state>
+  </lib-async-state>
 </div>

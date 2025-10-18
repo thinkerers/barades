@@ -117,6 +117,7 @@
 .group-card__visibility {
   display: inline-flex;
   align-items: center;
+  gap: 0.35rem;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.75rem;
@@ -214,6 +215,15 @@
 .group-card__meta-item .icon {
   flex-shrink: 0;
   color: #6b7280;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.group-card__visibility .icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
 }
 
 .group-card__meta-item .creator {

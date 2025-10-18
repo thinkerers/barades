@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 
 export type GroupPlaystyle =
   | 'COMPETITIVE'
@@ -32,7 +33,7 @@ export interface GroupCardData {
 @Component({
   selector: 'lib-group-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './group-card.component.html',
   styleUrl: './group-card.component.css',
 })

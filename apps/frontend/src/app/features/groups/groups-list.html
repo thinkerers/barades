@@ -15,7 +15,7 @@
     </button>
   </div>
 
-  <app-async-state
+  <lib-async-state
     [status]="groupsState"
     [loadingMessage]="'Chargement des groupes...'"
     [errorMessage]="error ?? defaultErrorMessage"
@@ -71,5 +71,5 @@
         </ng-container>
       </div>
     </div>
-  </app-async-state>
+  </lib-async-state>
 </div>

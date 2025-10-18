@@ -4,12 +4,12 @@
     <p>Découvrez les lieux où se déroulent les sessions</p>
   </header>
 
-  <app-async-state
+  <lib-async-state
     [status]="locationsState"
     [loadingMessage]="loadingMessage"
     [errorMessage]="error ?? defaultErrorMessage"
     (retry)="retry()"
-  ></app-async-state>
+  ></lib-async-state>
 
   <!-- Map and List - Always rendered but hidden during loading -->
   <div class="content-wrapper" [class.hidden]="locationsState !== 'ready'">

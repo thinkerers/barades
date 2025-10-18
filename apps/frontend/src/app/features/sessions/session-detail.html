@@ -1,4 +1,4 @@
-<app-async-state
+<lib-async-state
   [status]="viewState"
   [loadingMessage]="loadingMessage"
   [errorMessage]="error ?? defaultErrorMessage"
@@ -177,7 +177,7 @@
       </aside>
     </div>
   </div>
-</app-async-state>
+</lib-async-state>
 
 <div class="session-detail__error-actions" *ngIf="error && !loading">
   <button class="button button--secondary" (click)="goBack()">
