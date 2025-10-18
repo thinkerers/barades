@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
@@ -18,7 +18,7 @@ import {
 @Component({
   selector: 'app-groups-list',
   standalone: true,
-  imports: [CommonModule, GroupCardComponent, AsyncStateComponent],
+  imports: [GroupCardComponent, AsyncStateComponent],
   templateUrl: './groups-list.html',
   styleUrl: './groups-list.css',
 })

@@ -27,7 +27,7 @@
           (input)="applyFilters()"
           placeholder="Nom, adresse, ville..."
           class="search-input"
-        />
+          />
       </div>
 
       <!-- Location Type Filter -->
@@ -38,7 +38,7 @@
           [(ngModel)]="selectedType"
           (change)="applyFilters()"
           class="type-select"
-        >
+          >
           <option value="">Tous les types</option>
           <option value="GAME_STORE">Boutique de jeux</option>
           <option value="CAFE">Café</option>
@@ -57,7 +57,7 @@
               type="checkbox"
               [(ngModel)]="filters.wifi"
               (change)="applyFilters()"
-            />
+              />
             <span><mat-icon>wifi</mat-icon> WiFi</span>
           </label>
           <label class="checkbox-label">
@@ -65,7 +65,7 @@
               type="checkbox"
               [(ngModel)]="filters.tables"
               (change)="applyFilters()"
-            />
+              />
             <span><mat-icon>table_restaurant</mat-icon> Tables de jeu</span>
           </label>
           <label class="checkbox-label">
@@ -73,7 +73,7 @@
               type="checkbox"
               [(ngModel)]="filters.food"
               (change)="applyFilters()"
-            />
+              />
             <span><mat-icon>restaurant</mat-icon> Nourriture</span>
           </label>
           <label class="checkbox-label">
@@ -81,7 +81,7 @@
               type="checkbox"
               [(ngModel)]="filters.drinks"
               (change)="applyFilters()"
-            />
+              />
             <span><mat-icon>local_cafe</mat-icon> Boissons</span>
           </label>
           <label class="checkbox-label">
@@ -89,7 +89,7 @@
               type="checkbox"
               [(ngModel)]="filters.parking"
               (change)="applyFilters()"
-            />
+              />
             <span><mat-icon>local_parking</mat-icon> Parking</span>
           </label>
         </div>
@@ -111,9 +111,13 @@
         (click)="getUserLocation()"
         [disabled]="geolocating"
         [title]="geolocationError || 'Trouver ma position'"
-      >
-        <mat-icon *ngIf="!geolocating">my_location</mat-icon>
-        <span *ngIf="geolocating" class="spinner"></span>
+        >
+        @if (!geolocating) {
+          <mat-icon>my_location</mat-icon>
+        }
+        @if (geolocating) {
+          <span class="spinner"></span>
+        }
         <span>{{ geolocating ? 'Localisation...' : 'Ma position' }}</span>
       </button>
     </div>
@@ -126,35 +130,40 @@
         (click)="getUserLocation()"
         [disabled]="geolocating"
         [title]="geolocationError || 'Trouver ma position'"
-      >
-        <svg
-          *ngIf="!geolocating"
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
         >
-          <circle cx="12" cy="12" r="10"></circle>
-          <circle cx="12" cy="12" r="3"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-        <span *ngIf="geolocating" class="spinner"></span>
+        @if (!geolocating) {
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            >
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="12" r="3"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        }
+        @if (geolocating) {
+          <span class="spinner"></span>
+        }
         <span>{{ geolocating ? 'Localisation...' : 'Ma position' }}</span>
       </button>
 
-      <div *ngIf="geolocationError" class="geolocation-error">
-        {{ geolocationError }}
-      </div>
+      @if (geolocationError) {
+        <div class="geolocation-error">
+          {{ geolocationError }}
+        </div>
+      }
 
       <div id="map" class="map"></div>
     </div>
@@ -167,66 +176,72 @@
       </h2>
 
       <div class="location-cards">
-        <div
-          *ngFor="let location of filteredLocations"
-          [id]="'location-' + location.id"
-          class="location-card"
-          [class.selected]="selectedLocationId === location.id"
-          (click)="onLocationClick(location.id)"
-          role="button"
-          tabindex="0"
-          (keydown.enter)="onLocationClick(location.id)"
-          (keydown.space)="onLocationClick(location.id)"
-        >
-          <div class="location-header">
-            <h3>{{ location.name }}</h3>
-            <span class="location-type"
-              >{{ getLocationTypeLabel(location.type) }}</span
+        @for (location of filteredLocations; track location) {
+          <div
+            [id]="'location-' + location.id"
+            class="location-card"
+            [class.selected]="selectedLocationId === location.id"
+            (click)="onLocationClick(location.id)"
+            role="button"
+            tabindex="0"
+            (keydown.enter)="onLocationClick(location.id)"
+            (keydown.space)="onLocationClick(location.id)"
             >
-          </div>
-
-          <div class="location-info">
-            <div class="info-row" *ngIf="location.address">
-              <mat-icon aria-label="Adresse">place</mat-icon>
-              <span>{{ location.address }}, {{ location.city }}</span>
-            </div>
-
-            <div class="info-row" *ngIf="location.city && !location.address">
-              <mat-icon aria-label="Ville">place</mat-icon>
-              <span>{{ location.city }}</span>
-            </div>
-
-            <div class="info-row">
-              <mat-icon aria-label="Note">star</mat-icon>
-              <span>{{ location.rating.toFixed(1) }}/5</span>
-            </div>
-
-            <div class="info-row" *ngIf="location.capacity">
-              <mat-icon aria-label="Capacité">groups</mat-icon>
-              <span>Capacité: {{ location.capacity }} personnes</span>
-            </div>
-          </div>
-
-          <div class="amenities" *ngIf="location.amenities.length > 0">
-            <span *ngFor="let amenity of location.amenities" class="amenity-tag"
-              >{{ amenity }}</span
-            >
-          </div>
-
-          <div class="location-actions">
-            <a
-              *ngIf="location.website"
-              [href]="location.website"
-              target="_blank"
-              rel="noopener"
-              class="website-button"
-            >
-              <mat-icon aria-label="Site web">public</mat-icon>
-              Site web
-            </a>
+            <div class="location-header">
+              <h3>{{ location.name }}</h3>
+              <span class="location-type"
+                >{{ getLocationTypeLabel(location.type) }}</span
+                >
+              </div>
+              <div class="location-info">
+                @if (location.address) {
+                  <div class="info-row">
+                    <mat-icon aria-label="Adresse">place</mat-icon>
+                    <span>{{ location.address }}, {{ location.city }}</span>
+                  </div>
+                }
+                @if (location.city && !location.address) {
+                  <div class="info-row">
+                    <mat-icon aria-label="Ville">place</mat-icon>
+                    <span>{{ location.city }}</span>
+                  </div>
+                }
+                <div class="info-row">
+                  <mat-icon aria-label="Note">star</mat-icon>
+                  <span>{{ location.rating.toFixed(1) }}/5</span>
+                </div>
+                @if (location.capacity) {
+                  <div class="info-row">
+                    <mat-icon aria-label="Capacité">groups</mat-icon>
+                    <span>Capacité: {{ location.capacity }} personnes</span>
+                  </div>
+                }
+              </div>
+              @if (location.amenities.length > 0) {
+                <div class="amenities">
+                  @for (amenity of location.amenities; track amenity) {
+                    <span class="amenity-tag"
+                      >{{ amenity }}</span
+                      >
+                    }
+                  </div>
+                }
+                <div class="location-actions">
+                  @if (location.website) {
+                    <a
+                      [href]="location.website"
+                      target="_blank"
+                      rel="noopener"
+                      class="website-button"
+                      >
+                      <mat-icon aria-label="Site web">public</mat-icon>
+                      Site web
+                    </a>
+                  }
+                </div>
+              </div>
+            }
           </div>
         </div>
       </div>
     </div>
-  </div>
-</div>

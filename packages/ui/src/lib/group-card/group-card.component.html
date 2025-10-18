@@ -2,7 +2,7 @@
   class="group-card"
   [class]="'group-card--' + getPlaystyleColor(group.playstyle)"
   [attr.data-testid]="'group-card-' + group.id"
->
+  >
   <div
     class="group-card__tag"
     [ngClass]="'tag--' + getPlaystyleColor(group.playstyle)"
@@ -16,13 +16,15 @@
       <span
         class="group-card__playstyle"
         [ngClass]="'playstyle--' + getPlaystyleColor(group.playstyle)"
-      >
+        >
         {{ getPlaystyleLabel(group.playstyle) }}
       </span>
-      <span *ngIf="!group.isPublic" class="group-card__visibility">
-        <mat-icon class="icon" fontIcon="lock" aria-hidden="true"></mat-icon>
-        <span>Privé</span>
-      </span>
+      @if (!group.isPublic) {
+        <span class="group-card__visibility">
+          <mat-icon class="icon" fontIcon="lock" aria-hidden="true"></mat-icon>
+          <span>Privé</span>
+        </span>
+      }
     </div>
   </header>
 
@@ -33,16 +35,20 @@
   <p class="group-card__description">{{ group.description }}</p>
 
   <div class="group-card__metadata">
-    <div class="group-card__meta-item" *ngIf="group.creator">
-      <mat-icon class="icon" fontIcon="person" aria-hidden="true"></mat-icon>
-      <span class="creator">{{ group.creator.username }}</span>
-    </div>
+    @if (group.creator) {
+      <div class="group-card__meta-item">
+        <mat-icon class="icon" fontIcon="person" aria-hidden="true"></mat-icon>
+        <span class="creator">{{ group.creator.username }}</span>
+      </div>
+    }
 
     <div class="group-card__meta-item">
       <mat-icon class="icon" fontIcon="group" aria-hidden="true"></mat-icon>
       <span>
         {{ getMemberCount() }}
-        <span *ngIf="group.maxMembers !== null"> / {{ group.maxMembers }}</span>
+        @if (group.maxMembers !== null) {
+          <span> / {{ group.maxMembers }}</span>
+        }
         membre(s)
       </span>
     </div>
@@ -54,18 +60,19 @@
       class="btn btn--primary"
       [disabled]="primaryActionDisabled"
       (click)="onPrimaryAction()"
-    >
+      >
       {{ primaryActionLabel }}
     </button>
 
-    <button
-      *ngIf="shouldShowSecondaryAction"
-      type="button"
-      class="btn btn--secondary"
-      [disabled]="isSecondaryActionDisabled"
-      (click)="onSecondaryAction()"
-    >
-      {{ secondaryActionLoading ? 'Rejoindre...' : secondaryActionLabel }}
-    </button>
+    @if (shouldShowSecondaryAction) {
+      <button
+        type="button"
+        class="btn btn--secondary"
+        [disabled]="isSecondaryActionDisabled"
+        (click)="onSecondaryAction()"
+        >
+        {{ secondaryActionLoading ? 'Rejoindre...' : secondaryActionLabel }}
+      </button>
+    }
   </div>
 </article>

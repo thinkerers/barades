@@ -27,6 +27,8 @@ export class SessionDetailComponent implements OnInit {
   error: string | null = null;
   isRegistered = false;
   reserving = false;
+  cancelling = false;
+  private currentReservationId: string | null = null;
   readonly loadingMessage = 'Chargement de la session...';
   readonly defaultErrorMessage =
     "Impossible de charger la session. Elle n'existe peut-être pas.";
@@ -87,18 +89,22 @@ export class SessionDetailComponent implements OnInit {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser || !this.session) {
       this.isRegistered = false;
+      this.currentReservationId = null;
       return;
     }
 
     this.reservationsService.getReservations(currentUser.id).subscribe({
       next: (reservations) => {
-        this.isRegistered = reservations.some(
-          (r) => r.sessionId === this.session?.id
+        const activeReservation = reservations.find(
+          (r) => r.sessionId === this.session?.id && r.status !== 'CANCELLED'
         );
+        this.isRegistered = !!activeReservation;
+        this.currentReservationId = activeReservation?.id ?? null;
       },
       error: (err) => {
         console.error('Error checking registration:', err);
         this.isRegistered = false;
+        this.currentReservationId = null;
       },
     });
   }
@@ -127,10 +133,32 @@ export class SessionDetailComponent implements OnInit {
     this.reservationsService
       .createReservation(this.session.id, currentUser.id)
       .subscribe({
-        next: () => {
+        next: (reservation) => {
           this.isRegistered = true;
+          this.currentReservationId = reservation.id;
           if (this.session) {
-            this.session.playersCurrent++;
+            this.session.playersCurrent = Math.min(
+              this.session.playersMax,
+              this.session.playersCurrent + 1
+            );
+            const existingReservations = this.session.reservations ?? [];
+            const alreadyListed = existingReservations.some(
+              (entry) => entry.id === reservation.id
+            );
+            if (!alreadyListed) {
+              this.session.reservations = [
+                ...existingReservations,
+                {
+                  id: reservation.id,
+                  status: reservation.status,
+                  user: {
+                    id: currentUser.id,
+                    username: currentUser.username,
+                    avatar: currentUser.avatar ?? null,
+                  },
+                },
+              ];
+            }
           }
           this.reserving = false;
           alert(
@@ -143,6 +171,40 @@ export class SessionDetailComponent implements OnInit {
           alert(`❌ ${err.error?.message || 'Erreur lors de la réservation'}`);
         },
       });
+  }
+
+  onCancelReservation(): void {
+    if (!this.session || !this.currentReservationId) {
+      return;
+    }
+
+    const reservationId = this.currentReservationId;
+    this.cancelling = true;
+
+    this.reservationsService.cancelReservation(reservationId).subscribe({
+      next: () => {
+        this.isRegistered = false;
+        this.currentReservationId = null;
+        if (this.session) {
+          this.session.playersCurrent = Math.max(
+            0,
+            this.session.playersCurrent - 1
+          );
+          if (this.session.reservations) {
+            this.session.reservations = this.session.reservations.filter(
+              (reservation) => reservation.id !== reservationId
+            );
+          }
+        }
+        this.cancelling = false;
+        alert('ℹ️ Désinscription confirmée.');
+      },
+      error: (err) => {
+        console.error('Error cancelling reservation:', err);
+        this.cancelling = false;
+        alert(`❌ ${err.error?.message || 'Erreur lors de la désinscription'}`);
+      },
+    });
   }
 
   getLevelLabel(level: string): string {

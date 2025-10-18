@@ -1,22 +1,27 @@
-<div class="async-state" [ngSwitch]="status">
-  <div *ngSwitchCase="'loading'" class="async-state__loading">
-    <lib-loading-spinner [message]="loadingMessage"></lib-loading-spinner>
-  </div>
-
-  <div *ngSwitchCase="'error'" class="async-state__error">
-    <lib-error-message
-      [message]="errorMessage"
-      icon="warning"
-      [actionLabel]="showRetry ? 'Réessayer' : undefined"
-      (action)="onRetry()"
-    ></lib-error-message>
-  </div>
-
-  <div *ngSwitchCase="'empty'" class="async-state__empty">
-    <lib-empty-state [message]="emptyMessage"></lib-empty-state>
-  </div>
-
-  <ng-container *ngSwitchDefault>
-    <ng-content></ng-content>
-  </ng-container>
+<div class="async-state">
+  @switch (status) {
+    @case ('loading') {
+      <div class="async-state__loading">
+        <lib-loading-spinner [message]="loadingMessage"></lib-loading-spinner>
+      </div>
+    }
+    @case ('error') {
+      <div class="async-state__error">
+        <lib-error-message
+          [message]="errorMessage"
+          icon="warning"
+          [actionLabel]="showRetry ? 'Réessayer' : undefined"
+          (action)="onRetry()"
+        ></lib-error-message>
+      </div>
+    }
+    @case ('empty') {
+      <div class="async-state__empty">
+        <lib-empty-state [message]="emptyMessage"></lib-empty-state>
+      </div>
+    }
+    @default {
+      <ng-content></ng-content>
+    }
+  }
 </div>

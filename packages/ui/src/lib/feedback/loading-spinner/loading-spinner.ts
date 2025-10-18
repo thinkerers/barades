@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 /**
@@ -10,13 +10,15 @@ import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 @Component({
   selector: 'lib-loading-spinner',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   template: `
     <div class="loading-spinner">
       <div class="spinner"></div>
-      <p *ngIf="message" class="loading-spinner__message">{{ message }}</p>
+      @if (message) {
+        <p class="loading-spinner__message">{{ message }}</p>
+      }
     </div>
-  `,
+    `,
   styleUrls: ['./loading-spinner.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

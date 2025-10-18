@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,15 +16,14 @@ import { SessionCardComponent } from './session-card';
 @Component({
   standalone: true,
   imports: [
-    CommonModule,
     FormsModule,
     MatIconModule,
     SessionCardComponent,
     EmptyStateComponent,
     SearchInputComponent,
     RadioGroupComponent,
-    AsyncStateComponent,
-  ],
+    AsyncStateComponent
+],
   selector: 'app-sessions-list',
   templateUrl: './sessions-list.html',
   styleUrl: './sessions-list.css',

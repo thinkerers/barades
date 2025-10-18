@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,13 +14,12 @@ export type AsyncStateStatus = 'loading' | 'error' | 'empty' | 'ready';
   templateUrl: './async-state.component.html',
   styleUrl: './async-state.component.css',
   imports: [
-    CommonModule,
     MatButtonModule,
     MatIconModule,
     LoadingSpinnerComponent,
     ErrorMessageComponent,
-    EmptyStateComponent,
-  ],
+    EmptyStateComponent
+],
 })
 export class AsyncStateComponent {
   @Input() status: AsyncStateStatus = 'ready';

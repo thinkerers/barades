@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { GroupCardComponent } from '@org/ui';
 import { Group } from '../../core/services/groups.service';
@@ -10,11 +10,10 @@ import { SessionCardComponent } from '../sessions/session-card';
 @Component({
   selector: 'app-showcase-page',
   imports: [
-    CommonModule,
     SessionCardComponent,
     GroupCardComponent,
-    PollWidgetComponent,
-  ],
+    PollWidgetComponent
+],
   templateUrl: './showcase-page.html',
   styleUrl: './showcase-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -4,183 +4,208 @@
   [errorMessage]="error ?? defaultErrorMessage"
   [showRetry]="canRetry"
   (retry)="retry()"
->
-  <div class="session-detail" *ngIf="session">
-    <div class="session-detail__header">
-      <button class="button button--back" (click)="goBack()">
-        <mat-icon>arrow_back</mat-icon>
-        Retour aux sessions
-      </button>
-      <button *ngIf="isOwner()" class="button button--edit" (click)="onEdit()">
-        <mat-icon>edit</mat-icon>
-        Modifier
-      </button>
-    </div>
-
-    <div class="session-detail__content">
-      <!-- Main Section Info -->
-      <div class="session-detail__main">
-        <div class="session-detail__title-section">
-          <h1 class="session-detail__title">{{ session.title }}</h1>
-          <div class="session-detail__game">
-            <mat-icon>casino</mat-icon>
-            {{ session.game }}
-          </div>
-        </div>
-
-        <!-- Status Badges -->
-        <div class="session-detail__badges">
-          <span class="badge" [ngClass]="getStatusClass()">
-            {{ isFull() ? 'Complet' : getAvailableSpots() + ' place(s)
-            disponible(s)' }}
-          </span>
-          <span class="badge badge--registered" *ngIf="isRegistered">
-            <mat-icon>check_circle</mat-icon> Inscrit
-          </span>
-        </div>
-
-        <!-- Session Description -->
-        <div class="session-detail__description">
-          <h2 class="section-title">Description</h2>
-          <p class="description-text">{{ session.description }}</p>
-        </div>
-
-        <!-- Session Details Grid -->
-        <div class="session-detail__info-grid">
-          <div class="info-card">
-            <mat-icon class="info-card__icon">event</mat-icon>
-            <div class="info-card__content">
-              <span class="info-card__label">Date et heure</span>
-              <span class="info-card__value"
-                >{{ formatDate(session.date) }}</span
-              >
-            </div>
-          </div>
-
-          <div class="info-card">
-            <mat-icon class="info-card__icon">public</mat-icon>
-            <div class="info-card__content">
-              <span class="info-card__label">Format</span>
-              <span class="info-card__value"
-                >{{ session.online ? 'En ligne' : 'Présentiel' }}</span
-              >
-            </div>
-          </div>
-
-          <div class="info-card">
-            <mat-icon class="info-card__icon">groups</mat-icon>
-            <div class="info-card__content">
-              <span class="info-card__label">Joueurs</span>
-              <span class="info-card__value"
-                >{{ session.playersCurrent }} / {{ session.playersMax }}</span
-              >
-            </div>
-          </div>
-
-          <div class="info-card">
-            <mat-icon class="info-card__icon">leaderboard</mat-icon>
-            <div class="info-card__content">
-              <span class="info-card__label">Niveau requis</span>
-              <span class="info-card__value"
-                >{{ getLevelLabel(session.level) }}</span
-              >
-            </div>
-          </div>
-        </div>
-
-        <!-- Host Information -->
-        <div class="session-detail__host" *ngIf="session.host">
-          <h2 class="section-title">Organisateur</h2>
-          <div class="host-card">
-            <div class="host-card__avatar">
-              {{ session.host.username.charAt(0).toUpperCase() }}
-            </div>
-            <div class="host-card__info">
-              <span class="host-card__name">{{ session.host.username }}</span>
-              <span class="host-card__role">Maître du jeu</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Location Information -->
-        <div class="session-detail__location" *ngIf="session.location">
-          <h2 class="section-title">Lieu</h2>
-          <div class="location-card">
-            <mat-icon class="location-card__icon">place</mat-icon>
-            <div class="location-card__info">
-              <span class="location-card__name"
-                >{{ session.location.name }}</span
-              >
-              <span class="location-card__address"
-                >{{ session.location.city }} ({{ session.location.type }})</span
-              >
-            </div>
-          </div>
-        </div>
-
-        <!-- Participants -->
-        <div
-          class="session-detail__participants"
-          *ngIf="session.reservations && session.reservations.length > 0"
-        >
-          <h2 class="section-title">
-            Participants ({{ session.reservations.length }})
-          </h2>
-          <div class="participants-list">
-            <div
-              class="participant"
-              *ngFor="let reservation of session.reservations"
-            >
-              <div class="participant__avatar">
-                {{ reservation.user.username.charAt(0).toUpperCase() }}
-              </div>
-              <span class="participant__name"
-                >{{ reservation.user.username }}</span
-              >
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sidebar with Reservation -->
-      <aside class="session-detail__sidebar">
-        <div class="reservation-card">
-          <h3 class="reservation-card__title">Réservation</h3>
-
-          <div class="reservation-card__spots">
-            <mat-icon class="spots-icon">groups</mat-icon>
-            <span class="spots-text">
-              <strong>{{ getAvailableSpots() }}</strong> place(s) restante(s)
-            </span>
-          </div>
-
-          <button
-            class="button button--primary button--reserve"
-            [class.button--success]="isRegistered"
-            [disabled]="isFull() || isRegistered || reserving"
-            (click)="onReserve()"
-          >
-            <span *ngIf="!reserving && !isRegistered">Réserver ma place</span>
-            <span *ngIf="reserving">Réservation...</span>
-            <span *ngIf="isRegistered"
-              ><mat-icon>check</mat-icon> Déjà inscrit</span
-            >
+  >
+  @if (session) {
+    <div class="session-detail">
+      <div class="session-detail__header">
+        <button class="button button--back" (click)="goBack()">
+          <mat-icon>arrow_back</mat-icon>
+          Retour aux sessions
+        </button>
+        @if (isOwner()) {
+          <button class="button button--edit" (click)="onEdit()">
+            <mat-icon>edit</mat-icon>
+            Modifier
           </button>
-
-          <div class="reservation-card__info">
-            <p class="info-text">
-              <mat-icon class="info-icon">info</mat-icon>
-              Vous recevrez une confirmation par email après votre réservation.
-            </p>
+        }
+      </div>
+      <div class="session-detail__content">
+        <!-- Main Section Info -->
+        <div class="session-detail__main">
+          <div class="session-detail__title-section">
+            <h1 class="session-detail__title">{{ session.title }}</h1>
+            <div class="session-detail__game">
+              <mat-icon>casino</mat-icon>
+              {{ session.game }}
+            </div>
           </div>
-        </div>
-      </aside>
-    </div>
-  </div>
-</lib-async-state>
+          <!-- Status Badges -->
+          <div class="session-detail__badges">
+            <span class="badge" [ngClass]="getStatusClass()">
+              {{ isFull() ? 'Complet' : getAvailableSpots() + ' place(s)
+              disponible(s)' }}
+            </span>
+            @if (isRegistered) {
+              <span class="badge badge--registered">
+                <mat-icon>check_circle</mat-icon> Inscrit
+              </span>
+            }
+          </div>
+          <!-- Session Description -->
+          <div class="session-detail__description">
+            <h2 class="section-title">Description</h2>
+            <p class="description-text">{{ session.description }}</p>
+          </div>
+          <!-- Session Details Grid -->
+          <div class="session-detail__info-grid">
+            <div class="info-card">
+              <mat-icon class="info-card__icon">event</mat-icon>
+              <div class="info-card__content">
+                <span class="info-card__label">Date et heure</span>
+                <span class="info-card__value"
+                  >{{ formatDate(session.date) }}</span
+                  >
+                </div>
+              </div>
+              <div class="info-card">
+                <mat-icon class="info-card__icon">public</mat-icon>
+                <div class="info-card__content">
+                  <span class="info-card__label">Format</span>
+                  <span class="info-card__value"
+                    >{{ session.online ? 'En ligne' : 'Présentiel' }}</span
+                    >
+                  </div>
+                </div>
+                <div class="info-card">
+                  <mat-icon class="info-card__icon">groups</mat-icon>
+                  <div class="info-card__content">
+                    <span class="info-card__label">Joueurs</span>
+                    <span class="info-card__value"
+                      >{{ session.playersCurrent }} / {{ session.playersMax }}</span
+                      >
+                    </div>
+                  </div>
+                  <div class="info-card">
+                    <mat-icon class="info-card__icon">leaderboard</mat-icon>
+                    <div class="info-card__content">
+                      <span class="info-card__label">Niveau requis</span>
+                      <span class="info-card__value"
+                        >{{ getLevelLabel(session.level) }}</span
+                        >
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Host Information -->
+                  @if (session.host) {
+                    <div class="session-detail__host">
+                      <h2 class="section-title">Organisateur</h2>
+                      <div class="host-card">
+                        <div class="host-card__avatar">
+                          {{ session.host.username.charAt(0).toUpperCase() }}
+                        </div>
+                        <div class="host-card__info">
+                          <span class="host-card__name">{{ session.host.username }}</span>
+                          <span class="host-card__role">Maître du jeu</span>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  <!-- Location Information -->
+                  @if (session.location) {
+                    <div class="session-detail__location">
+                      <h2 class="section-title">Lieu</h2>
+                      <div class="location-card">
+                        <mat-icon class="location-card__icon">place</mat-icon>
+                        <div class="location-card__info">
+                          <span class="location-card__name"
+                            >{{ session.location.name }}</span
+                            >
+                            <span class="location-card__address"
+                              >{{ session.location.city }} ({{ session.location.type }})</span
+                              >
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      <!-- Participants -->
+                      @if (session.reservations && session.reservations.length > 0) {
+                        <div
+                          class="session-detail__participants"
+                          >
+                          <h2 class="section-title">
+                            Participants ({{ session.reservations.length }})
+                          </h2>
+                          <div class="participants-list">
+                            @for (reservation of session.reservations; track reservation) {
+                              <div
+                                class="participant"
+                                >
+                                <div class="participant__avatar">
+                                  {{ reservation.user.username.charAt(0).toUpperCase() }}
+                                </div>
+                                <span class="participant__name"
+                                  >{{ reservation.user.username }}</span
+                                  >
+                                </div>
+                              }
+                            </div>
+                          </div>
+                        }
+                      </div>
+                      <!-- Sidebar with Reservation -->
+                      <aside class="session-detail__sidebar">
+                        <div class="reservation-card">
+                          <h3 class="reservation-card__title">Réservation</h3>
+                          <div class="reservation-card__spots">
+                            <mat-icon class="spots-icon">groups</mat-icon>
+                            <span class="spots-text">
+                              <strong>{{ getAvailableSpots() }}</strong> place(s) restante(s)
+                            </span>
+                          </div>
+                          @if (!isRegistered) {
+                            <button
+                              class="button button--primary button--reserve"
+                              [disabled]="isFull() || reserving"
+                              (click)="onReserve()"
+                              >
+                              @if (!reserving) {
+                                <span>Réserver ma place</span>
+                              }
+                              @if (reserving) {
+                                <span>Réservation...</span>
+                              }
+                            </button>
+                          }
+                          @if (isRegistered) {
+                            <button
+                              class="button button--danger button--reserve"
+                              [disabled]="cancelling"
+                              (click)="onCancelReservation()"
+                              >
+                              @if (!cancelling) {
+                                <span>Se désinscrire</span>
+                              }
+                              @if (cancelling) {
+                                <span>Désinscription...</span>
+                              }
+                            </button>
+                          }
+                          <div class="reservation-card__info">
+                            @if (!isRegistered) {
+                              <p class="info-text">
+                                <mat-icon class="info-icon">info</mat-icon>
+                                Vous recevrez une confirmation par email après votre réservation.
+                              </p>
+                            }
+                            @if (isRegistered) {
+                              <p class="info-text">
+                                <mat-icon class="info-icon">event_available</mat-icon>
+                                Vous êtes inscrit à cette session. Vous pouvez vous désinscrire à
+                                tout moment si vous avez un empêchement.
+                              </p>
+                            }
+                          </div>
+                        </div>
+                      </aside>
+                    </div>
+                  </div>
+                }
+              </lib-async-state>
 
-<div class="session-detail__error-actions" *ngIf="error && !loading">
-  <button class="button button--secondary" (click)="goBack()">
-    Retour aux sessions
-  </button>
-</div>
+              @if (error && !loading) {
+                <div class="session-detail__error-actions">
+                  <button class="button button--secondary" (click)="goBack()">
+                    Retour aux sessions
+                  </button>
+                </div>
+              }

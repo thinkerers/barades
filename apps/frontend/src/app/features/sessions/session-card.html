@@ -1,7 +1,7 @@
 <article
   class="session-card"
   [class]="'session-card--' + session.tagColor.toLowerCase()"
->
+  >
   <!-- Tag Color Indicator -->
   <div
     class="session-card__tag"
@@ -17,85 +17,105 @@
   <!-- Status Badges -->
   <div class="session-card__badges">
     <div class="session-card__status" [ngClass]="getStatusClass()">
-      <span *ngIf="!isFull()"
-        >{{ getAvailableSpots() }} place(s) disponible(s)</span
-      >
-      <span *ngIf="isFull()">Complet</span>
-    </div>
-    <div class="session-card__registered" *ngIf="isRegistered">
-      <mat-icon>check_circle</mat-icon> Inscrit
-    </div>
-  </div>
-
-  <!-- Details -->
-  <div class="session-card__details">
-    <!-- Date -->
-    <div class="session-card__detail">
-      <mat-icon>event</mat-icon>
-      <span>{{ formatDate(session.date) }}</span>
+      @if (!isFull()) {
+        <span
+          >{{ getAvailableSpots() }} place(s) disponible(s)</span
+          >
+        }
+        @if (isFull()) {
+          <span>Complet</span>
+        }
+      </div>
+      @if (isRegistered) {
+        <div class="session-card__registered">
+          <mat-icon>check_circle</mat-icon> Inscrit
+        </div>
+      }
     </div>
 
-    <!-- Host -->
-    <div class="session-card__detail" *ngIf="session.host">
-      <mat-icon>person</mat-icon>
-      <span>{{ session.host.username }}</span>
+    <!-- Details -->
+    <div class="session-card__details">
+      <!-- Date -->
+      <div class="session-card__detail">
+        <mat-icon>event</mat-icon>
+        <span>{{ formatDate(session.date) }}</span>
+      </div>
+
+      <!-- Host -->
+      @if (session.host) {
+        <div class="session-card__detail">
+          <mat-icon>person</mat-icon>
+          <span>{{ session.host.username }}</span>
+        </div>
+      }
+
+      <!-- Location -->
+      @if (session.location) {
+        <div class="session-card__detail">
+          <mat-icon>place</mat-icon>
+          <span>{{ session.location.name }}, {{ session.location.city }}</span>
+        </div>
+      }
+
+      <!-- Online indicator -->
+      @if (session.online) {
+        <div class="session-card__detail">
+          <mat-icon>computer</mat-icon>
+          <span>En ligne</span>
+        </div>
+      }
+
+      <!-- Level -->
+      <div class="session-card__detail">
+        <mat-icon>trending_up</mat-icon>
+        <span>{{ getLevelLabel(session.level) }}</span>
+      </div>
+
+      <!-- Players -->
+      <div class="session-card__detail session-card__detail--players">
+        <mat-icon>groups</mat-icon>
+        <span>
+          <strong>{{ session.playersCurrent }}/{{ session.playersMax }}</strong>
+          joueurs
+        </span>
+      </div>
     </div>
 
-    <!-- Location -->
-    <div class="session-card__detail" *ngIf="session.location">
-      <mat-icon>place</mat-icon>
-      <span>{{ session.location.name }}, {{ session.location.city }}</span>
-    </div>
+    <!-- Description -->
+    @if (session.description) {
+      <p class="session-card__description">
+        {{ session.description }}
+      </p>
+    }
 
-    <!-- Online indicator -->
-    <div class="session-card__detail" *ngIf="session.online">
-      <mat-icon>computer</mat-icon>
-      <span>En ligne</span>
-    </div>
-
-    <!-- Level -->
-    <div class="session-card__detail">
-      <mat-icon>trending_up</mat-icon>
-      <span>{{ getLevelLabel(session.level) }}</span>
-    </div>
-
-    <!-- Players -->
-    <div class="session-card__detail session-card__detail--players">
-      <mat-icon>groups</mat-icon>
-      <span>
-        <strong>{{ session.playersCurrent }}/{{ session.playersMax }}</strong>
-        joueurs
-      </span>
-    </div>
-  </div>
-
-  <!-- Description -->
-  <p class="session-card__description" *ngIf="session.description">
-    {{ session.description }}
-  </p>
-
-  <!-- Actions -->
-  <footer class="session-card__actions">
-    <button
-      type="button"
-      class="button button--primary"
-      [disabled]="isFull() || loading || isRegistered"
-      [class.button--success]="isRegistered"
-      (click)="onReserve()"
-    >
-      <span *ngIf="loading">Réservation...</span>
-      <span *ngIf="!loading && isRegistered"
-        ><mat-icon>check</mat-icon> Déjà inscrit</span
-      >
-      <span *ngIf="!loading && !isRegistered"
-        >{{ isFull() ? 'Complet' : 'Réserver ma place' }}</span
-      >
-    </button>
-    <a
-      [routerLink]="['/sessions', session.id]"
-      class="button button--secondary"
-    >
-      Voir détails
-    </a>
-  </footer>
-</article>
+    <!-- Actions -->
+    <footer class="session-card__actions">
+      <button
+        type="button"
+        class="button button--primary"
+        [disabled]="isFull() || loading || isRegistered"
+        [class.button--success]="isRegistered"
+        (click)="onReserve()"
+        >
+        @if (loading) {
+          <span>Réservation...</span>
+        }
+        @if (!loading && isRegistered) {
+          <span
+            ><mat-icon>check</mat-icon> Déjà inscrit</span
+            >
+          }
+          @if (!loading && !isRegistered) {
+            <span
+              >{{ isFull() ? 'Complet' : 'Réserver ma place' }}</span
+              >
+            }
+          </button>
+          <a
+            [routerLink]="['/sessions', session.id]"
+            class="button button--secondary"
+            >
+            Voir détails
+          </a>
+        </footer>
+      </article>
