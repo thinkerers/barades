@@ -18,6 +18,14 @@
       },
       "outputs": ["{workspaceRoot}/doc/diagrams"],
       "description": "Render Mermaid user journey diagrams into SVG"
+    },
+    "spell-check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx cspell \"**/*.{ts,tsx,js,jsx,md,json}\" --no-progress"
+      },
+      "cache": true,
+      "description": "Run cSpell across source and documentation files"
     }
   }
 }
