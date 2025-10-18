@@ -1,17 +1,55 @@
 <header class="top-bar">
-	<a routerLink="/" class="top-bar__logo">Bar à Dés</a>
-	<nav class="top-bar__nav">
-		<a routerLink="/sessions" routerLinkActive="active" class="top-bar__link">Sessions</a>
-		<a routerLink="/locations" routerLinkActive="active" class="top-bar__link">Lieux</a>
-		<a routerLink="/groups" routerLinkActive="active" class="top-bar__link">Groupes</a>
-	</nav>
-	<nav class="top-bar__actions">
-		@if (authService.isAuthenticated()) {
-			<span class="top-bar__user">{{ authService.getCurrentUser()?.username }}</span>
-			<button type="button" class="top-bar__action" (click)="logout()">Se déconnecter</button>
-		} @else {
-			<a routerLink="/login" class="top-bar__action">Se connecter</a>
-			<a routerLink="/register" class="top-bar__action top-bar__action--primary">S'inscrire</a>
-		}
-	</nav>
+  <a routerLink="/" class="top-bar__logo">Bar à Dés</a>
+  <nav class="top-bar__nav">
+    <a routerLink="/sessions" routerLinkActive="active" class="top-bar__link"
+      >Sessions</a
+    >
+    <a routerLink="/locations" routerLinkActive="active" class="top-bar__link"
+      >Lieux</a
+    >
+    <a routerLink="/groups" routerLinkActive="active" class="top-bar__link"
+      >Groupes</a
+    >
+  </nav>
+  <nav class="top-bar__actions">
+    @if (authService.isAuthenticated()) {
+    <div class="top-bar__user-menu">
+      <button
+        type="button"
+        class="top-bar__avatar"
+        [matMenuTriggerFor]="userMenu"
+        [title]="'Ouvrir le menu utilisateur'"
+        aria-haspopup="menu"
+        aria-label="Ouvrir le menu utilisateur"
+      >
+        {{ getAvatarText() }}
+      </button>
+      <mat-menu
+        #userMenu="matMenu"
+        [overlapTrigger]="false"
+        xPosition="before"
+        yPosition="below"
+        panelClass="top-bar__menu-panel"
+      >
+        <button mat-menu-item (click)="navigateToProfile()">
+          <mat-icon fontIcon="person"></mat-icon>
+          <span>Mon profil</span>
+        </button>
+        <button
+          mat-menu-item
+          (click)="logout()"
+          class="top-bar__menu-item--danger"
+        >
+          <mat-icon fontIcon="logout"></mat-icon>
+          <span>Se déconnecter</span>
+        </button>
+      </mat-menu>
+    </div>
+    } @else {
+    <a routerLink="/login" class="top-bar__action">Se connecter</a>
+    <a routerLink="/register" class="top-bar__action top-bar__action--primary"
+      >S'inscrire</a
+    >
+    }
+  </nav>
 </header>
