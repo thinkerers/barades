@@ -1,4 +1,3 @@
-
 import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,6 +7,8 @@ import {
   Location,
   LocationsService,
 } from '../../core/services/locations.service';
+
+type AmenityFilterKey = 'wifi' | 'tables' | 'food' | 'drinks' | 'parking';
 
 @Component({
   selector: 'app-locations-list',
@@ -30,7 +31,7 @@ export class LocationsListComponent implements OnInit {
   // Filter properties
   searchTerm = '';
   selectedType = '';
-  filters = {
+  filters: Record<AmenityFilterKey, boolean> = {
     wifi: false,
     tables: false,
     food: false,
@@ -46,6 +47,7 @@ export class LocationsListComponent implements OnInit {
   private userMarker: L.Marker | null = null;
   geolocating = false;
   geolocationError: string | null = null;
+  isDetailsCollapsed = false;
 
   ngOnInit(): void {
     console.log('[LocationsList] Component initialized');
@@ -277,6 +279,16 @@ export class LocationsListComponent implements OnInit {
     return `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`;
   }
 
+  private renderMaterialIcon(name: string, extraClass = ''): string {
+    const classes = ['material-icons'];
+    if (extraClass) {
+      classes.push(extraClass);
+    }
+    return `<span class="${classes.join(
+      ' '
+    )}" aria-hidden="true">${name}</span>`;
+  }
+
   private createPopupContent(location: Location): string {
     // Amenities with icons
     const amenitiesHtml =
@@ -293,25 +305,18 @@ export class LocationsListComponent implements OnInit {
     const capacityHtml = location.capacity
       ? `
         <div class="popup-row">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-          </svg>
-          <span>${location.capacity} personnes</span>
+          ${this.renderMaterialIcon('groups', 'popup-icon')}
+          <span>Capacité: ${location.capacity} personnes</span>
         </div>
       `
       : '';
 
     const websiteHtml = location.website
       ? `
-        <a href="${location.website}" target="_blank" rel="noopener" class="popup-link">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="2" y1="12" x2="22" y2="12"></line>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-          </svg>
+        <a href="${
+          location.website
+        }" target="_blank" rel="noopener" class="popup-link">
+          ${this.renderMaterialIcon('public', 'popup-icon')}
           <span>Site web</span>
         </a>
       `
@@ -324,10 +329,7 @@ export class LocationsListComponent implements OnInit {
     const addressHtml = location.address
       ? `
         <div class="popup-row">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
+          ${this.renderMaterialIcon('place', 'popup-icon')}
           <span>${location.address}, ${location.city}</span>
         </div>
       `
@@ -343,9 +345,7 @@ export class LocationsListComponent implements OnInit {
         </div>
 
         <div class="popup-rating">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="2">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-          </svg>
+          ${this.renderMaterialIcon('star', 'popup-rating__icon')}
           <span>${location.rating.toFixed(1)}/5</span>
         </div>
 
@@ -359,63 +359,25 @@ export class LocationsListComponent implements OnInit {
   }
 
   private getAmenityIcon(amenity: string): string {
-    const iconMap: Record<string, string> = {
-      WiFi: `
-        <div class="amenity-icon" title="WiFi">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
-            <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
-            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-            <line x1="12" y1="20" x2="12.01" y2="20"></line>
-          </svg>
-          <span>WiFi</span>
-        </div>
-      `,
-      Tables: `
-        <div class="amenity-icon" title="Tables de jeu">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M2 2h20v20H2z"></path>
-            <path d="M6 6h12v12H6z"></path>
-          </svg>
-          <span>Tables</span>
-        </div>
-      `,
-      Food: `
-        <div class="amenity-icon" title="Restauration">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-            <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-            <line x1="6" y1="1" x2="6" y2="4"></line>
-            <line x1="10" y1="1" x2="10" y2="4"></line>
-            <line x1="14" y1="1" x2="14" y2="4"></line>
-          </svg>
-          <span>Food</span>
-        </div>
-      `,
-      Drinks: `
-        <div class="amenity-icon" title="Boissons">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 2H6v20h12V2z"></path>
-            <path d="M6 7h12"></path>
-          </svg>
-          <span>Drinks</span>
-        </div>
-      `,
-      Parking: `
-        <div class="amenity-icon" title="Parking">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-            <path d="M9 17V7h4a3 3 0 0 1 0 6H9"></path>
-          </svg>
-          <span>Parking</span>
-        </div>
-      `,
+    const iconMap: Record<string, { icon: string; label: string }> = {
+      WiFi: { icon: 'wifi', label: 'WiFi' },
+      Tables: { icon: 'table_restaurant', label: 'Tables' },
+      Food: { icon: 'restaurant', label: 'Restauration' },
+      Drinks: { icon: 'local_cafe', label: 'Boissons' },
+      Parking: { icon: 'local_parking', label: 'Parking' },
     };
 
-    return (
-      iconMap[amenity] ||
-      `<div class="amenity-icon"><span>${amenity}</span></div>`
-    );
+    const match = iconMap[amenity];
+    if (!match) {
+      return `<div class="amenity-icon"><span>${amenity}</span></div>`;
+    }
+
+    return `
+      <div class="amenity-icon" title="${match.label}">
+        ${this.renderMaterialIcon(match.icon, 'amenity-icon__glyph')}
+        <span>${match.label}</span>
+      </div>
+    `;
   }
 
   private formatOpeningHours(hours: Record<string, string>): string {
@@ -528,6 +490,15 @@ export class LocationsListComponent implements OnInit {
       this.locations.length
     );
 
+    if (
+      this.selectedLocationId &&
+      !this.filteredLocations.some(
+        (location) => location.id === this.selectedLocationId
+      )
+    ) {
+      this.selectedLocationId = null;
+    }
+
     // Update markers on map
     this.updateMarkers();
   }
@@ -546,6 +517,27 @@ export class LocationsListComponent implements OnInit {
       parking: false,
     };
     this.applyFilters();
+  }
+
+  toggleAmenity(filterKey: AmenityFilterKey): void {
+    this.filters[filterKey] = !this.filters[filterKey];
+    this.applyFilters();
+  }
+
+  toggleDetailsCollapse(): void {
+    this.isDetailsCollapsed = !this.isDetailsCollapsed;
+  }
+
+  get selectedLocation(): Location | null {
+    if (!this.selectedLocationId) {
+      return null;
+    }
+
+    return (
+      this.filteredLocations.find(
+        (location) => location.id === this.selectedLocationId
+      ) || null
+    );
   }
 
   /**
@@ -659,20 +651,23 @@ export class LocationsListComponent implements OnInit {
   onMarkerClick(locationId: string): void {
     this.selectedLocationId = locationId;
 
-    // Scroll to the location card
-    const element = document.getElementById(`location-${locationId}`);
-    if (element) {
+    // Allow the template to render the selected card before attempting to scroll
+    setTimeout(() => {
+      const element = document.getElementById(`location-${locationId}`);
+      if (!element) {
+        return;
+      }
+
       element.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
       });
 
-      // Add temporary highlight animation
       element.classList.add('highlight');
       setTimeout(() => {
         element.classList.remove('highlight');
       }, 2000);
-    }
+    });
   }
 
   /**
