@@ -1,33 +1,29 @@
 /* Basic shell layout using CSS flexbox for navigation + content. */
 .app-layout {
-	display: flex;
-	flex-direction: column;
-	min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .app-layout__top-bar {
-	position: sticky;
-	top: 0;
-	z-index: 10;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .app-layout__body {
-	flex: 1 1 auto;
-	display: flex;
-	min-height: 0;
-}
-
-.app-layout__side-nav {
-	flex: 0 0 240px;
-	min-height: 100%;
+  flex: 1 1 auto;
+  display: flex;
+  min-height: 0;
 }
 
 .app-layout__content {
-	flex: 1 1 auto;
-	padding: 1.5rem;
-	min-width: 0;
+  flex: 1 1 auto;
+  padding: 1.5rem;
+  min-width: 0;
+  width: 100%;
 }
 
 .app-layout__footer {
-	flex: 0 0 auto;
+  flex: 0 0 auto;
 }
