@@ -7,12 +7,10 @@ import {
   Output,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
+import { HostFilterField } from '../host-filter-field/host-filter-field';
 import { GameSystemInputComponent } from '../inputs/game-system-input/game-system-input.component';
 import { SearchFilterField } from '../search-filter-field/search-filter-field';
 
@@ -24,12 +22,10 @@ type SessionsFilterMode = 'all' | 'online' | 'onsite';
   imports: [
     CommonModule,
     FormsModule,
-    MatAutocompleteModule,
     MatButtonModule,
     MatCheckboxModule,
-    MatFormFieldModule,
     MatIconModule,
-    MatInputModule,
+    HostFilterField,
     GameSystemInputComponent,
     SearchFilterField,
   ],
@@ -64,9 +60,5 @@ export class SessionsFiltersCard {
 
   get hasActiveFilters(): boolean {
     return this.activeFiltersCount > 0;
-  }
-
-  get hasHostFilterValue(): boolean {
-    return this.selectedHost.trim().length > 0;
   }
 }

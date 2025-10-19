@@ -11,6 +11,7 @@ export * from './lib/feedback/loading-spinner/loading-spinner';
 export * from './lib/group-card/group-card.component';
 
 // Input components
+export * from './lib/host-filter-field/host-filter-field';
 export * from './lib/inputs/game-system-input/game-system-input.component';
 export * from './lib/inputs/radio-group/radio-group';
 export * from './lib/inputs/search-input/search-input';

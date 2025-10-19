@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { HostFilterField } from '../host-filter-field/host-filter-field';
 import { SearchFilterField } from '../search-filter-field/search-filter-field';
 import { SessionsFiltersCard } from './sessions-filters-card';
 
@@ -23,10 +24,21 @@ describe('SessionsFiltersCard', () => {
 
   it('should forward search term changes', () => {
     const emitSpy = jest.spyOn(component.searchTermChange, 'emit');
-    const searchField = fixture.debugElement.query(By.directive(SearchFilterField));
+    const searchField = fixture.debugElement.query(
+      By.directive(SearchFilterField)
+    );
 
     searchField.componentInstance.handleInputChange('query');
 
     expect(emitSpy).toHaveBeenCalledWith('query');
+  });
+
+  it('should forward host filter changes', () => {
+    const emitSpy = jest.spyOn(component.hostFilterChange, 'emit');
+    const hostField = fixture.debugElement.query(By.directive(HostFilterField));
+
+    hostField.componentInstance.handleInputChange('Alice');
+
+    expect(emitSpy).toHaveBeenCalledWith('Alice');
   });
 });

@@ -36,7 +36,9 @@ describe('SearchFilterField', () => {
 
     await fixture.whenStable();
 
-    const input: HTMLInputElement = fixture.debugElement.query(By.css('input')).nativeElement;
+    const input: HTMLInputElement = fixture.debugElement.query(
+      By.css('input')
+    ).nativeElement;
 
     expect(input.value).toBe('initial value');
   });

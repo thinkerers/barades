@@ -1,0 +1,42 @@
+<mat-form-field
+  appearance="outline"
+  class="host-filter-field filters-card__field filters-card__field--host"
+>
+  <mat-label>Hôte</mat-label>
+  <mat-icon matPrefix aria-hidden="true">person_search</mat-icon>
+  <input
+    matInput
+    [id]="controlId"
+    [placeholder]="placeholder"
+    [ngModel]="selectedHost"
+    (ngModelChange)="handleInputChange($event)"
+    (focus)="handleInputFocus()"
+    [matAutocomplete]="hostAuto"
+    [attr.autocomplete]="autocomplete"
+  />
+  <button
+    mat-icon-button
+    matSuffix
+    type="button"
+    (click)="handleClearClick()"
+    [disabled]="isClearButtonDisabled"
+    [attr.aria-label]="clearButtonAriaLabel"
+  >
+    <mat-icon aria-hidden="true">close</mat-icon>
+  </button>
+  <mat-autocomplete
+    #hostAuto="matAutocomplete"
+    (optionSelected)="handleOptionSelected($event.option.value)"
+  >
+    @for (host of filteredHostOptions; track host) {
+    <mat-option [value]="host">{{ host }}</mat-option>
+    } @if (!filteredHostOptions.length && hasHostFilterValue) {
+    <mat-option disabled>Aucun hôte trouvé</mat-option>
+    }
+  </mat-autocomplete>
+  @if (isScopeFilterActive) {
+  <mat-hint align="start" class="filters-card__hint">
+    Filtre appliqué depuis le dashboard
+  </mat-hint>
+  }
+</mat-form-field>
