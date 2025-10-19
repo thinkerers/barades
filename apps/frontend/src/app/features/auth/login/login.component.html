@@ -6,44 +6,70 @@
     </mat-card-header>
 
     <mat-card-content>
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" data-testid="login-form">
+      <form
+        [formGroup]="loginForm"
+        (ngSubmit)="onSubmit()"
+        data-testid="login-form"
+      >
         <!-- Username -->
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Nom d'utilisateur</mat-label>
-          <input matInput formControlName="username" placeholder="alice_dm" autocomplete="username" data-testid="username-input">
-          @if (loginForm.get('username')?.hasError('required') && loginForm.get('username')?.touched) {
-            <mat-error>Le nom d'utilisateur est requis</mat-error>
+          <input
+            matInput
+            formControlName="username"
+            placeholder="alice_dm"
+            autocomplete="username"
+            data-testid="username-input"
+          />
+          @if (loginForm.get('username')?.hasError('required') &&
+          loginForm.get('username')?.touched) {
+          <mat-error>Le nom d'utilisateur est requis</mat-error>
           }
         </mat-form-field>
 
         <!-- Password -->
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Mot de passe</mat-label>
-          <input matInput type="password" formControlName="password" placeholder="••••••••••••" autocomplete="current-password" data-testid="password-input">
-          @if (loginForm.get('password')?.hasError('required') && loginForm.get('password')?.touched) {
-            <mat-error>Le mot de passe est requis</mat-error>
+          <input
+            matInput
+            type="password"
+            formControlName="password"
+            placeholder="••••••••••••"
+            autocomplete="current-password"
+            data-testid="password-input"
+          />
+          @if (loginForm.get('password')?.hasError('required') &&
+          loginForm.get('password')?.touched) {
+          <mat-error>Le mot de passe est requis</mat-error>
           }
         </mat-form-field>
 
         <!-- Error message -->
-        @if (errorMessage) {
-          <div class="error-message" data-testid="error-message">
-            {{ errorMessage }}
-          </div>
+        @if (errorMessage(); as message) {
+        <div class="error-message" data-testid="error-message">
+          {{ message }}
+        </div>
         }
 
         <!-- Submit button -->
-        <button mat-raised-button color="primary" type="submit" [disabled]="loginForm.invalid || isLoading" class="full-width submit-button" data-testid="login-submit-button">
-          @if (isLoading) {
-            <mat-spinner diameter="20"></mat-spinner>
-          } @else {
-            Se connecter
-          }
+        <button
+          mat-raised-button
+          color="primary"
+          type="submit"
+          [disabled]="loginForm.invalid || isLoading()"
+          class="full-width submit-button"
+          data-testid="login-submit-button"
+        >
+          @if (isLoading()) {
+          <mat-spinner diameter="20"></mat-spinner>
+          } @else { Se connecter }
         </button>
 
         <!-- Register link -->
         <div class="register-link">
-          <p>Pas encore de compte ? <a routerLink="/register">Créer un compte</a></p>
+          <p>
+            Pas encore de compte ? <a routerLink="/register">Créer un compte</a>
+          </p>
         </div>
       </form>
     </mat-card-content>

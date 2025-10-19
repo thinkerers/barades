@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 
 import {
   AbstractControl,
@@ -14,6 +14,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -32,30 +33,26 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrls: ['./register.component.scss'],
 })
 export class RegisterComponent {
-  private fb = inject(FormBuilder);
-  private authService = inject(AuthService);
-  private router = inject(Router);
-  private cdr = inject(ChangeDetectorRef);
+  private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
-  registerForm: FormGroup;
-  isLoading = false;
-  errorMessage = '';
+  readonly registerForm: FormGroup = this.fb.group(
+    {
+      email: ['', [Validators.required, Validators.email]],
+      username: ['', [Validators.required, Validators.minLength(3)]],
+      firstName: [''],
+      lastName: [''],
+      password: ['', [Validators.required, Validators.minLength(12)]],
+      confirmPassword: ['', [Validators.required]],
+    },
+    {
+      validators: this.passwordMatchValidator,
+    }
+  );
 
-  constructor() {
-    this.registerForm = this.fb.group(
-      {
-        email: ['', [Validators.required, Validators.email]],
-        username: ['', [Validators.required, Validators.minLength(3)]],
-        firstName: [''],
-        lastName: [''],
-        password: ['', [Validators.required, Validators.minLength(12)]],
-        confirmPassword: ['', [Validators.required]],
-      },
-      {
-        validators: this.passwordMatchValidator,
-      }
-    );
-  }
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   /**
    * Custom validator to check if passwords match
@@ -74,27 +71,26 @@ export class RegisterComponent {
 
   onSubmit(): void {
     if (this.registerForm.invalid) {
-      this.cdr.markForCheck();
+      this.registerForm.markAllAsTouched();
       return;
     }
 
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.cdr.markForCheck();
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
 
-    this.authService.signup(this.registerForm.value).subscribe({
-      next: () => {
-        this.isLoading = false;
-        this.cdr.markForCheck();
-        this.router.navigate(['/']);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage =
-          error.error?.message || 'Registration failed. Please try again.';
-        this.cdr.markForCheck();
-      },
-    });
+    this.authService
+      .signup(this.registerForm.getRawValue())
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: () => {
+          this.router.navigate(['/']);
+        },
+        error: (error) => {
+          const message =
+            error.error?.message || 'Registration failed. Please try again.';
+          this.errorMessage.set(message);
+        },
+      });
   }
 
   /**

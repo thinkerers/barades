@@ -1,5 +1,4 @@
-
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { EmptyStateComponent } from '../feedback/empty-state/empty-state';
@@ -18,20 +17,23 @@ export type AsyncStateStatus = 'loading' | 'error' | 'empty' | 'ready';
     MatIconModule,
     LoadingSpinnerComponent,
     ErrorMessageComponent,
-    EmptyStateComponent
-],
+    EmptyStateComponent,
+  ],
 })
 export class AsyncStateComponent {
-  @Input() status: AsyncStateStatus = 'ready';
-  @Input() loadingMessage = 'Chargement en cours...';
-  @Input() errorTitle = 'Une erreur est survenue';
-  @Input() errorMessage =
-    'Nous ne parvenons pas à récupérer les données. Veuillez réessayer ultérieurement.';
-  @Input() emptyTitle = 'Aucun résultat';
-  @Input() emptyMessage = "Il n'y a aucun élément à afficher pour le moment.";
-  @Input() showRetry = true;
+  readonly status = input<AsyncStateStatus>('ready');
+  readonly loadingMessage = input('Chargement en cours...');
+  readonly errorTitle = input('Une erreur est survenue');
+  readonly errorMessage = input(
+    'Nous ne parvenons pas à récupérer les données. Veuillez réessayer ultérieurement.'
+  );
+  readonly emptyTitle = input('Aucun résultat');
+  readonly emptyMessage = input(
+    "Il n'y a aucun élément à afficher pour le moment."
+  );
+  readonly showRetry = input(true);
 
-  @Output() retry = new EventEmitter<void>();
+  readonly retry = output<void>();
 
   onRetry(): void {
     this.retry.emit();

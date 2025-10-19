@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 
 import {
   FormBuilder,
@@ -12,6 +12,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -30,48 +31,42 @@ import { AuthService } from '../../../core/services/auth.service';
   styleUrls: ['./login.component.scss'],
 })
 export class LoginComponent {
-  private fb = inject(FormBuilder);
-  private authService = inject(AuthService);
-  private router = inject(Router);
-  private route = inject(ActivatedRoute);
-  private cdr = inject(ChangeDetectorRef);
+  private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
-  loginForm: FormGroup;
-  isLoading = false;
-  errorMessage = '';
+  readonly loginForm: FormGroup = this.fb.group({
+    username: ['', [Validators.required]],
+    password: ['', [Validators.required]],
+  });
 
-  constructor() {
-    this.loginForm = this.fb.group({
-      username: ['', [Validators.required]],
-      password: ['', [Validators.required]],
-    });
-  }
+  readonly isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   onSubmit(): void {
     if (this.loginForm.invalid) {
-      this.cdr.markForCheck();
+      this.loginForm.markAllAsTouched();
       return;
     }
 
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.cdr.markForCheck();
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
 
-    this.authService.login(this.loginForm.value).subscribe({
-      next: () => {
-        // Redirect to return URL or home
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
-        this.isLoading = false;
-        this.cdr.markForCheck();
-        this.router.navigateByUrl(returnUrl);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        this.errorMessage =
-          error.error?.message ||
-          'Identifiants incorrects. Veuillez réessayer.';
-        this.cdr.markForCheck();
-      },
-    });
+    this.authService
+      .login(this.loginForm.getRawValue())
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: () => {
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+          this.router.navigateByUrl(returnUrl);
+        },
+        error: (error) => {
+          const message =
+            error.error?.message ||
+            'Identifiants incorrects. Veuillez réessayer.';
+          this.errorMessage.set(message);
+        },
+      });
   }
 }

@@ -1,27 +1,22 @@
 <div class="async-state">
-  @switch (status) {
-    @case ('loading') {
-      <div class="async-state__loading">
-        <lib-loading-spinner [message]="loadingMessage"></lib-loading-spinner>
-      </div>
-    }
-    @case ('error') {
-      <div class="async-state__error">
-        <lib-error-message
-          [message]="errorMessage"
-          icon="warning"
-          [actionLabel]="showRetry ? 'Réessayer' : undefined"
-          (action)="onRetry()"
-        ></lib-error-message>
-      </div>
-    }
-    @case ('empty') {
-      <div class="async-state__empty">
-        <lib-empty-state [message]="emptyMessage"></lib-empty-state>
-      </div>
-    }
-    @default {
-      <ng-content></ng-content>
-    }
-  }
+  @switch (status()) { @case ('loading') {
+  <div class="async-state__loading">
+    <lib-loading-spinner [message]="loadingMessage()"></lib-loading-spinner>
+  </div>
+  } @case ('error') {
+  <div class="async-state__error">
+    <lib-error-message
+      [message]="errorMessage()"
+      icon="warning"
+      [actionLabel]="showRetry() ? 'Réessayer' : undefined"
+      (action)="onRetry()"
+    ></lib-error-message>
+  </div>
+  } @case ('empty') {
+  <div class="async-state__empty">
+    <lib-empty-state [message]="emptyMessage()"></lib-empty-state>
+  </div>
+  } @default {
+  <ng-content></ng-content>
+  } }
 </div>
