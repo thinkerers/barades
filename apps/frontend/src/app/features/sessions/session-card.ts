@@ -3,6 +3,7 @@ import { Component, inject, Input, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { ReservationsService } from '../../core/services/reservations.service';
 import { Session } from '../../core/services/sessions.service';
 
@@ -19,6 +20,7 @@ export class SessionCardComponent implements OnInit {
   private reservationsService = inject(ReservationsService);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private notifications = inject(NotificationService);
 
   loading = false;
   error: string | null = null;
@@ -114,6 +116,7 @@ export class SessionCardComponent implements OnInit {
     // Vérifier si la session est complète
     if (this.isFull()) {
       this.error = 'Cette session est complète';
+      this.notifications.info('Cette session est complète.');
       return;
     }
 
@@ -126,19 +129,23 @@ export class SessionCardComponent implements OnInit {
         next: (reservation) => {
           console.log('Réservation créée:', reservation);
           // Mettre à jour le compteur local et le statut d'inscription
-          this.session.playersCurrent++;
+          this.session.playersCurrent = Math.min(
+            this.session.playersMax,
+            this.session.playersCurrent + 1
+          );
           this.isRegistered = true;
           this.loading = false;
-          // TODO: Afficher un message de succès (toast/snackbar)
-          alert(
-            '✅ Réservation confirmée ! Vous avez reçu un email de confirmation.'
+          this.notifications.success(
+            'Réservation confirmée ! Vous avez reçu un email de confirmation.'
           );
         },
         error: (err) => {
           console.error('Erreur lors de la réservation:', err);
           this.error = err.error?.message || 'Erreur lors de la réservation';
           this.loading = false;
-          alert(`❌ ${this.error}`);
+          this.notifications.error(
+            this.error || 'Erreur lors de la réservation.'
+          );
         },
       });
   }

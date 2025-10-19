@@ -1,6 +1,6 @@
-import { defineConfig, devices } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright/preset';
 import { workspaceRoot } from '@nx/devkit';
+import { nxE2EPreset } from '@nx/playwright/preset';
+import { defineConfig, devices } from '@playwright/test';
 import { config as loadEnv } from 'dotenv';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -30,6 +30,10 @@ for (const candidate of envCandidates) {
  */
 export default defineConfig({
   ...nxE2EPreset(__filename, { testDir: './src' }),
+
+  /* Limit workers to avoid resource exhaustion (EAGAIN errors) */
+  workers: process.env['CI'] ? 2 : 3,
+
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,

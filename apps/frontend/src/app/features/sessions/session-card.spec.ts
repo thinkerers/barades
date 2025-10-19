@@ -4,6 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { of } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { Reservation } from '../../core/services/reservations.service';
 import { Session } from '../../core/services/sessions.service';
 import { SessionCardComponent } from './session-card';
@@ -17,6 +18,12 @@ describe('SessionCardComponent', () => {
       .fn()
       .mockReturnValue({ id: 'user-1', username: 'TestUser' }),
     isAuthenticated: jest.fn().mockReturnValue(true),
+  };
+
+  const mockNotificationService = {
+    success: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
   };
 
   const mockSession: Session = {
@@ -52,6 +59,7 @@ describe('SessionCardComponent', () => {
   };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     // Reset mocks before each test
     mockAuthService.getCurrentUser.mockReturnValue({
       id: 'user-1',
@@ -65,6 +73,7 @@ describe('SessionCardComponent', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: mockAuthService },
+        { provide: NotificationService, useValue: mockNotificationService },
       ],
     }).compileComponents();
 

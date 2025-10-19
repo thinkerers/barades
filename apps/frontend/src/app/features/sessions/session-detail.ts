@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AsyncStateComponent, AsyncStateStatus } from '@org/ui';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { ReservationsService } from '../../core/services/reservations.service';
 import { Session, SessionsService } from '../../core/services/sessions.service';
 
@@ -20,6 +21,7 @@ export class SessionDetailComponent implements OnInit {
   private readonly sessionsService = inject(SessionsService);
   private readonly reservationsService = inject(ReservationsService);
   private readonly authService = inject(AuthService);
+  private readonly notifications = inject(NotificationService);
   private sessionId: string | null = null;
 
   session: Session | null = null;
@@ -28,6 +30,7 @@ export class SessionDetailComponent implements OnInit {
   isRegistered = false;
   reserving = false;
   cancelling = false;
+  deleting = false;
   private currentReservationId: string | null = null;
   readonly loadingMessage = 'Chargement de la session...';
   readonly defaultErrorMessage =
@@ -121,7 +124,7 @@ export class SessionDetailComponent implements OnInit {
     }
 
     if (this.isFull()) {
-      alert('Cette session est complète');
+      this.notifications.info('Cette session est complète.');
       return;
     }
 
@@ -161,14 +164,16 @@ export class SessionDetailComponent implements OnInit {
             }
           }
           this.reserving = false;
-          alert(
-            '✅ Réservation confirmée ! Vous avez reçu un email de confirmation.'
+          this.notifications.success(
+            'Réservation confirmée ! Vous avez reçu un email de confirmation.'
           );
         },
         error: (err) => {
           console.error('Error creating reservation:', err);
           this.reserving = false;
-          alert(`❌ ${err.error?.message || 'Erreur lors de la réservation'}`);
+          this.notifications.error(
+            err.error?.message || 'Erreur lors de la réservation.'
+          );
         },
       });
   }
@@ -197,12 +202,14 @@ export class SessionDetailComponent implements OnInit {
           }
         }
         this.cancelling = false;
-        alert('ℹ️ Désinscription confirmée.');
+        this.notifications.info('Désinscription confirmée.');
       },
       error: (err) => {
         console.error('Error cancelling reservation:', err);
         this.cancelling = false;
-        alert(`❌ ${err.error?.message || 'Erreur lors de la désinscription'}`);
+        this.notifications.error(
+          err.error?.message || 'Erreur lors de la désinscription.'
+        );
       },
     });
   }
@@ -265,5 +272,38 @@ export class SessionDetailComponent implements OnInit {
     if (this.session) {
       this.router.navigate(['/sessions', this.session.id, 'edit']);
     }
+  }
+
+  onDelete(): void {
+    if (!this.session) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Êtes-vous sûr de vouloir supprimer cette session ? Cette action est irréversible.'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.deleting = true;
+
+    this.sessionsService.deleteSession(this.session.id).subscribe({
+      next: () => {
+        this.deleting = false;
+        this.notifications.success('Session supprimée.');
+        this.router.navigate(['/sessions'], {
+          queryParams: { filter: 'my-hosted' },
+        });
+      },
+      error: (err) => {
+        console.error('Error deleting session:', err);
+        this.deleting = false;
+        this.notifications.error(
+          err?.error?.message ?? 'Erreur lors de la suppression de la session.'
+        );
+      },
+    });
   }
 }

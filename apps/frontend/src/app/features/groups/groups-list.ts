@@ -1,4 +1,3 @@
-
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
@@ -118,6 +117,14 @@ export class GroupsListComponent implements OnInit, OnDestroy {
       this.hasJoined(groupId) ||
       group.currentUserIsMember
     ) {
+      return;
+    }
+
+    if (!this.authService.isAuthenticated()) {
+      const returnUrl = `/groups/${groupId}?autoJoin=1`;
+      void this.router.navigate(['/login'], {
+        queryParams: { returnUrl },
+      });
       return;
     }
 
@@ -258,7 +265,10 @@ export class GroupsListComponent implements OnInit, OnDestroy {
 
     switch (httpError.status) {
       case 401:
-        return 'Votre session a expiré. Veuillez vous reconnecter pour voir les groupes.';
+        if (this.authService.isAuthenticated()) {
+          return 'Votre session a expiré. Veuillez vous reconnecter pour voir les groupes.';
+        }
+        return 'Nous ne pouvons pas afficher les groupes publics pour le moment. Réessayez plus tard.';
       case 403:
         return "Vous n'avez pas l'autorisation de consulter ces groupes.";
       case 404:

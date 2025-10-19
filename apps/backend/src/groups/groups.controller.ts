@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { JoinGroupDto } from './dto/join-group.dto';
 import { UpdateGroupDto } from './dto/update-group.dto';
@@ -29,8 +30,8 @@ export class GroupsController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
-  findAll(@CurrentUser() userId: string) {
+  @UseGuards(OptionalJwtAuthGuard)
+  findAll(@CurrentUser() userId?: string) {
     return this.groupsService.findAll(userId);
   }
 
@@ -45,8 +46,8 @@ export class GroupsController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
-  findOne(@Param('id') id: string, @CurrentUser() userId: string) {
+  @UseGuards(OptionalJwtAuthGuard)
+  findOne(@Param('id') id: string, @CurrentUser() userId?: string) {
     return this.groupsService.findOne(id, userId);
   }
 

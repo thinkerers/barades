@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
-import { PollWidgetComponent } from './poll-widget';
-import { PollsService, Poll } from '../../core/services/polls.service';
 import { of, throwError } from 'rxjs';
+import { NotificationService } from '../../core/services/notification.service';
+import { Poll, PollsService } from '../../core/services/polls.service';
+import { PollWidgetComponent } from './poll-widget';
 
 describe('PollWidgetComponent', () => {
   let component: PollWidgetComponent;
@@ -39,6 +40,12 @@ describe('PollWidgetComponent', () => {
     removeVote: jest.fn(),
   };
 
+  const mockNotificationService = {
+    success: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+  };
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [PollWidgetComponent, FormsModule],
@@ -46,6 +53,10 @@ describe('PollWidgetComponent', () => {
         {
           provide: PollsService,
           useValue: mockPollsService,
+        },
+        {
+          provide: NotificationService,
+          useValue: mockNotificationService,
         },
       ],
     }).compileComponents();
@@ -174,7 +185,9 @@ describe('PollWidgetComponent', () => {
 
       component.createPoll();
 
-      expect(component.error).toBe('Vous devez être membre du groupe pour créer un sondage');
+      expect(component.error).toBe(
+        'Vous devez être membre du groupe pour créer un sondage'
+      );
       expect(component.creating).toBe(false);
     });
 
@@ -188,7 +201,9 @@ describe('PollWidgetComponent', () => {
 
       component.createPoll();
 
-      expect(component.error).toBe('Vous devez être connecté pour créer un sondage');
+      expect(component.error).toBe(
+        'Vous devez être connecté pour créer un sondage'
+      );
       expect(component.creating).toBe(false);
     });
 
@@ -250,13 +265,11 @@ describe('PollWidgetComponent', () => {
         throwError(() => ({ status: 403 }))
       );
 
-      // Mock window.alert
-      const alertSpy = jest.spyOn(window, 'alert').mockImplementation();
-
       component.vote('2025-11-01');
 
-      expect(alertSpy).toHaveBeenCalledWith('Vous devez être membre du groupe pour voter');
-      alertSpy.mockRestore();
+      expect(mockNotificationService.error).toHaveBeenCalledWith(
+        'Vous devez être membre du groupe pour voter.'
+      );
     });
 
     it('should handle vote error 401', () => {
@@ -265,12 +278,11 @@ describe('PollWidgetComponent', () => {
         throwError(() => ({ status: 401 }))
       );
 
-      const alertSpy = jest.spyOn(window, 'alert').mockImplementation();
-
       component.vote('2025-11-01');
 
-      expect(alertSpy).toHaveBeenCalledWith('Vous devez être connecté pour voter');
-      alertSpy.mockRestore();
+      expect(mockNotificationService.error).toHaveBeenCalledWith(
+        'Vous devez être connecté pour voter.'
+      );
     });
   });
 
@@ -287,7 +299,10 @@ describe('PollWidgetComponent', () => {
 
       component.removeMyVote();
 
-      expect(mockPollsService.removeVote).toHaveBeenCalledWith('poll-1', 'user-1');
+      expect(mockPollsService.removeVote).toHaveBeenCalledWith(
+        'poll-1',
+        'user-1'
+      );
       expect(emitSpy).toHaveBeenCalled();
     });
 
@@ -312,12 +327,11 @@ describe('PollWidgetComponent', () => {
         throwError(() => ({ status: 500 }))
       );
 
-      const alertSpy = jest.spyOn(window, 'alert').mockImplementation();
-
       component.removeMyVote();
 
-      expect(alertSpy).toHaveBeenCalledWith('Erreur lors de la suppression du vote');
-      alertSpy.mockRestore();
+      expect(mockNotificationService.error).toHaveBeenCalledWith(
+        'Erreur lors de la suppression du vote.'
+      );
     });
   });
 

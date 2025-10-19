@@ -19,6 +19,7 @@ export class GroupsService {
   }
 
   async findAll(userId?: string) {
+    console.log('GroupsService.findAll userId', userId);
     const groups = await this.prisma.group.findMany({
       include: {
         creator: {
@@ -67,10 +68,11 @@ export class GroupsService {
       const isMember =
         Boolean(userId) &&
         group.members.some((member) => member.userId === userId);
+      const canViewMembers = group.isPublic || isMember;
 
       return {
         ...group,
-        members: isMember ? group.members : undefined,
+        members: canViewMembers ? group.members : undefined,
         currentUserIsMember: isMember,
         isRecruiting: group.recruiting,
       };
@@ -127,9 +129,11 @@ export class GroupsService {
       !!userId && group.members.some((member) => member.userId === userId);
 
     // Map recruiting to isRecruiting for frontend consistency
+    const canViewMembers = group.isPublic || isMember;
+
     return {
       ...group,
-      members: isMember ? group.members : undefined,
+      members: canViewMembers ? group.members : undefined,
       currentUserIsMember: isMember,
       isRecruiting: group.recruiting,
     };

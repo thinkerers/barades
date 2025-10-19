@@ -20,6 +20,10 @@ describe('GroupDetailComponent', () => {
   let getGroupSpy: jest.SpyInstance;
   let getPollsSpy: jest.SpyInstance;
   let router: Router;
+  let routeParamMapGet: jest.Mock;
+  let routeQueryParamMapGet: jest.Mock;
+  let routeQueryParamMapHas: jest.Mock;
+  let isAuthenticatedSpy: jest.SpyInstance;
 
   const mockGroup = {
     id: '1',
@@ -87,6 +91,10 @@ describe('GroupDetailComponent', () => {
   };
 
   beforeEach(async () => {
+    routeParamMapGet = jest.fn().mockImplementation(() => '1');
+    routeQueryParamMapGet = jest.fn().mockReturnValue(null);
+    routeQueryParamMapHas = jest.fn().mockReturnValue(false);
+
     await TestBed.configureTestingModule({
       imports: [
         GroupDetailComponent,
@@ -99,7 +107,11 @@ describe('GroupDetailComponent', () => {
           useValue: {
             snapshot: {
               paramMap: {
-                get: jest.fn().mockReturnValue('1'),
+                get: routeParamMapGet,
+              },
+              queryParamMap: {
+                get: routeQueryParamMapGet,
+                has: routeQueryParamMapHas,
               },
             },
           },
@@ -127,6 +139,9 @@ describe('GroupDetailComponent', () => {
     getCurrentUserSpy = jest
       .spyOn(authService, 'getCurrentUser')
       .mockReturnValue(null);
+    isAuthenticatedSpy = jest
+      .spyOn(authService, 'isAuthenticated')
+      .mockReturnValue(false);
   });
 
   it('should create', () => {
@@ -230,8 +245,7 @@ describe('GroupDetailComponent', () => {
     });
 
     it('should set error when id is missing', () => {
-      const route = TestBed.inject(ActivatedRoute);
-      jest.spyOn(route.snapshot.paramMap, 'get').mockReturnValue(null);
+      routeParamMapGet.mockReturnValueOnce(null);
 
       component.ngOnInit();
 
@@ -305,6 +319,7 @@ describe('GroupDetailComponent', () => {
       getGroupSpy.mockReturnValueOnce(of(joinableGroup));
       getCurrentUserIdSpy.mockReturnValue(mockCurrentUser.id);
       getCurrentUserSpy.mockReturnValue(mockCurrentUser);
+      isAuthenticatedSpy.mockReturnValue(true);
       fixture.detectChanges();
     });
 

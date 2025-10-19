@@ -53,7 +53,7 @@ test.describe('Groups Navigation', () => {
     await expect(page.getByText('Casual Board Gamers')).toBeVisible();
 
     // Bob should NOT see private group (Elite Strategy Players)
-    await expect(page.getByText('Elite Strategy Players')).toBeHidden();
+    await expect(page.getByText('Elite Strategy Players')).toHaveCount(0);
   });
 
   test('should navigate to group detail page', async ({
@@ -102,19 +102,64 @@ test.describe('Groups Navigation', () => {
     ).toBeVisible();
   });
 
-  test('should show recruiting badge when group is recruiting', async ({
-    authenticatedPage: page,
+  test('should show recruiting badge and join action when group is recruiting', async ({
+    page,
+    loginAs,
+    createPollSandbox,
   }) => {
+    const sandbox = await createPollSandbox({
+      members: ['bob_boardgamer'],
+      isPublic: true,
+      recruiting: true,
+    });
+
+    await loginAs(page, 'carol_newbie');
+    await expect(page).toHaveURL('/');
+
     await page.goto('/groups');
 
-    // Wait for groups to load
-    await expect(page.locator('.group-card').first()).toBeVisible();
+    const groupCard = page.getByTestId(`group-card-${sandbox.groupId}`);
+    await expect(groupCard).toBeVisible();
 
-    // Look for recruiting status badge ("Recrutement ouvert" or similar text)
-    // The text might be "Rejoindre" button or status badge
+    await expect(groupCard.getByText('Recrute')).toBeVisible();
+    const joinButton = groupCard.getByRole('button', { name: 'Rejoindre' });
+    await expect(joinButton).toBeVisible();
+    await expect(joinButton).toBeEnabled();
+  });
+
+  test('should prompt login and auto-join after authentication', async ({
+    page,
+    createPollSandbox,
+  }) => {
+    const sandbox = await createPollSandbox({
+      members: ['bob_boardgamer'],
+      isPublic: true,
+      recruiting: true,
+    });
+
+    await page.goto('/groups');
+
+    const groupCard = page.getByTestId(`group-card-${sandbox.groupId}`);
+    await expect(groupCard).toBeVisible();
+
+    await groupCard.getByRole('button', { name: 'Rejoindre' }).click();
+
+    // Should be redirected to login with autoJoin return URL
+    await expect(page).toHaveURL(/\/login\?returnUrl=/);
+    const loginRedirectUrl = page.url();
+    expect(loginRedirectUrl).toContain('autoJoin%3D1');
+
+    await page.getByTestId('username-input').fill('carol_newbie');
+    await page.getByTestId('password-input').fill('password123');
+    await page.getByTestId('login-submit-button').click();
+
+    await page.waitForURL(new RegExp(`/groups/${sandbox.groupId}`), {
+      timeout: 15000,
+    });
+
     await expect(
-      page.getByText(/rejoindre|recrutement/i).first()
-    ).toBeVisible();
+      page.getByRole('button', { name: /quitter le groupe/i })
+    ).toBeVisible({ timeout: 10000 });
   });
 
   test('should filter groups by playstyle', async ({

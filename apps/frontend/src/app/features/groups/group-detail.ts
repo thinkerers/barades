@@ -74,6 +74,7 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
   leaveError: string | null = null;
   private currentGroupId: string | null = null;
   private autoRetryInterval: ReturnType<typeof setInterval> | null = null;
+  private autoJoinRequested = false;
   private readonly autoRetryDelayMs = 15000;
   private readonly offlineHandler = () => {
     this.isOffline = true;
@@ -101,6 +102,13 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
     if (id) {
       this.currentGroupId = id;
       this.loadGroup(id);
+
+      // Check if user should auto-join after login
+      const autoJoin =
+        this.route.snapshot.queryParamMap.get('autoJoin') === '1';
+      if (autoJoin && this.authService.isAuthenticated()) {
+        this.autoJoinRequested = true;
+      }
     } else {
       this.error = 'ID de groupe invalide';
       this.loading = false;
@@ -142,6 +150,10 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
         if (!this.initialPollsLoaded || refreshPolls) {
           this.initialPollsLoaded = true;
           this.loadPolls(id);
+        }
+
+        if (this.autoJoinRequested) {
+          this.handlePendingAutoJoin();
         }
       },
       error: (err) => {
@@ -233,7 +245,68 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
     );
   }
 
+  private handlePendingAutoJoin(): void {
+    if (!this.autoJoinRequested) {
+      return;
+    }
+
+    if (!this.authService.isAuthenticated() || !this.group) {
+      this.autoJoinRequested = false;
+      this.clearAutoJoinQueryParam();
+      return;
+    }
+
+    if (this.isMember || !this.canJoin() || this.joinInProgress) {
+      this.autoJoinRequested = false;
+      this.clearAutoJoinQueryParam();
+      return;
+    }
+
+    this.autoJoinRequested = false;
+    this.joinGroup();
+    this.clearAutoJoinQueryParam();
+  }
+
+  private clearAutoJoinQueryParam(): void {
+    const currentUrl = this.router.url;
+    const cleanedUrl = currentUrl
+      .replace(/([?&])autoJoin=1(&|$)/, (_, prefix: string, suffix: string) => {
+        if (prefix === '?' && suffix === '&') {
+          return '?';
+        }
+
+        if (suffix === '&') {
+          return prefix;
+        }
+
+        return prefix === '?' ? '?' : '';
+      })
+      .replace(/\?$/, '')
+      .replace(/&$/, '');
+
+    if (cleanedUrl !== currentUrl) {
+      setTimeout(() => {
+        void this.router.navigateByUrl(cleanedUrl, {
+          replaceUrl: true,
+        });
+      }, 0);
+    }
+  }
+
   joinGroup(): void {
+    if (!this.authService.isAuthenticated()) {
+      const returnUrl =
+        this.router.url || `/groups/${this.currentGroupId ?? ''}`;
+      const separator = returnUrl.includes('?') ? '&' : '?';
+      const targetUrl = returnUrl.includes('autoJoin=1')
+        ? returnUrl
+        : `${returnUrl}${separator}autoJoin=1`;
+      this.router.navigate(['/login'], {
+        queryParams: { returnUrl: targetUrl },
+      });
+      return;
+    }
+
     if (!this.group || !this.canJoin() || this.joinInProgress) {
       return;
     }
@@ -391,7 +464,10 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
 
     switch (httpError.status) {
       case 401:
-        return 'Votre session a expiré. Veuillez vous reconnecter pour accéder au groupe.';
+        if (this.authService.isAuthenticated()) {
+          return 'Votre session a expiré. Veuillez vous reconnecter pour accéder au groupe.';
+        }
+        return 'Ce groupe est public, mais nous ne pouvons pas l’afficher pour le moment.';
       case 403:
         return "Vous n'avez pas accès à ce groupe.";
       case 404:

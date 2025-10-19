@@ -19,7 +19,22 @@ async function openGroupDetail(page: Page, groupName: string): Promise<void> {
   await page.goto('/groups');
   const groupCard = page.locator('.group-card', { hasText: groupName });
   await expect(groupCard).toBeVisible({ timeout: 10_000 });
+
+  // Intercept API call to verify currentUserIsMember is true
+  const responsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes('/api/groups/') && response.status() === 200
+  );
+
   await groupCard.getByRole('button', { name: 'Voir les détails' }).click();
+
+  const response = await responsePromise;
+  const groupData = await response.json();
+  console.log(
+    'Group API response - currentUserIsMember:',
+    groupData.currentUserIsMember
+  );
+
   await expect(page.locator('.group-detail__title')).toContainText(groupName);
   await expect(page.getByTestId('poll-widget')).toBeVisible();
 }
@@ -72,9 +87,21 @@ test.describe('Edge Cases and Empty States', () => {
     authenticatedPage: page,
     createPollSandbox,
   }, testInfo) => {
-    await openSandboxGroup(page, createPollSandbox, testInfo);
+    const sandbox = await openSandboxGroup(page, createPollSandbox, testInfo);
 
-    await expect(page.getByTestId('create-poll-button')).toBeVisible();
+    // Debug: Check if token is present and user is recognized as member
+    const token = await page.evaluate(() =>
+      localStorage.getItem('accessToken')
+    );
+    console.log('Token present:', !!token);
+    console.log('Sandbox group ID:', sandbox.groupId);
+
+    // Wait for the poll-widget component to fully load
+    await expect(page.getByTestId('poll-widget')).toBeVisible();
+
+    await expect(page.getByTestId('create-poll-button')).toBeVisible({
+      timeout: 10000,
+    });
     await expect(page.locator('.poll-display')).toBeHidden();
   });
 

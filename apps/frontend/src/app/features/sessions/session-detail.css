@@ -13,6 +13,12 @@
   gap: 1rem;
 }
 
+.session-detail__owner-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .button--back {
   display: inline-flex;
   align-items: center;
@@ -50,6 +56,31 @@
 .button--edit:hover {
   background-color: var(--color-primary-light, #818cf8);
   border-color: var(--color-primary-light, #818cf8);
+}
+
+.button--danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.button--danger:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.6);
+}
+
+.button--danger:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .button__icon {

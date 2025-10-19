@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
 import { findClosestMatches } from '@org/ui';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { Session, SessionsService } from '../../core/services/sessions.service';
 
 @Component({
@@ -25,6 +26,7 @@ export class SessionEditComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly sessionsService = inject(SessionsService);
   private readonly authService = inject(AuthService);
+  private readonly notifications = inject(NotificationService);
 
   sessionForm!: FormGroup;
   loading = true;
@@ -200,7 +202,7 @@ export class SessionEditComponent implements OnInit {
     this.sessionsService.updateSession(this.sessionId, sessionData).subscribe({
       next: (updatedSession) => {
         this.saving = false;
-        alert('✅ Session modifiée avec succès !');
+        this.notifications.success('Session modifiée avec succès.');
         this.router.navigate(['/sessions', updatedSession.id]);
       },
       error: (err) => {

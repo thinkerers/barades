@@ -114,7 +114,7 @@ describe('GroupsService', () => {
       expect(result[0].isPublic).toBe(true);
       expect(result[0].isRecruiting).toBe(true);
       expect(result[0].currentUserIsMember).toBe(false);
-      expect(result[0].members).toBeUndefined();
+      expect(result[0].members).toEqual(mockPublicGroup.members);
     });
 
     it('should return public groups and private groups where user is member', async () => {
@@ -132,7 +132,7 @@ describe('GroupsService', () => {
       const privateGroup = result.find((g) => g.id === 'group-private');
 
       expect(publicGroup?.currentUserIsMember).toBe(false);
-      expect(publicGroup?.members).toBeUndefined();
+      expect(publicGroup?.members).toEqual(mockPublicGroup.members);
       expect(privateGroup?.currentUserIsMember).toBe(true);
       expect(privateGroup?.members).toBeDefined();
     });
@@ -148,7 +148,7 @@ describe('GroupsService', () => {
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(mockGroupId);
       expect(result[0].currentUserIsMember).toBe(false);
-      expect(result[0].members).toBeUndefined();
+      expect(result[0].members).toEqual(mockPublicGroup.members);
     });
 
     it('should map recruiting to isRecruiting for all groups', async () => {
@@ -168,8 +168,8 @@ describe('GroupsService', () => {
 
       expect(result[0].isRecruiting).toBe(true);
       expect(result[1].isRecruiting).toBe(false);
-      expect(result[0].members).toBeUndefined();
-      expect(result[1].members).toBeUndefined();
+      expect(result[0].members).toEqual(groupRecruiting.members);
+      expect(result[1].members).toEqual(groupNotRecruiting.members);
     });
   });
 
@@ -182,7 +182,7 @@ describe('GroupsService', () => {
       expect(result.id).toBe(mockGroupId);
       expect(result.isRecruiting).toBe(true);
       expect(result.currentUserIsMember).toBe(false);
-      expect(result.members).toBeUndefined();
+      expect(result.members).toEqual(mockPublicGroup.members);
       expect(mockPrismaService.group.findUnique).toHaveBeenCalledWith({
         where: { id: mockGroupId },
         include: expect.objectContaining({

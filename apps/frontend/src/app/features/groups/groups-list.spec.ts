@@ -40,12 +40,14 @@ describe('GroupsListComponent', () => {
   const authServiceMock = {
     getCurrentUserId: jest.fn(),
     getCurrentUser: jest.fn(),
+    isAuthenticated: jest.fn(),
   };
 
   beforeEach(async () => {
     jest.clearAllMocks();
     authServiceMock.getCurrentUserId.mockReturnValue(null);
     authServiceMock.getCurrentUser.mockReturnValue(null);
+    authServiceMock.isAuthenticated.mockReturnValue(false);
 
     await TestBed.configureTestingModule({
       imports: [GroupsListComponent, HttpClientTestingModule],
@@ -149,6 +151,7 @@ describe('GroupsListComponent', () => {
   });
 
   it('should request to join a group and update local state on success', () => {
+    authServiceMock.isAuthenticated.mockReturnValue(true);
     const joinResponse = {
       joined: true,
       groupId: '1',
@@ -191,6 +194,7 @@ describe('GroupsListComponent', () => {
       .mockReturnValue(throwError(() => new Error('Failed')));
 
     component.groups = [...mockGroups];
+    authServiceMock.isAuthenticated.mockReturnValue(true);
 
     component.requestToJoin(mockGroups[0]);
 
@@ -225,5 +229,18 @@ describe('GroupsListComponent', () => {
 
     expect(component.hasJoined('2')).toBe(true);
     expect(component.isJoining('2')).toBe(false);
+  });
+
+  it('should redirect to login when requesting to join while unauthenticated', () => {
+    const group = { ...mockGroups[0] };
+    const navigateSpy = jest.spyOn(router, 'navigate').mockResolvedValue(true);
+    const joinSpy = jest.spyOn(groupsService, 'joinGroup');
+
+    component.requestToJoin(group);
+
+    expect(joinSpy).not.toHaveBeenCalled();
+    expect(navigateSpy).toHaveBeenCalledWith(['/login'], {
+      queryParams: { returnUrl: `/groups/${group.id}?autoJoin=1` },
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
@@ -101,32 +101,39 @@ export class SessionsService {
   }
 
   findOne(id: string) {
-    return this.prisma.session.findUnique({
-      where: { id },
-      include: {
-        host: {
-          select: {
-            id: true,
-            username: true,
-            avatar: true,
-            bio: true,
+    return this.prisma.session
+      .findUnique({
+        where: { id },
+        include: {
+          host: {
+            select: {
+              id: true,
+              username: true,
+              avatar: true,
+              bio: true,
+            },
           },
-        },
-        location: true,
-        reservations: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                avatar: true,
-                skillLevel: true,
+          location: true,
+          reservations: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                  avatar: true,
+                  skillLevel: true,
+                },
               },
             },
           },
         },
-      },
-    });
+      })
+      .then((session) => {
+        if (!session) {
+          throw new NotFoundException(`Session with ID ${id} not found`);
+        }
+        return session;
+      });
   }
 
   async update(id: string, updateSessionDto: UpdateSessionDto) {
@@ -184,9 +191,24 @@ export class SessionsService {
     });
   }
 
-  remove(_id: string) {
-    // TODO: Implement later
-    throw new Error('Method not implemented yet');
+  async remove(id: string) {
+    const existingSession = await this.prisma.session.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!existingSession) {
+      throw new NotFoundException(`Session with ID ${id} not found`);
+    }
+
+    await this.prisma.session.delete({
+      where: { id },
+    });
+
+    return {
+      deleted: true,
+      id,
+    };
   }
 
   /**

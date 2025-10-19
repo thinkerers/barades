@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { NotificationService } from '../../core/services/notification.service';
 import { Poll, PollsService } from '../../core/services/polls.service';
 
 @Component({
@@ -8,10 +9,11 @@ import { Poll, PollsService } from '../../core/services/polls.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './poll-widget.html',
-  styleUrl: './poll-widget.css'
+  styleUrl: './poll-widget.css',
 })
 export class PollWidgetComponent {
   private pollsService = inject(PollsService);
+  private notifications = inject(NotificationService);
 
   @Input() poll: Poll | null = null;
   @Input() groupId = '';
@@ -43,7 +45,7 @@ export class PollWidgetComponent {
   }
 
   removeDate(date: string): void {
-    this.selectedDates = this.selectedDates.filter(d => d !== date);
+    this.selectedDates = this.selectedDates.filter((d) => d !== date);
   }
 
   createPoll(): void {
@@ -55,52 +57,59 @@ export class PollWidgetComponent {
     this.creating = true;
     this.error = null;
 
-    this.pollsService.createPoll({
-      title: this.pollTitle,
-      dates: this.selectedDates,
-      groupId: this.groupId
-    }).subscribe({
-      next: (poll) => {
-        this.pollCreated.emit(poll);
-        this.resetForm();
-        this.showCreateForm = false;
-        this.creating = false;
-      },
-      error: (err) => {
-        console.error('Error creating poll:', err);
-        if (err.status === 403) {
-          this.error = 'Vous devez être membre du groupe pour créer un sondage';
-        } else if (err.status === 401) {
-          this.error = 'Vous devez être connecté pour créer un sondage';
-        } else {
-          this.error = 'Erreur lors de la création du sondage';
-        }
-        this.creating = false;
-      }
-    });
+    this.pollsService
+      .createPoll({
+        title: this.pollTitle,
+        dates: this.selectedDates,
+        groupId: this.groupId,
+      })
+      .subscribe({
+        next: (poll) => {
+          this.pollCreated.emit(poll);
+          this.resetForm();
+          this.showCreateForm = false;
+          this.creating = false;
+        },
+        error: (err) => {
+          console.error('Error creating poll:', err);
+          if (err.status === 403) {
+            this.error =
+              'Vous devez être membre du groupe pour créer un sondage';
+          } else if (err.status === 401) {
+            this.error = 'Vous devez être connecté pour créer un sondage';
+          } else {
+            this.error = 'Erreur lors de la création du sondage';
+          }
+          this.creating = false;
+        },
+      });
   }
 
   vote(dateChoice: string): void {
     if (!this.poll || !this.currentUserId) return;
 
-    this.pollsService.vote(this.poll.id, {
-      userId: this.currentUserId,
-      dateChoice
-    }).subscribe({
-      next: () => {
-        this.voted.emit();
-      },
-      error: (err) => {
-        console.error('Error voting:', err);
-        if (err.status === 403) {
-          alert('Vous devez être membre du groupe pour voter');
-        } else if (err.status === 401) {
-          alert('Vous devez être connecté pour voter');
-        } else {
-          alert('Erreur lors du vote');
-        }
-      }
-    });
+    this.pollsService
+      .vote(this.poll.id, {
+        userId: this.currentUserId,
+        dateChoice,
+      })
+      .subscribe({
+        next: () => {
+          this.voted.emit();
+        },
+        error: (err) => {
+          console.error('Error voting:', err);
+          if (err.status === 403) {
+            this.notifications.error(
+              'Vous devez être membre du groupe pour voter.'
+            );
+          } else if (err.status === 401) {
+            this.notifications.error('Vous devez être connecté pour voter.');
+          } else {
+            this.notifications.error('Erreur lors du vote.');
+          }
+        },
+      });
   }
 
   removeMyVote(): void {
@@ -113,13 +122,17 @@ export class PollWidgetComponent {
       error: (err) => {
         console.error('Error removing vote:', err);
         if (err.status === 403) {
-          alert('Vous devez être membre du groupe pour supprimer votre vote');
+          this.notifications.error(
+            'Vous devez être membre du groupe pour supprimer votre vote.'
+          );
         } else if (err.status === 401) {
-          alert('Vous devez être connecté pour supprimer votre vote');
+          this.notifications.error(
+            'Vous devez être connecté pour supprimer votre vote.'
+          );
         } else {
-          alert('Erreur lors de la suppression du vote');
+          this.notifications.error('Erreur lors de la suppression du vote.');
         }
-      }
+      },
     });
   }
 
@@ -150,7 +163,7 @@ export class PollWidgetComponent {
       month: 'long',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     }).format(date);
   }
 

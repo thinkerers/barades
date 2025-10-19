@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { SessionsService } from '../../core/services/sessions.service';
 import { SessionEditComponent } from './session-edit';
 
@@ -13,6 +14,11 @@ describe('SessionEditComponent', () => {
   let mockSessionsService: Partial<SessionsService>;
   let mockAuthService: Partial<AuthService>;
   let mockRouter: Partial<Router>;
+  const mockNotificationService = {
+    success: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+  };
 
   const mockSession = {
     id: '1',
@@ -61,6 +67,7 @@ describe('SessionEditComponent', () => {
         { provide: SessionsService, useValue: mockSessionsService },
         { provide: AuthService, useValue: mockAuthService },
         { provide: Router, useValue: mockRouter },
+        { provide: NotificationService, useValue: mockNotificationService },
         {
           provide: ActivatedRoute,
           useValue: {
@@ -72,6 +79,7 @@ describe('SessionEditComponent', () => {
 
     fixture = TestBed.createComponent(SessionEditComponent);
     component = fixture.componentInstance;
+    jest.clearAllMocks();
   });
 
   it('should create', () => {
@@ -98,9 +106,11 @@ describe('SessionEditComponent', () => {
 
   it('should call updateSession on submit', () => {
     fixture.detectChanges();
-    jest.spyOn(window, 'alert').mockImplementation(() => undefined);
     component.onSubmit();
     expect(mockSessionsService.updateSession).toHaveBeenCalled();
+    expect(mockNotificationService.success).toHaveBeenCalledWith(
+      'Session modifiée avec succès.'
+    );
   });
 
   it('should navigate on cancel', () => {
