@@ -3,12 +3,50 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { AsyncStateComponent, AsyncStateStatus } from '@org/ui';
 import * as L from 'leaflet';
+import 'leaflet.locatecontrol';
 import {
   Location,
   LocationsService,
 } from '../../core/services/locations.service';
 
 type AmenityFilterKey = 'wifi' | 'tables' | 'food' | 'drinks' | 'parking';
+
+type LeafletLocateControl = L.Control & {
+  start(): void;
+  stop(): void;
+  on(
+    type: 'locationfound',
+    fn: (event: L.LocationEvent) => void
+  ): LeafletLocateControl;
+  on(
+    type: 'locationerror',
+    fn: (event: L.ErrorEvent) => void
+  ): LeafletLocateControl;
+};
+
+interface LeafletLocateOptions extends L.ControlOptions {
+  flyTo?: boolean;
+  keepCurrentZoomLevel?: boolean;
+  drawCircle?: boolean;
+  drawMarker?: boolean;
+  showCompass?: boolean;
+  strings?: {
+    title?: string;
+    popup?: string;
+    outsideMapBoundsMsg?: string;
+  };
+  locateOptions?: PositionOptions & { maxZoom?: number };
+}
+
+type LeafletControlWithLocate = typeof L.control & {
+  locate?: (options?: LeafletLocateOptions) => LeafletLocateControl;
+};
+
+interface StoredUserPosition {
+  lat: number;
+  lon: number;
+  timestamp: number;
+}
 
 @Component({
   selector: 'app-locations-list',
@@ -45,12 +83,27 @@ export class LocationsListComponent implements OnInit {
   selectedLocationId: string | null = null;
   userPosition: { lat: number; lon: number } | null = null;
   private userMarker: L.Marker | null = null;
-  geolocating = false;
+  private locateControl: LeafletLocateControl | null = null;
+  private mapLocationFoundHandler?: (event: L.LocationEvent) => void;
+  private mapLocationErrorHandler?: (event: L.ErrorEvent) => void;
+  private preloadedUserPositionFromStorage = false;
+  private restoredUserPosition = false;
+  private initialLocateRequested = false;
+  private skipNextNearestAdjust = false;
+  private readonly userLocationStorageKey = 'barades.locations.userPosition';
   geolocationError: string | null = null;
   isDetailsCollapsed = false;
 
   ngOnInit(): void {
     console.log('[LocationsList] Component initialized');
+    const storedPosition = this.readStoredUserPosition();
+    if (storedPosition) {
+      this.userPosition = {
+        lat: storedPosition.lat,
+        lon: storedPosition.lon,
+      };
+      this.preloadedUserPositionFromStorage = true;
+    }
     // Initialize map immediately since container is always in DOM
     setTimeout(() => {
       console.log('[LocationsList] Attempting to initialize map...');
@@ -101,6 +154,7 @@ export class LocationsListComponent implements OnInit {
 
           console.log('[LocationsList] Adding markers to map...');
           this.addMarkers();
+          this.maybeRestoreUserPosition();
         }, 100);
       },
       error: (err) => {
@@ -132,8 +186,17 @@ export class LocationsListComponent implements OnInit {
     // Avoid reinitializing if map already exists
     if (this.map) {
       console.log('[LocationsList] Map already exists, removing old instance');
+      if (this.mapLocationFoundHandler) {
+        this.map.off('locationfound', this.mapLocationFoundHandler);
+        this.mapLocationFoundHandler = undefined;
+      }
+      if (this.mapLocationErrorHandler) {
+        this.map.off('locationerror', this.mapLocationErrorHandler);
+        this.mapLocationErrorHandler = undefined;
+      }
       this.map.remove();
       this.map = null;
+      this.locateControl = null;
     }
 
     // Set default icon path for Leaflet
@@ -141,10 +204,15 @@ export class LocationsListComponent implements OnInit {
 
     console.log('[LocationsList] Creating Leaflet map...');
 
-    // Center on Brussels - create map with specific options
+    const initialCenter: [number, number] = this.userPosition
+      ? [this.userPosition.lat, this.userPosition.lon]
+      : [50.8503, 4.3517];
+    const initialZoom = this.userPosition ? 15 : 7;
+
+    // Center on Brussels or stored user position - create map with specific options
     this.map = L.map('map', {
-      center: [50.8503, 4.3517],
-      zoom: 13,
+      center: initialCenter,
+      zoom: initialZoom,
       preferCanvas: false,
       attributionControl: true,
     });
@@ -166,6 +234,8 @@ export class LocationsListComponent implements OnInit {
     // Critical: Force map to recognize its container size
     this.map.whenReady(() => {
       console.log('[LocationsList] Map is ready');
+      this.setupLocateControl();
+      this.triggerInitialLocate();
       setTimeout(() => {
         if (this.map) {
           console.log('[LocationsList] Calling invalidateSize()');
@@ -189,6 +259,223 @@ export class LocationsListComponent implements OnInit {
     tileLayer.on('tileerror', (error) => {
       console.error('[LocationsList] Tile loading error:', error);
     });
+  }
+
+  private setupLocateControl(): void {
+    if (!this.map) return;
+
+    if (this.locateControl) {
+      this.locateControl.stop();
+      this.locateControl = null;
+    }
+
+    if (this.mapLocationFoundHandler) {
+      this.map.off('locationfound', this.mapLocationFoundHandler);
+      this.mapLocationFoundHandler = undefined;
+    }
+
+    if (this.mapLocationErrorHandler) {
+      this.map.off('locationerror', this.mapLocationErrorHandler);
+      this.mapLocationErrorHandler = undefined;
+    }
+
+    const controlFactory = L.control as LeafletControlWithLocate;
+    const locate = controlFactory.locate;
+
+    if (!locate) {
+      console.warn('[LocationsList] Locate control plugin not available');
+      return;
+    }
+    try {
+      this.locateControl = locate({
+        position: 'topleft',
+        flyTo: true,
+        showCompass: true,
+        drawCircle: false,
+        drawMarker: false,
+        strings: {
+          title: 'Trouver ma position',
+          popup: 'Vous êtes ici (±{distance} {unit})',
+          outsideMapBoundsMsg: 'Vous êtes hors des limites de la carte',
+        },
+        locateOptions: {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 10000,
+        },
+      }).addTo(this.map);
+
+      this.mapLocationFoundHandler = (event: L.LocationEvent) => {
+        this.handleLocateSuccess(event);
+      };
+
+      this.mapLocationErrorHandler = (event: L.ErrorEvent) => {
+        this.handleLocateError(event);
+      };
+
+      this.map.on('locationfound', this.mapLocationFoundHandler);
+      this.map.on('locationerror', this.mapLocationErrorHandler);
+
+      const container = this.locateControl.getContainer();
+      if (container) {
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.disableScrollPropagation(container);
+      }
+
+      this.triggerInitialLocate();
+    } catch (error) {
+      console.error('[LocationsList] Failed to setup locate control:', error);
+      this.locateControl = null;
+      if (this.mapLocationFoundHandler) {
+        this.map.off('locationfound', this.mapLocationFoundHandler);
+        this.mapLocationFoundHandler = undefined;
+      }
+      if (this.mapLocationErrorHandler) {
+        this.map.off('locationerror', this.mapLocationErrorHandler);
+        this.mapLocationErrorHandler = undefined;
+      }
+    }
+  }
+
+  private triggerInitialLocate(): void {
+    if (this.initialLocateRequested) {
+      return;
+    }
+
+    this.initialLocateRequested = true;
+    this.skipNextNearestAdjust = true;
+
+    if (this.locateControl) {
+      try {
+        this.locateControl.start();
+        return;
+      } catch (error) {
+        console.warn(
+          '[LocationsList] Locate control start failed, falling back to map.locate()',
+          error
+        );
+      }
+    }
+
+    if (!this.map) {
+      return;
+    }
+
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      console.warn('[LocationsList] Geolocation API not available');
+      return;
+    }
+
+    this.map.locate({
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 10000,
+      setView: false,
+    });
+  }
+
+  private handleLocateSuccess(event: L.LocationEvent): void {
+    this.geolocationError = null;
+    this.userPosition = {
+      lat: event.latlng.lat,
+      lon: event.latlng.lng,
+    };
+
+    const animateUserMarker = !this.skipNextNearestAdjust;
+    this.addUserMarker({ animate: animateUserMarker });
+    const adjustMap = !this.skipNextNearestAdjust;
+    this.skipNextNearestAdjust = false;
+    this.findNearestLocation({ adjustMap });
+    this.persistUserPosition(this.userPosition);
+    this.restoredUserPosition = true;
+  }
+
+  private handleLocateError(event: L.ErrorEvent): void {
+    console.error('[LocationsList] Locate failed:', event.message);
+    this.geolocationError = event.message;
+    this.skipNextNearestAdjust = false;
+  }
+
+  private persistUserPosition(position: { lat: number; lon: number }): void {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return;
+    }
+
+    const payload: StoredUserPosition = {
+      lat: position.lat,
+      lon: position.lon,
+      timestamp: Date.now(),
+    };
+
+    try {
+      window.localStorage.setItem(
+        this.userLocationStorageKey,
+        JSON.stringify(payload)
+      );
+    } catch (error) {
+      console.warn('[LocationsList] Failed to persist user position', error);
+    }
+  }
+
+  private readStoredUserPosition(): StoredUserPosition | null {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return null;
+    }
+
+    const raw = window.localStorage.getItem(this.userLocationStorageKey);
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as Partial<StoredUserPosition>;
+      if (
+        typeof parsed !== 'object' ||
+        parsed === null ||
+        typeof parsed.lat !== 'number' ||
+        typeof parsed.lon !== 'number'
+      ) {
+        return null;
+      }
+
+      return {
+        lat: parsed.lat,
+        lon: parsed.lon,
+        timestamp:
+          typeof parsed.timestamp === 'number' ? parsed.timestamp : Date.now(),
+      };
+    } catch (error) {
+      console.warn('[LocationsList] Failed to read stored position', error);
+      return null;
+    }
+  }
+
+  private maybeRestoreUserPosition(): void {
+    if (this.restoredUserPosition) {
+      return;
+    }
+
+    if (!this.map) {
+      return;
+    }
+
+    if (this.preloadedUserPositionFromStorage && this.userPosition) {
+      this.restoredUserPosition = true;
+      this.preloadedUserPositionFromStorage = false;
+      this.addUserMarker({ animate: false });
+      this.findNearestLocation({ adjustMap: false });
+      return;
+    }
+
+    const stored = this.readStoredUserPosition();
+    if (!stored) {
+      return;
+    }
+
+    this.userPosition = { lat: stored.lat, lon: stored.lon };
+    this.restoredUserPosition = true;
+    this.addUserMarker({ animate: false });
+    this.findNearestLocation({ adjustMap: false });
   }
 
   private addMarkers(): void {
@@ -671,58 +958,13 @@ export class LocationsListComponent implements OnInit {
   }
 
   /**
-   * Get user's current position using geolocation API
-   */
-  getUserLocation(): void {
-    if (!navigator.geolocation) {
-      this.geolocationError =
-        "La géolocalisation n'est pas supportée par votre navigateur";
-      return;
-    }
-
-    this.geolocating = true;
-    this.geolocationError = null;
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        this.userPosition = {
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
-        };
-
-        this.addUserMarker();
-        this.findNearestLocation();
-        this.geolocating = false;
-      },
-      (error) => {
-        this.geolocating = false;
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            this.geolocationError = 'Permission de géolocalisation refusée';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            this.geolocationError = 'Position non disponible';
-            break;
-          case error.TIMEOUT:
-            this.geolocationError = 'Délai de géolocalisation dépassé';
-            break;
-          default:
-            this.geolocationError = 'Erreur de géolocalisation inconnue';
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
-    );
-  }
-
-  /**
    * Add a marker for user's position
    */
-  private addUserMarker(): void {
+  private addUserMarker(options: { animate?: boolean } = {}): void {
     if (!this.userPosition || !this.map) return;
+
+    const { animate = true } = options;
+    const targetZoom = animate ? 13 : this.map.getZoom();
 
     // Remove existing user marker if any
     if (this.userMarker) {
@@ -750,16 +992,23 @@ export class LocationsListComponent implements OnInit {
       .openPopup();
 
     // Center map on user position
-    this.map.setView([this.userPosition.lat, this.userPosition.lon], 13, {
-      animate: true,
-      duration: 1,
-    });
+    this.map.setView(
+      [this.userPosition.lat, this.userPosition.lon],
+      targetZoom,
+      {
+        animate,
+        duration: animate ? 1 : 0,
+        noMoveStart: !animate,
+      }
+    );
   }
 
   /**
    * Find and zoom to nearest location
    */
-  private findNearestLocation(): void {
+  private findNearestLocation(options: { adjustMap?: boolean } = {}): void {
+    const { adjustMap = true } = options;
+
     if (!this.userPosition || !this.map || this.filteredLocations.length === 0)
       return;
 
@@ -786,19 +1035,21 @@ export class LocationsListComponent implements OnInit {
 
     const nearest = locationsWithDistance[0];
 
-    // Create bounds to include both user position and nearest location
-    const bounds = L.latLngBounds([
-      [userLat, userLon],
-      [nearest.location.lat, nearest.location.lon],
-    ]);
+    if (adjustMap) {
+      // Create bounds to include both user position and nearest location
+      const bounds = L.latLngBounds([
+        [userLat, userLon],
+        [nearest.location.lat, nearest.location.lon],
+      ]);
 
-    // Fit map to show both markers with padding
-    this.map.fitBounds(bounds, {
-      padding: [50, 50],
-      maxZoom: 15,
-      animate: true,
-      duration: 1,
-    });
+      // Fit map to show both markers with padding
+      this.map.fitBounds(bounds, {
+        padding: [50, 50],
+        maxZoom: 15,
+        animate: true,
+        duration: 1,
+      });
+    }
 
     // Highlight nearest location in list
     setTimeout(() => {

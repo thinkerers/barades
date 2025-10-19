@@ -44,6 +44,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "leaflet": "^1.9.4",
+    "leaflet.locatecontrol": "^0.81.0",
     "prisma": "^6.17.1",
     "reflect-metadata": "^0.1.13",
     "resend": "^6.1.3",

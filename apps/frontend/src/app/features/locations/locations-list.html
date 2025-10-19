@@ -255,19 +255,5 @@
         </div>
       </div>
     </div>
-
-    <button
-      type="button"
-      class="geolocation-button"
-      (click)="getUserLocation()"
-      [disabled]="geolocating"
-      [title]="geolocationError || 'Trouver ma position'"
-    >
-      @if (!geolocating) {
-      <mat-icon aria-hidden="true">my_location</mat-icon>
-      } @else {
-      <mat-icon aria-hidden="true" class="spin">sync</mat-icon>
-      }
-    </button>
   </div>
 </div>
