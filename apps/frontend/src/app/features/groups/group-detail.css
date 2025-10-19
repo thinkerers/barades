@@ -7,6 +7,18 @@
   margin: 0 auto;
 }
 
+.group-detail-container mat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1em;
+  min-height: 1em;
+  width: auto;
+  height: auto;
+  line-height: 1;
+  overflow: visible;
+}
+
 .offline-banner {
   display: flex;
   align-items: center;
