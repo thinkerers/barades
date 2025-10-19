@@ -192,7 +192,11 @@ export class LocationsListComponent implements OnInit, OnDestroy {
   readonly defaultErrorMessage =
     'Impossible de charger les lieux. Veuillez réessayer.';
 
-  private scheduleAfterNextRender(callback: () => void): void {
+  private scheduleAfterNextRender(
+    callback: () => void,
+    options?: { waitForRender?: boolean }
+  ): void {
+    const waitForRender = options?.waitForRender ?? false;
     let executed = false;
     const runOnce = () => {
       if (executed) {
@@ -206,53 +210,95 @@ export class LocationsListComponent implements OnInit, OnDestroy {
       afterNextRender(() => runInInjectionContext(this.injector, runOnce))
     );
 
+    const scheduleFallback = () => {
+      if (!executed) {
+        this.scheduleAfterDelay(runOnce, waitForRender ? 16 : 0);
+      }
+    };
+
     if (typeof queueMicrotask === 'function') {
-      queueMicrotask(() => runInInjectionContext(this.injector, runOnce));
+      queueMicrotask(() =>
+        runInInjectionContext(this.injector, scheduleFallback)
+      );
     } else {
       void Promise.resolve().then(() =>
-        runInInjectionContext(this.injector, runOnce)
+        runInInjectionContext(this.injector, scheduleFallback)
       );
     }
 
-    this.scheduleAfterDelay(runOnce, 1);
+    this.scheduleAfterDelay(runOnce, waitForRender ? 50 : 0);
   }
 
   private scheduleAfterDelay(callback: () => void, delayMs: number): void {
-    if (delayMs <= 0) {
-      runInInjectionContext(this.injector, callback);
-      return;
-    }
-
+    const delay = Math.max(0, delayMs);
     const invoke = () => runInInjectionContext(this.injector, callback);
 
-    if (typeof requestAnimationFrame !== 'function') {
-      const timeoutId = setTimeout(() => {
-        this.pendingTimeouts.delete(timeoutId);
-        invoke();
-      }, delayMs);
-      this.pendingTimeouts.add(timeoutId);
-      return;
-    }
+    let completed = false;
+    let timeoutId: number | null = null;
+    let frameId: number | null = null;
 
-    const start = performance.now();
-    let frameId = 0;
-
-    const step = (timestamp: number) => {
-      if (frameId !== 0) {
-        this.pendingAnimationFrames.delete(frameId);
-      }
-
-      if (timestamp - start >= delayMs) {
-        invoke();
+    const finalize = () => {
+      if (completed) {
         return;
       }
+      completed = true;
+
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+        this.pendingTimeouts.delete(timeoutId);
+        timeoutId = null;
+      }
+
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+        this.pendingAnimationFrames.delete(frameId);
+        frameId = null;
+      }
+
+      invoke();
+    };
+
+    const scheduleTimeout = () => {
+      timeoutId = setTimeout(() => {
+        if (timeoutId !== null) {
+          this.pendingTimeouts.delete(timeoutId);
+          timeoutId = null;
+        }
+        finalize();
+      }, delay);
+
+      this.pendingTimeouts.add(timeoutId);
+    };
+
+    const scheduleAnimation = () => {
+      if (typeof requestAnimationFrame !== 'function') {
+        return;
+      }
+
+      const start =
+        typeof performance !== 'undefined' ? performance.now() : Date.now();
+
+      const step = (timestamp: number) => {
+        if (frameId !== null) {
+          this.pendingAnimationFrames.delete(frameId);
+        }
+
+        if (timestamp - start >= delay) {
+          frameId = null;
+          finalize();
+          return;
+        }
+
+        frameId = requestAnimationFrame(step);
+        this.pendingAnimationFrames.add(frameId);
+      };
 
       frameId = requestAnimationFrame(step);
       this.pendingAnimationFrames.add(frameId);
     };
 
-    frameId = requestAnimationFrame(step);
-    this.pendingAnimationFrames.add(frameId);
+    scheduleTimeout();
+    scheduleAnimation();
   }
 
   private cancelScheduledFrames(): void {
@@ -355,10 +401,13 @@ export class LocationsListComponent implements OnInit, OnDestroy {
       };
       this.preloadedUserPositionFromStorage = true;
     }
-    this.scheduleAfterNextRender(() => {
-      console.log('[LocationsList] Attempting to initialize map...');
-      this.initMap();
-    });
+    this.scheduleAfterNextRender(
+      () => {
+        console.log('[LocationsList] Attempting to initialize map...');
+        this.initMap();
+      },
+      { waitForRender: true }
+    );
 
     void this.loadLocations();
   }
@@ -439,19 +488,22 @@ export class LocationsListComponent implements OnInit, OnDestroy {
   }
 
   private scheduleMapRefresh(): void {
-    this.scheduleAfterNextRender(() => {
-      if (!this.map) {
-        this.initMap();
-      }
+    this.scheduleAfterNextRender(
+      () => {
+        if (!this.map) {
+          this.initMap();
+        }
 
-      if (this.map) {
-        console.log('[LocationsList] Refreshing map size and markers');
-        this.map.invalidateSize(true);
-      }
+        if (this.map) {
+          console.log('[LocationsList] Refreshing map size and markers');
+          this.map.invalidateSize(true);
+        }
 
-      this.addMarkers();
-      this.maybeRestoreUserPosition();
-    });
+        this.addMarkers();
+        this.maybeRestoreUserPosition();
+      },
+      { waitForRender: true }
+    );
   }
 
   private initMap(): void {
@@ -1115,9 +1167,12 @@ export class LocationsListComponent implements OnInit, OnDestroy {
 
   toggleDetailsCollapse(): void {
     this.isDetailsCollapsedSignal.update((current) => !current);
-    this.scheduleAfterNextRender(() => {
-      this.map?.invalidateSize(true);
-    });
+    this.scheduleAfterNextRender(
+      () => {
+        this.map?.invalidateSize(true);
+      },
+      { waitForRender: true }
+    );
   }
 
   get selectedLocation(): Location | null {
