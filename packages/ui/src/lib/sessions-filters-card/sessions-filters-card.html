@@ -56,14 +56,8 @@
     </div>
   </div>
 
-  <div class="filters-card__availability">
-    <div class="filters-card__availability-card">
-      <mat-checkbox
-        [ngModel]="onlyAvailable"
-        (ngModelChange)="availabilityChange.emit($event)"
-      >
-        Uniquement les sessions avec places disponibles
-      </mat-checkbox>
-    </div>
-  </div>
+  <lib-session-availability-toggle
+    [onlyAvailable]="onlyAvailable"
+    (availabilityChange)="availabilityChange.emit($event)"
+  ></lib-session-availability-toggle>
 </section>

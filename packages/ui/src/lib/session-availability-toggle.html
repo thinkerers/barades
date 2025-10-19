@@ -1,0 +1,8 @@
+<div class="availability-toggle__card">
+  <mat-checkbox
+    [checked]="onlyAvailable"
+    (change)="onAvailabilityChange($event.checked)"
+  >
+    Uniquement les sessions avec places disponibles
+  </mat-checkbox>
+</div>

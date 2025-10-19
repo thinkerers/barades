@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { HostFilterField } from '../host-filter-field/host-filter-field';
 import { SearchFilterField } from '../search-filter-field/search-filter-field';
+import { SessionAvailabilityToggle } from '../session-availability-toggle';
 import { SessionTypeToggleGroup } from '../session-type-toggle-group';
 import { SessionsFiltersCard } from './sessions-filters-card';
 
@@ -52,5 +53,16 @@ describe('SessionsFiltersCard', () => {
     toggleGroup.componentInstance.selectType('online');
 
     expect(emitSpy).toHaveBeenCalledWith('online');
+  });
+
+  it('should forward availability changes', () => {
+    const emitSpy = jest.spyOn(component.availabilityChange, 'emit');
+    const availabilityToggle = fixture.debugElement.query(
+      By.directive(SessionAvailabilityToggle)
+    );
+
+    availabilityToggle.componentInstance.onAvailabilityChange(true);
+
+    expect(emitSpy).toHaveBeenCalledWith(true);
   });
 });

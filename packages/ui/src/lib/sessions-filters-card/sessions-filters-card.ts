@@ -8,11 +8,11 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatIconModule } from '@angular/material/icon';
 import { HostFilterField } from '../host-filter-field/host-filter-field';
 import { GameSystemInputComponent } from '../inputs/game-system-input/game-system-input.component';
 import { SearchFilterField } from '../search-filter-field/search-filter-field';
+import { SessionAvailabilityToggle } from '../session-availability-toggle';
 import type { SessionTypeFilter } from '../session-type-toggle-group';
 import { SessionTypeToggleGroup } from '../session-type-toggle-group';
 
@@ -23,11 +23,11 @@ import { SessionTypeToggleGroup } from '../session-type-toggle-group';
     CommonModule,
     FormsModule,
     MatButtonModule,
-    MatCheckboxModule,
     MatIconModule,
     HostFilterField,
     GameSystemInputComponent,
     SearchFilterField,
+    SessionAvailabilityToggle,
     SessionTypeToggleGroup,
   ],
   templateUrl: './sessions-filters-card.html',
