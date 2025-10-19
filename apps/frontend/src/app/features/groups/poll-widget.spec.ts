@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { of, throwError } from 'rxjs';
@@ -131,27 +132,27 @@ describe('PollWidgetComponent', () => {
   });
 
   describe('Poll creation', () => {
-    it('should show error when title is missing', () => {
+    it('should show error when title is missing', async () => {
       component.pollTitle = '';
       component.selectedDates = ['2025-10-25', '2025-10-26'];
 
-      component.createPoll();
+      await component.createPoll();
 
       expect(component.error).toBe('Le titre et au moins 2 dates sont requis');
       expect(mockPollsService.createPoll).not.toHaveBeenCalled();
     });
 
-    it('should show error when less than 2 dates', () => {
+    it('should show error when less than 2 dates', async () => {
       component.pollTitle = 'Test Poll';
       component.selectedDates = ['2025-10-25'];
 
-      component.createPoll();
+      await component.createPoll();
 
       expect(component.error).toBe('Le titre et au moins 2 dates sont requis');
       expect(mockPollsService.createPoll).not.toHaveBeenCalled();
     });
 
-    it('should create poll successfully', () => {
+    it('should create poll successfully', async () => {
       component.pollTitle = 'Test Poll';
       component.selectedDates = ['2025-10-25', '2025-10-26'];
       component.showCreateForm = true;
@@ -160,7 +161,7 @@ describe('PollWidgetComponent', () => {
 
       const emitSpy = jest.spyOn(component.pollCreated, 'emit');
 
-      component.createPoll();
+      await component.createPoll();
 
       expect(mockPollsService.createPoll).toHaveBeenCalledWith({
         title: 'Test Poll',
@@ -175,15 +176,15 @@ describe('PollWidgetComponent', () => {
       expect(component.selectedDates).toEqual([]);
     });
 
-    it('should handle 403 error (not a member)', () => {
+    it('should handle 403 error (not a member)', async () => {
       component.pollTitle = 'Test Poll';
       component.selectedDates = ['2025-10-25', '2025-10-26'];
 
       mockPollsService.createPoll.mockReturnValue(
-        throwError(() => ({ status: 403 }))
+        throwError(() => new HttpErrorResponse({ status: 403 }))
       );
 
-      component.createPoll();
+      await component.createPoll();
 
       expect(component.error).toBe(
         'Vous devez être membre du groupe pour créer un sondage'
@@ -191,15 +192,15 @@ describe('PollWidgetComponent', () => {
       expect(component.creating).toBe(false);
     });
 
-    it('should handle 401 error (not authenticated)', () => {
+    it('should handle 401 error (not authenticated)', async () => {
       component.pollTitle = 'Test Poll';
       component.selectedDates = ['2025-10-25', '2025-10-26'];
 
       mockPollsService.createPoll.mockReturnValue(
-        throwError(() => ({ status: 401 }))
+        throwError(() => new HttpErrorResponse({ status: 401 }))
       );
 
-      component.createPoll();
+      await component.createPoll();
 
       expect(component.error).toBe(
         'Vous devez être connecté pour créer un sondage'
@@ -207,15 +208,15 @@ describe('PollWidgetComponent', () => {
       expect(component.creating).toBe(false);
     });
 
-    it('should handle generic error', () => {
+    it('should handle generic error', async () => {
       component.pollTitle = 'Test Poll';
       component.selectedDates = ['2025-10-25', '2025-10-26'];
 
       mockPollsService.createPoll.mockReturnValue(
-        throwError(() => ({ status: 500 }))
+        throwError(() => new HttpErrorResponse({ status: 500 }))
       );
 
-      component.createPoll();
+      await component.createPoll();
 
       expect(component.error).toBe('Erreur lors de la création du sondage');
       expect(component.creating).toBe(false);
@@ -227,13 +228,13 @@ describe('PollWidgetComponent', () => {
       component.poll = mockPoll;
     });
 
-    it('should vote for a date when user is authenticated', () => {
+    it('should vote for a date when user is authenticated', async () => {
       component.currentUserId = 'user-3';
       mockPollsService.vote.mockReturnValue(of(mockPoll));
 
       const emitSpy = jest.spyOn(component.voted, 'emit');
 
-      component.vote('2025-11-01');
+      await component.vote('2025-11-01');
 
       expect(mockPollsService.vote).toHaveBeenCalledWith('poll-1', {
         userId: 'user-3',
@@ -259,26 +260,26 @@ describe('PollWidgetComponent', () => {
       expect(mockPollsService.vote).not.toHaveBeenCalled();
     });
 
-    it('should handle vote error 403', () => {
+    it('should handle vote error 403', async () => {
       component.currentUserId = 'user-3';
       mockPollsService.vote.mockReturnValue(
-        throwError(() => ({ status: 403 }))
+        throwError(() => new HttpErrorResponse({ status: 403 }))
       );
 
-      component.vote('2025-11-01');
+      await component.vote('2025-11-01');
 
       expect(mockNotificationService.error).toHaveBeenCalledWith(
         'Vous devez être membre du groupe pour voter.'
       );
     });
 
-    it('should handle vote error 401', () => {
+    it('should handle vote error 401', async () => {
       component.currentUserId = 'user-3';
       mockPollsService.vote.mockReturnValue(
-        throwError(() => ({ status: 401 }))
+        throwError(() => new HttpErrorResponse({ status: 401 }))
       );
 
-      component.vote('2025-11-01');
+      await component.vote('2025-11-01');
 
       expect(mockNotificationService.error).toHaveBeenCalledWith(
         'Vous devez être connecté pour voter.'
@@ -292,12 +293,12 @@ describe('PollWidgetComponent', () => {
       component.currentUserId = 'user-1';
     });
 
-    it('should remove user vote', () => {
+    it('should remove user vote', async () => {
       mockPollsService.removeVote.mockReturnValue(of(mockPoll));
 
       const emitSpy = jest.spyOn(component.voted, 'emit');
 
-      component.removeMyVote();
+      await component.removeMyVote();
 
       expect(mockPollsService.removeVote).toHaveBeenCalledWith(
         'poll-1',
@@ -322,12 +323,12 @@ describe('PollWidgetComponent', () => {
       expect(mockPollsService.removeVote).not.toHaveBeenCalled();
     });
 
-    it('should handle remove vote error', () => {
+    it('should handle remove vote error', async () => {
       mockPollsService.removeVote.mockReturnValue(
         throwError(() => ({ status: 500 }))
       );
 
-      component.removeMyVote();
+      await component.removeMyVote();
 
       expect(mockNotificationService.error).toHaveBeenCalledWith(
         'Erreur lors de la suppression du vote.'

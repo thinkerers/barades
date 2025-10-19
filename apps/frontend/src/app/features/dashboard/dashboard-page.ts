@@ -6,7 +6,7 @@ import {
   signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { firstValueFrom, forkJoin } from 'rxjs';
 import { GroupsService } from '../../core/services/groups.service';
 import { ReservationsService } from '../../core/services/reservations.service';
 import { SessionsService } from '../../core/services/sessions.service';
@@ -50,58 +50,57 @@ export class DashboardPage implements OnInit {
   error = signal<string | null>(null);
 
   ngOnInit(): void {
-    this.loadDashboardData();
+    void this.loadDashboardData();
   }
 
-  loadDashboardData(): void {
+  async loadDashboardData(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
 
-    forkJoin({
-      sessionStats: this.sessionsService.getCreatedByMeStats(),
-      groupStats: this.groupsService.getManagedByMeStats(),
-      pendingReservations: this.reservationsService.getPendingForMySessions(),
-      actionItems: this.usersService.getActionItems(),
-    }).subscribe({
-      next: (data) => {
-        // Build stats array
-        this.stats.set([
-          {
-            key: 'sessions-created',
-            label: 'Sessions créées',
-            value: data.sessionStats.totalCount,
-            trend: `+${data.sessionStats.recentCount} ${data.sessionStats.period}`,
-          },
-          {
-            key: 'groups-managed',
-            label: 'Groupes gérés',
-            value: data.groupStats.totalCount,
-            trend: 'Stable',
-          },
-          {
-            key: 'pending-reservations',
-            label: 'Réservations en attente',
-            value: data.pendingReservations.length,
-            trend:
-              data.pendingReservations.length > 0
-                ? `${data.pendingReservations.length} nouvelle${
-                    data.pendingReservations.length > 1 ? 's' : ''
-                  } demande${data.pendingReservations.length > 1 ? 's' : ''}`
-                : 'Aucune demande',
-          },
-        ]);
+    try {
+      const data = await firstValueFrom(
+        forkJoin({
+          sessionStats: this.sessionsService.getCreatedByMeStats(),
+          groupStats: this.groupsService.getManagedByMeStats(),
+          pendingReservations:
+            this.reservationsService.getPendingForMySessions(),
+          actionItems: this.usersService.getActionItems(),
+        })
+      );
 
-        // Build upcoming actions from action items
-        this.upcomingActions.set(this.buildUpcomingActions(data.actionItems));
+      this.stats.set([
+        {
+          key: 'sessions-created',
+          label: 'Sessions créées',
+          value: data.sessionStats.totalCount,
+          trend: `+${data.sessionStats.recentCount} ${data.sessionStats.period}`,
+        },
+        {
+          key: 'groups-managed',
+          label: 'Groupes gérés',
+          value: data.groupStats.totalCount,
+          trend: 'Stable',
+        },
+        {
+          key: 'pending-reservations',
+          label: 'Réservations en attente',
+          value: data.pendingReservations.length,
+          trend:
+            data.pendingReservations.length > 0
+              ? `${data.pendingReservations.length} nouvelle${
+                  data.pendingReservations.length > 1 ? 's' : ''
+                } demande${data.pendingReservations.length > 1 ? 's' : ''}`
+              : 'Aucune demande',
+        },
+      ]);
 
-        this.loading.set(false);
-      },
-      error: (err) => {
-        console.error('Error loading dashboard data:', err);
-        this.error.set('Impossible de charger les données du dashboard');
-        this.loading.set(false);
-      },
-    });
+      this.upcomingActions.set(this.buildUpcomingActions(data.actionItems));
+    } catch (err) {
+      console.error('Error loading dashboard data:', err);
+      this.error.set('Impossible de charger les données du dashboard');
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   private buildUpcomingActions(actionItems: ActionItems): UpcomingAction[] {

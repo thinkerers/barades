@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,7 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Router, RouterLink } from '@angular/router';
 import { AsyncStateComponent, AsyncStateStatus } from '@org/ui';
-import { Observable } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
 import { Session, SessionsService } from '../../core/services/sessions.service';
 import { SessionCardComponent } from '../sessions/session-card';
@@ -34,7 +34,6 @@ import { SessionCardComponent } from '../sessions/session-card';
 export class HomePage implements OnInit {
   private router = inject(Router);
   private sessionsService = inject(SessionsService);
-  private cdr = inject(ChangeDetectorRef);
 
   // Form controls pour la recherche
   gameControl = new FormControl('');
@@ -68,12 +67,24 @@ export class HomePage implements OnInit {
   filteredCities$: Observable<string[]>;
 
   // Sessions en vedette (chargées depuis le service)
-  featuredSessions: Session[] = [];
-  loading = false;
-  error: string | null = null;
+  readonly featuredSessions = signal<Session[]>([]);
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
   readonly defaultErrorMessage =
     'Impossible de charger les sessions en vedette.';
   readonly emptyMessage = 'Aucune session disponible pour le moment.';
+
+  readonly featuredSessionsState = computed<AsyncStateStatus>(() => {
+    if (this.loading()) {
+      return 'loading';
+    }
+
+    if (this.error()) {
+      return 'error';
+    }
+
+    return this.featuredSessions().length ? 'ready' : 'empty';
+  });
 
   constructor() {
     // Configuration des filtres pour l'autocomplete
@@ -89,39 +100,22 @@ export class HomePage implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadFeaturedSessions();
+    void this.loadFeaturedSessions();
   }
 
-  loadFeaturedSessions(): void {
-    this.loading = true;
-    this.error = null;
+  async loadFeaturedSessions(): Promise<void> {
+    this.loading.set(true);
+    this.error.set(null);
 
-    this.sessionsService.getSessions().subscribe({
-      next: (sessions) => {
-        // Prendre les 3 premières sessions comme sessions en vedette
-        this.featuredSessions = sessions.slice(0, 3);
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Error loading featured sessions:', err);
-        this.error = this.defaultErrorMessage;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-    });
-  }
-
-  get featuredSessionsState(): AsyncStateStatus {
-    if (this.loading) {
-      return 'loading';
+    try {
+      const sessions = await firstValueFrom(this.sessionsService.getSessions());
+      this.featuredSessions.set(sessions.slice(0, 3));
+    } catch (err) {
+      console.error('Error loading featured sessions:', err);
+      this.error.set(this.defaultErrorMessage);
+    } finally {
+      this.loading.set(false);
     }
-
-    if (this.error) {
-      return 'error';
-    }
-
-    return this.featuredSessions.length ? 'ready' : 'empty';
   }
 
   private _filterGames(value: string): string[] {

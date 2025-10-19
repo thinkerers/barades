@@ -75,14 +75,14 @@
   </div>
 
   <lib-async-state
-    [status]="featuredSessionsState"
+    [status]="featuredSessionsState()"
     [loadingMessage]="'Chargement des sessions...'"
-    [errorMessage]="error ?? defaultErrorMessage"
+    [errorMessage]="error() ?? defaultErrorMessage"
     [emptyMessage]="emptyMessage"
     (retry)="loadFeaturedSessions()"
   >
     <div class="sessions-grid">
-      @for (session of featuredSessions; track session) {
+      @for (session of featuredSessions(); track session) {
       <app-session-card [session]="session"></app-session-card>
       }
     </div>

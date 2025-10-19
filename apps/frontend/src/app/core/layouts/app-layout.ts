@@ -1,6 +1,7 @@
-import { Component, DestroyRef, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, effect, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { filter, startWith } from 'rxjs';
 import { Footer } from '../navigation/footer';
 import { TopBar } from '../navigation/top-bar';
 
@@ -13,7 +14,13 @@ import { TopBar } from '../navigation/top-bar';
 })
 export class AppLayout {
   private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
+
+  private readonly navigationEnd = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      startWith(null as NavigationEnd | null)
+    )
+  );
 
   showFooter = true;
   isLocationsRoute = false;
@@ -21,14 +28,16 @@ export class AppLayout {
   constructor() {
     this.updateRouteState(this.router.url);
 
-    this.router.events
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((event) => {
-        if (event instanceof NavigationEnd) {
-          const nextUrl = event.urlAfterRedirects ?? event.url;
-          this.updateRouteState(nextUrl);
-        }
-      });
+    effect(() => {
+      const event = this.navigationEnd();
+
+      if (!event) {
+        return;
+      }
+
+      const nextUrl = event.urlAfterRedirects ?? event.url;
+      this.updateRouteState(nextUrl);
+    });
   }
 
   private updateRouteState(url: string): void {

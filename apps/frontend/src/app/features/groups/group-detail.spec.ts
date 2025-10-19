@@ -46,6 +46,12 @@ describe('GroupDetailComponent', () => {
   let routeQueryParamMapGet: jest.Mock;
   let routeQueryParamMapHas: jest.Mock;
   let isAuthenticatedSpy: jest.SpyInstance;
+  type MockGroup = typeof mockGroup;
+  type MockGroupMember = MockGroup['members'][number];
+  const readGroup = () => component.group() as MockGroup | null;
+  const writeGroup = (value: MockGroup | null) =>
+    component.group.set(value as MockGroup | null);
+  const setIsMember = (value: boolean) => component.isMember.set(value);
   const routerMock = {
     navigate: jest.fn().mockResolvedValue(true),
     navigateByUrl: jest.fn().mockResolvedValue(true),
@@ -245,8 +251,8 @@ describe('GroupDetailComponent', () => {
       fixture.detectChanges();
 
       expect(getGroupSpy).toHaveBeenCalledWith('1');
-      expect(component.group).toEqual(mockGroup);
-      expect(component.loading).toBe(false);
+      expect(component.group()).toEqual(mockGroup);
+      expect(component.loading()).toBe(false);
       expect(getPollsSpy).toHaveBeenCalledWith('1');
     });
 
@@ -257,8 +263,8 @@ describe('GroupDetailComponent', () => {
 
       fixture.detectChanges();
 
-      expect(component.error).toBe(component.defaultErrorMessage);
-      expect(component.loading).toBe(false);
+      expect(component.error()).toBe(component.defaultErrorMessage);
+      expect(component.loading()).toBe(false);
     });
 
     it('should display specific message for 404 errors', () => {
@@ -268,7 +274,7 @@ describe('GroupDetailComponent', () => {
 
       fixture.detectChanges();
 
-      expect(component.error).toBe(
+      expect(component.error()).toBe(
         'Ce groupe est introuvable ou n’existe plus.'
       );
     });
@@ -285,17 +291,17 @@ describe('GroupDetailComponent', () => {
       try {
         fixture.detectChanges();
 
-        expect(component.error).toContain(
+        expect(component.error()).toContain(
           'Nos serveurs sont momentanément indisponibles'
         );
-        expect(component.autoRetrySeconds).toBeGreaterThan(0);
+        expect(component.autoRetrySeconds()).toBeGreaterThan(0);
 
         jest.advanceTimersByTime(15000);
 
         expect(getGroupSpy).toHaveBeenCalledTimes(2);
-        expect(component.group).toEqual(mockGroup);
-        expect(component.error).toBeNull();
-        expect(component.autoRetrySeconds).toBeNull();
+        expect(component.group()).toEqual(mockGroup);
+        expect(component.error()).toBeNull();
+        expect(component.autoRetrySeconds()).toBeNull();
         expect(getPollsSpy).toHaveBeenCalledTimes(1);
         expect(getPollsSpy).toHaveBeenCalledWith('1');
       } finally {
@@ -320,8 +326,8 @@ describe('GroupDetailComponent', () => {
 
       fixture.detectChanges();
 
-      expect(component.isOffline).toBe(true);
-      expect(component.error).toBe(
+      expect(component.isOffline()).toBe(true);
+      expect(component.error()).toBe(
         'Connexion perdue. Vérifiez votre réseau puis réessayez.'
       );
 
@@ -339,8 +345,8 @@ describe('GroupDetailComponent', () => {
 
       component.ngOnInit();
 
-      expect(component.error).toBe('ID de groupe invalide');
-      expect(component.loading).toBe(false);
+      expect(component.error()).toBe('ID de groupe invalide');
+      expect(component.loading()).toBe(false);
     });
   });
 
@@ -371,27 +377,31 @@ describe('GroupDetailComponent', () => {
     });
 
     it('should get member count from _count when members is not available', () => {
-      component.group = { ...mockGroup, members: undefined };
+      component.group.set({ ...mockGroup, members: undefined });
       expect(component.getMemberCount()).toBe(5);
     });
 
     it('should return 0 when no member data available', () => {
-      component.group = { ...mockGroup, members: undefined, _count: undefined };
+      component.group.set({
+        ...mockGroup,
+        members: undefined,
+        _count: undefined,
+      });
       expect(component.getMemberCount()).toBe(0);
     });
 
     it('should detect when group is full', () => {
-      component.group = { ...mockGroup, maxMembers: 2 };
+      component.group.set({ ...mockGroup, maxMembers: 2 });
       expect(component.isFull()).toBe(true);
     });
 
     it('should detect when group is not full', () => {
-      component.group = { ...mockGroup, maxMembers: 10 };
+      component.group.set({ ...mockGroup, maxMembers: 10 });
       expect(component.isFull()).toBe(false);
     });
 
     it('should return false for isFull when maxMembers is null', () => {
-      component.group = { ...mockGroup, maxMembers: null };
+      component.group.set({ ...mockGroup, maxMembers: null });
       expect(component.isFull()).toBe(false);
     });
   });
@@ -414,39 +424,45 @@ describe('GroupDetailComponent', () => {
     });
 
     it('should allow joining when recruiting and not full', () => {
-      if (!component.group) {
+      const currentGroup = readGroup();
+      expect(currentGroup).toBeTruthy();
+      if (!currentGroup) {
         throw new Error('Group should be defined');
       }
-      component.group = {
-        ...component.group,
+      writeGroup({
+        ...currentGroup,
         isRecruiting: true,
         maxMembers: 10,
-      };
-      component.isMember = false;
+      });
+      setIsMember(false);
       expect(component.canJoin()).toBe(true);
     });
 
     it('should not allow joining when not recruiting', () => {
-      if (!component.group) {
+      const currentGroup = readGroup();
+      expect(currentGroup).toBeTruthy();
+      if (!currentGroup) {
         throw new Error('Group should be defined');
       }
-      component.group = { ...component.group, isRecruiting: false };
+      writeGroup({ ...currentGroup, isRecruiting: false });
       expect(component.canJoin()).toBe(false);
     });
 
     it('should not allow joining when group is full', () => {
-      if (!component.group) {
+      const currentGroup = readGroup();
+      expect(currentGroup).toBeTruthy();
+      if (!currentGroup) {
         throw new Error('Group should be defined');
       }
-      component.group = {
-        ...component.group,
+      writeGroup({
+        ...currentGroup,
         isRecruiting: true,
         maxMembers: 2,
-      };
+      });
       expect(component.canJoin()).toBe(false);
     });
 
-    it('should call joinGroup service and update state on success', () => {
+    it('should call joinGroup service and update state on success', async () => {
       const joinResponse = {
         joined: true,
         groupId: '1',
@@ -458,40 +474,48 @@ describe('GroupDetailComponent', () => {
         .spyOn(groupsService, 'joinGroup')
         .mockReturnValue(of(joinResponse));
 
-      component.isMember = false;
-      component.joinGroup();
+      setIsMember(false);
+      await component.joinGroup();
 
       expect(joinSpy).toHaveBeenCalledWith('1');
-      expect(component.joinInProgress).toBe(false);
-      expect(component.isMember).toBe(true);
-      expect(component.joinError).toBeNull();
-      expect(component.group?._count?.members).toBe(6);
-      expect(component.group?.currentUserIsMember).toBe(true);
+      expect(component.joinInProgress()).toBe(false);
+      expect(component.isMember()).toBe(true);
+      expect(component.joinError()).toBeNull();
+      const updatedGroup = readGroup();
+      expect(updatedGroup).toBeTruthy();
+      if (!updatedGroup) {
+        throw new Error('Group should be defined');
+      }
+      expect(updatedGroup._count?.members).toBe(6);
+      expect(updatedGroup.currentUserIsMember).toBe(true);
+      const updatedMembers = (updatedGroup.members ?? []) as MockGroupMember[];
       expect(
-        component.group?.members?.some((m) => m.userId === mockCurrentUser.id)
+        updatedMembers.some(
+          (member: MockGroupMember) => member.userId === mockCurrentUser.id
+        )
       ).toBe(true);
     });
 
-    it('should surface join errors and reset loading state', () => {
+    it('should surface join errors and reset loading state', async () => {
       jest
         .spyOn(groupsService, 'joinGroup')
         .mockReturnValue(
           throwError(() => ({ error: { message: 'Vous êtes déjà membre.' } }))
         );
 
-      component.isMember = false;
-      component.joinGroup();
+      setIsMember(false);
+      await component.joinGroup().catch(() => undefined);
 
-      expect(component.joinInProgress).toBe(false);
-      expect(component.isMember).toBe(false);
-      expect(component.joinError).toBe('Vous êtes déjà membre.');
+      expect(component.joinInProgress()).toBe(false);
+      expect(component.isMember()).toBe(false);
+      expect(component.joinError()).toBe('Vous êtes déjà membre.');
     });
 
-    it('should do nothing when join is not allowed', () => {
-      component.isMember = true;
+    it('should do nothing when join is not allowed', async () => {
+      setIsMember(true);
       const joinSpy = jest.spyOn(groupsService, 'joinGroup');
 
-      component.joinGroup();
+      await component.joinGroup();
 
       expect(joinSpy).not.toHaveBeenCalled();
     });
@@ -548,13 +572,13 @@ describe('GroupDetailComponent', () => {
       const leaveSpy = jest.spyOn(groupsService, 'leaveGroup');
       confirmSpy.mockReturnValue(false);
 
-      component.leaveGroup();
+      void component.leaveGroup();
 
       expect(confirmSpy).toHaveBeenCalled();
       expect(leaveSpy).not.toHaveBeenCalled();
     });
 
-    it('should call leaveGroup service and update state on success', () => {
+    it('should call leaveGroup service and update state on success', async () => {
       jest.spyOn(groupsService, 'leaveGroup').mockReturnValue(
         of({
           left: true,
@@ -565,33 +589,39 @@ describe('GroupDetailComponent', () => {
         })
       );
 
-      component.leaveGroup();
+      await component.leaveGroup();
 
       expect(groupsService.leaveGroup).toHaveBeenCalledWith('1');
-      expect(component.leaveInProgress).toBe(false);
-      expect(component.isMember).toBe(false);
-      expect(component.leaveError).toBeNull();
-      expect(component.group?._count?.members).toBe(2);
-      expect(component.group?.currentUserIsMember).toBe(false);
+      expect(component.leaveInProgress()).toBe(false);
+      expect(component.isMember()).toBe(false);
+      expect(component.leaveError()).toBeNull();
+      const updatedGroup = readGroup();
+      expect(updatedGroup).toBeTruthy();
+      if (!updatedGroup) {
+        throw new Error('Group should be defined');
+      }
+      expect(updatedGroup._count?.members).toBe(2);
+      expect(updatedGroup.currentUserIsMember).toBe(false);
+      const updatedMembers = (updatedGroup.members ?? []) as MockGroupMember[];
       expect(
-        component.group?.members?.some(
-          (member) => member.userId === mockCurrentUser.id
+        updatedMembers.some(
+          (member: MockGroupMember) => member.userId === mockCurrentUser.id
         )
       ).toBe(false);
     });
 
-    it('should surface leave errors and reset loading state', () => {
+    it('should surface leave errors and reset loading state', async () => {
       jest
         .spyOn(groupsService, 'leaveGroup')
         .mockReturnValue(
           throwError(() => ({ error: { message: 'Action impossible' } }))
         );
 
-      component.leaveGroup();
+      await component.leaveGroup().catch(() => undefined);
 
-      expect(component.leaveInProgress).toBe(false);
-      expect(component.leaveError).toBe('Action impossible');
-      expect(component.isMember).toBe(true);
+      expect(component.leaveInProgress()).toBe(false);
+      expect(component.leaveError()).toBe('Action impossible');
+      expect(component.isMember()).toBe(true);
     });
   });
 
@@ -681,11 +711,11 @@ describe('GroupDetailComponent', () => {
     });
 
     it('should show leave button when user is member', () => {
-      component.group = {
+      writeGroup({
         ...mockGroup,
         members: mockGroup.members,
-      };
-      component.isMember = true;
+      });
+      setIsMember(true);
 
       // In zoneless mode, we need full change detection
       fixture.detectChanges();
@@ -712,8 +742,8 @@ describe('GroupDetailComponent', () => {
         });
 
       // Set state before first detectChanges
-      freshComponent.loading = true;
-      freshComponent.group = null;
+      freshComponent.loading.set(true);
+      freshComponent.group.set(null);
 
       // Now run change detection
       freshFixture.detectChanges();
@@ -737,9 +767,9 @@ describe('GroupDetailComponent', () => {
         });
 
       // Set state before first detectChanges
-      freshComponent.loading = false;
-      freshComponent.error = 'Test error';
-      freshComponent.group = null;
+      freshComponent.loading.set(false);
+      freshComponent.error.set('Test error');
+      freshComponent.group.set(null);
 
       // Now run change detection
       freshFixture.detectChanges();

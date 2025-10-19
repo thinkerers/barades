@@ -12,6 +12,7 @@ import {
   AsyncStateStatus,
   GroupCardComponent,
 } from '@org/ui';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import {
   Group,
@@ -66,7 +67,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
       typeof navigator !== 'undefined' && navigator.onLine === false;
     window.addEventListener('offline', this.offlineHandler);
     window.addEventListener('online', this.onlineHandler);
-    this.loadGroups();
+    void this.loadGroups();
   }
 
   ngOnDestroy(): void {
@@ -75,34 +76,32 @@ export class GroupsListComponent implements OnInit, OnDestroy {
     this.clearAutoRetry();
   }
 
-  private loadGroups(): void {
+  private async loadGroups(): Promise<void> {
     this.loading = true;
     this.error = null;
     this.pendingErrorBaseMessage = null;
     this.clearAutoRetry();
     this.cdr.markForCheck();
 
-    this.groupsService.getGroups().subscribe({
-      next: (data) => {
-        this.groups = data;
-        this.syncJoinedGroups(data);
-        this.loading = false;
-        this.error = null;
-        this.isOffline = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Error loading groups:', err);
-        this.loading = false;
-        this.handleLoadError(err);
-        this.cdr.markForCheck();
-      },
-    });
+    try {
+      const data = await firstValueFrom(this.groupsService.getGroups());
+      this.groups = data;
+      this.syncJoinedGroups(data);
+      this.loading = false;
+      this.error = null;
+      this.isOffline = false;
+    } catch (err) {
+      console.error('Error loading groups:', err);
+      this.loading = false;
+      this.handleLoadError(err);
+    } finally {
+      this.cdr.markForCheck();
+    }
   }
 
   retry(): void {
     this.clearAutoRetry();
-    this.loadGroups();
+    void this.loadGroups();
     this.cdr.markForCheck();
   }
 
@@ -122,7 +121,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
     void this.router.navigate(['/groups', groupId]);
   }
 
-  requestToJoin(group: Group): void {
+  async requestToJoin(group: Group): Promise<void> {
     const groupId = group.id;
 
     if (
@@ -143,33 +142,54 @@ export class GroupsListComponent implements OnInit, OnDestroy {
 
     this.joinErrors.delete(groupId);
     this.joiningGroups.add(groupId);
+    this.cdr.markForCheck();
 
-    this.groupsService.joinGroup(groupId).subscribe({
-      next: (response) => {
-        this.joiningGroups.delete(groupId);
-        this.joinedGroups.add(groupId);
-        this.recentlyJoined.add(groupId);
-        group.currentUserIsMember = true;
-        if (!this.currentUserId) {
-          this.currentUserId = this.authService.getCurrentUserId();
-        }
-        this.updateLocalGroupState(groupId, response);
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Error joining group:', err);
-        this.joiningGroups.delete(groupId);
-        const message =
-          err?.error?.message ??
-          'Impossible de rejoindre le groupe pour le moment.';
-        this.joinErrors.set(groupId, message);
-        this.cdr.markForCheck();
-      },
-    });
+    try {
+      await this.attemptJoin(group, true);
+    } finally {
+      this.joiningGroups.delete(groupId);
+      this.cdr.markForCheck();
+    }
   }
 
   isJoining(groupId: string): boolean {
     return this.joiningGroups.has(groupId);
+  }
+
+  private async attemptJoin(group: Group, allowRetry: boolean): Promise<void> {
+    const groupId = group.id;
+
+    try {
+      const response = await firstValueFrom(
+        this.groupsService.joinGroup(groupId)
+      );
+      this.joinErrors.delete(groupId);
+      this.joinedGroups.add(groupId);
+      this.recentlyJoined.add(groupId);
+      group.currentUserIsMember = true;
+      if (!this.currentUserId) {
+        this.currentUserId = this.authService.getCurrentUserId();
+      }
+      this.updateLocalGroupState(groupId, response);
+    } catch (error) {
+      if (
+        error instanceof HttpErrorResponse &&
+        error.status === 409 &&
+        allowRetry
+      ) {
+        await this.attemptJoin(group, false);
+        return;
+      }
+
+      console.error('Error joining group:', error);
+      const message =
+        error instanceof HttpErrorResponse && error.error?.message
+          ? error.error.message
+          : 'Impossible de rejoindre le groupe pour le moment.';
+      this.joinErrors.set(groupId, message);
+      this.joinedGroups.delete(groupId);
+      this.recentlyJoined.delete(groupId);
+    }
   }
 
   hasJoined(groupId: string): boolean {
@@ -342,7 +362,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
 
       if (this.autoRetrySeconds <= 0) {
         this.clearAutoRetry();
-        this.loadGroups();
+        void this.loadGroups();
       } else {
         this.error = this.composeErrorMessage();
         this.cdr.markForCheck();

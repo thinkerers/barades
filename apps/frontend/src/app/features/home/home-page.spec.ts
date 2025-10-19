@@ -281,6 +281,8 @@ describe('HomePage', () => {
     fixture = TestBed.createComponent(HomePage);
     component = fixture.componentInstance;
     fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
   });
 
   it('should create', () => {
@@ -311,8 +313,8 @@ describe('HomePage', () => {
 
   it('should load featured sessions on init', () => {
     expect(mockSessionsService.getSessions).toHaveBeenCalled();
-    expect(component.featuredSessions.length).toBe(3);
-    expect(component.loading).toBe(false);
+    expect(component.featuredSessions().length).toBe(3);
+    expect(component.loading()).toBe(false);
   });
 
   it('should display featured sessions using SessionCard component', () => {
@@ -322,9 +324,9 @@ describe('HomePage', () => {
   });
 
   it('should display session titles in SessionCard components', () => {
-    expect(component.featuredSessions[0].title).toBe('Test Session 1');
-    expect(component.featuredSessions[1].title).toBe('Test Session 2');
-    expect(component.featuredSessions[2].title).toBe('Test Session 3');
+    expect(component.featuredSessions()[0].title).toBe('Test Session 1');
+    expect(component.featuredSessions()[1].title).toBe('Test Session 2');
+    expect(component.featuredSessions()[2].title).toBe('Test Session 3');
   });
 
   it('should filter games based on input', () => {
@@ -379,14 +381,12 @@ describe('HomePage', () => {
     const freshComponent = freshFixture.componentInstance;
     jest
       .spyOn(freshComponent, 'loadFeaturedSessions')
-      .mockImplementation(() => {
-        /* intentionally blank for zoneless test */
-      });
+      .mockResolvedValue(undefined);
 
     // Set state before first detectChanges
-    freshComponent.loading = true;
-    freshComponent.error = null;
-    freshComponent.featuredSessions = [];
+    freshComponent.loading.set(true);
+    freshComponent.error.set(null);
+    freshComponent.featuredSessions.set([]);
 
     // Now run change detection
     freshFixture.detectChanges();
@@ -408,14 +408,12 @@ describe('HomePage', () => {
     const freshComponent = freshFixture.componentInstance;
     jest
       .spyOn(freshComponent, 'loadFeaturedSessions')
-      .mockImplementation(() => {
-        /* intentionally blank for zoneless test */
-      });
+      .mockResolvedValue(undefined);
 
     // Set state before first detectChanges
-    freshComponent.loading = false;
-    freshComponent.error = 'Test error message';
-    freshComponent.featuredSessions = [];
+    freshComponent.loading.set(false);
+    freshComponent.error.set('Test error message');
+    freshComponent.featuredSessions.set([]);
 
     // Now run change detection
     freshFixture.detectChanges();

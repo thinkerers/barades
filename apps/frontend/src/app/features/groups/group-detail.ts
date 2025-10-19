@@ -1,34 +1,47 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
-  ChangeDetectorRef,
+  afterNextRender,
   Component,
+  inject,
   OnDestroy,
   OnInit,
-  inject,
+  signal,
+  WritableSignal,
 } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ErrorMessageComponent } from '@org/ui';
+import { firstValueFrom, Subscription, timer } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import {
   Group,
   GroupMemberSummary,
   GroupsService,
+  JoinGroupResponse,
   LeaveGroupResponse,
 } from '../../core/services/groups.service';
 import { Poll, PollsService } from '../../core/services/polls.service';
 import { PollWidgetComponent } from './poll-widget';
 
-interface GroupMember extends GroupMemberSummary {
+type CountdownSubscription = Subscription | null;
+
+type AutoRetryState = {
+  baseMessage: string;
+  countdownSeconds: WritableSignal<number | null>;
+  subscription: CountdownSubscription;
+};
+
+type GroupMember = GroupMemberSummary & {
   user: {
     id: string;
     username: string;
     avatar: string | null;
   };
   joinedAt: string;
-}
+};
 
-interface GroupSession {
+type GroupSession = {
   id: string;
   title: string;
   scheduledFor: string;
@@ -39,12 +52,12 @@ interface GroupSession {
   _count?: {
     reservations: number;
   };
-}
+};
 
-interface GroupDetail extends Group {
+type GroupDetail = Omit<Group, 'members'> & {
   members?: GroupMember[];
   sessions?: GroupSession[];
-}
+};
 
 @Component({
   selector: 'app-group-detail',
@@ -54,6 +67,7 @@ interface GroupDetail extends Group {
     RouterLink,
     PollWidgetComponent,
     ErrorMessageComponent,
+    MatIconModule,
   ],
   templateUrl: './group-detail.html',
   styleUrl: './group-detail.css',
@@ -64,144 +78,139 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
   private groupsService = inject(GroupsService);
   private pollsService = inject(PollsService);
   private authService = inject(AuthService);
-  private cdr = inject(ChangeDetectorRef);
 
-  group: GroupDetail | null = null;
-  polls: Poll[] = [];
-  activePoll: Poll | null = null;
-  loading = true;
-  error: string | null = null;
-  isOffline = false;
-  autoRetrySeconds: number | null = null;
+  readonly group = signal<GroupDetail | null>(null);
+  readonly polls = signal<Poll[]>([]);
+  readonly activePoll = signal<Poll | null>(null);
+  readonly loading = signal<boolean>(true);
+  readonly error = signal<string | null>(null);
+  readonly isOffline = signal<boolean>(false);
+  readonly autoRetrySeconds = signal<number | null>(null);
+  readonly isMember = signal<boolean>(false);
+  readonly joinInProgress = signal<boolean>(false);
+  readonly joinError = signal<string | null>(null);
+  readonly leaveInProgress = signal<boolean>(false);
+  readonly leaveError = signal<string | null>(null);
+
   currentUserId: string | null = null;
-  isMember = false;
-  joinInProgress = false;
-  joinError: string | null = null;
-  leaveInProgress = false;
-  leaveError: string | null = null;
-  private currentGroupId: string | null = null;
-  private autoRetryInterval: ReturnType<typeof setInterval> | null = null;
-  private autoJoinRequested = false;
-  private readonly autoRetryDelayMs = 15000;
-  private readonly offlineHandler = () => {
-    this.isOffline = true;
-  };
-  private readonly onlineHandler = () => {
-    this.isOffline = false;
-    if (!this.loading && this.error) {
-      this.retryLoading();
-    }
-  };
-  private pendingErrorBaseMessage: string | null = null;
-  private initialPollsLoaded = false;
   readonly defaultErrorMessage =
     'Impossible de charger les détails du groupe. Veuillez réessayer.';
 
+  private currentGroupId: string | null = null;
+  private autoJoinRequested = false;
+  private readonly autoRetryDelayMs = 15000;
+  private readonly offlineHandler = () => {
+    this.isOffline.set(true);
+  };
+  private readonly onlineHandler = () => {
+    this.isOffline.set(false);
+    if (!this.loading() && this.error()) {
+      this.retryLoading();
+    }
+  };
+  private autoRetryState: AutoRetryState | null = null;
+  private initialPollsLoaded = false;
+
   ngOnInit(): void {
-    // Récupérer l'utilisateur connecté
     this.currentUserId = this.authService.getCurrentUserId();
-    this.isOffline =
-      typeof navigator !== 'undefined' && navigator.onLine === false;
-    window.addEventListener('offline', this.offlineHandler);
-    window.addEventListener('online', this.onlineHandler);
+    if (typeof navigator !== 'undefined') {
+      this.isOffline.set(navigator.onLine === false);
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('offline', this.offlineHandler);
+      window.addEventListener('online', this.onlineHandler);
+    }
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.currentGroupId = id;
-      this.loadGroup(id);
+      void this.loadGroup(id);
 
-      // Check if user should auto-join after login
       const autoJoin =
         this.route.snapshot.queryParamMap.get('autoJoin') === '1';
       if (autoJoin && this.authService.isAuthenticated()) {
         this.autoJoinRequested = true;
       }
     } else {
-      this.error = 'ID de groupe invalide';
-      this.loading = false;
+      this.error.set('ID de groupe invalide');
+      this.loading.set(false);
     }
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('offline', this.offlineHandler);
-    window.removeEventListener('online', this.onlineHandler);
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('offline', this.offlineHandler);
+      window.removeEventListener('online', this.onlineHandler);
+    }
     this.clearAutoRetry();
   }
 
-  private loadGroup(
+  private async loadGroup(
     id: string,
     options: { refreshPolls?: boolean } = {}
-  ): void {
+  ): Promise<void> {
     const { refreshPolls = false } = options;
-    this.loading = true;
-    this.error = null;
-    this.pendingErrorBaseMessage = null;
+    this.loading.set(true);
+    this.error.set(null);
+    this.autoRetrySeconds.set(null);
     this.clearAutoRetry();
-    this.joinInProgress = false;
-    this.joinError = null;
-    this.leaveInProgress = false;
-    this.leaveError = null;
+    this.joinInProgress.set(false);
+    this.joinError.set(null);
+    this.leaveInProgress.set(false);
+    this.leaveError.set(null);
 
-    this.groupsService.getGroup(id).subscribe({
-      next: (data) => {
-        this.group = data as GroupDetail;
-        const isMemberFromApi =
-          typeof data.currentUserIsMember === 'boolean'
-            ? data.currentUserIsMember
-            : this.group.members?.some((m) => m.userId === this.currentUserId);
+    try {
+      const data = (await firstValueFrom(
+        this.groupsService.getGroup(id)
+      )) as GroupDetail;
 
-        this.isMember = Boolean(isMemberFromApi);
-        this.loading = false;
-        this.error = null;
-        this.isOffline = false;
-        if (!this.initialPollsLoaded || refreshPolls) {
-          this.initialPollsLoaded = true;
-          this.loadPolls(id);
-        }
+      const isMemberFromApi =
+        typeof data.currentUserIsMember === 'boolean'
+          ? data.currentUserIsMember
+          : data.members?.some((m) => m.userId === this.currentUserId);
 
-        if (this.autoJoinRequested) {
-          this.handlePendingAutoJoin();
-        }
+      this.group.set(data);
+      this.isMember.set(Boolean(isMemberFromApi));
+      this.loading.set(false);
+      this.error.set(null);
+      this.isOffline.set(false);
 
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Error loading group:', err);
-        this.loading = false;
-        this.handleGroupError(err);
-        this.cdr.markForCheck();
-      },
-    });
+      if (!this.initialPollsLoaded || refreshPolls) {
+        this.initialPollsLoaded = true;
+        await this.loadPolls(id);
+      }
+
+      if (this.autoJoinRequested) {
+        this.handlePendingAutoJoin();
+      }
+    } catch (err) {
+      this.loading.set(false);
+      this.handleGroupError(err);
+    }
   }
 
-  private loadPolls(groupId: string): void {
-    this.pollsService.getPolls(groupId).subscribe({
-      next: (polls) => {
-        this.polls = polls;
-        if (polls.length > 0) {
-          // Load full details for the most recent poll
-          this.loadPollDetails(polls[0].id);
-        }
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Error loading polls:', err);
-        this.cdr.markForCheck();
-      },
-    });
+  private async loadPolls(groupId: string): Promise<void> {
+    try {
+      const polls = await firstValueFrom(this.pollsService.getPolls(groupId));
+      this.polls.set(polls);
+      if (polls.length > 0) {
+        await this.loadPollDetails(polls[0].id);
+      } else {
+        this.activePoll.set(null);
+      }
+    } catch (err) {
+      console.error('Error loading polls:', err);
+    }
   }
 
-  private loadPollDetails(pollId: string): void {
-    this.pollsService.getPoll(pollId).subscribe({
-      next: (poll) => {
-        this.activePoll = poll;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Error loading poll details:', err);
-        this.cdr.markForCheck();
-      },
-    });
+  private async loadPollDetails(pollId: string): Promise<void> {
+    try {
+      const poll = await firstValueFrom(this.pollsService.getPoll(pollId));
+      this.activePoll.set(poll);
+    } catch (err) {
+      console.error('Error loading poll details:', err);
+    }
   }
 
   retryLoading(): void {
@@ -210,17 +219,18 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
     }
 
     this.clearAutoRetry();
-    this.loadGroup(this.currentGroupId, { refreshPolls: true });
+    void this.loadGroup(this.currentGroupId, { refreshPolls: true });
   }
 
   onPollCreated(poll: Poll): void {
-    this.polls = [poll, ...this.polls];
-    this.loadPollDetails(poll.id);
+    this.polls.update((current) => [poll, ...current]);
+    void this.loadPollDetails(poll.id);
   }
 
   onVoted(): void {
-    if (this.activePoll) {
-      this.loadPollDetails(this.activePoll.id);
+    const activePoll = this.activePoll();
+    if (activePoll) {
+      void this.loadPollDetails(activePoll.id);
     }
   }
 
@@ -245,18 +255,19 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
   }
 
   getMemberCount(): number {
-    return this.group?.members?.length || this.group?._count?.members || 0;
+    const group = this.group();
+    return group?.members?.length || group?._count?.members || 0;
   }
 
   isFull(): boolean {
-    if (!this.group?.maxMembers) return false;
-    return this.getMemberCount() >= this.group.maxMembers;
+    const group = this.group();
+    if (!group?.maxMembers) return false;
+    return this.getMemberCount() >= group.maxMembers;
   }
 
   canJoin(): boolean {
-    return (
-      !this.isMember && this.group?.isRecruiting === true && !this.isFull()
-    );
+    const group = this.group();
+    return !this.isMember() && group?.isRecruiting === true && !this.isFull();
   }
 
   private handlePendingAutoJoin(): void {
@@ -264,13 +275,13 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.authService.isAuthenticated() || !this.group) {
+    if (!this.authService.isAuthenticated() || !this.group()) {
       this.autoJoinRequested = false;
       this.clearAutoJoinQueryParam();
       return;
     }
 
-    if (this.isMember || !this.canJoin() || this.joinInProgress) {
+    if (this.isMember() || !this.canJoin() || this.joinInProgress()) {
       this.autoJoinRequested = false;
       this.clearAutoJoinQueryParam();
       return;
@@ -299,15 +310,15 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
       .replace(/&$/, '');
 
     if (cleanedUrl !== currentUrl) {
-      setTimeout(() => {
+      afterNextRender(() => {
         void this.router.navigateByUrl(cleanedUrl, {
           replaceUrl: true,
         });
-      }, 0);
+      });
     }
   }
 
-  joinGroup(): void {
+  async joinGroup(): Promise<void> {
     if (!this.authService.isAuthenticated()) {
       const returnUrl =
         this.router.url || `/groups/${this.currentGroupId ?? ''}`;
@@ -321,124 +332,125 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (!this.group || !this.canJoin() || this.joinInProgress) {
+    const group = this.group();
+    if (!group || !this.canJoin() || this.joinInProgress()) {
       return;
     }
 
-    this.joinError = null;
-    this.joinInProgress = true;
+    this.joinError.set(null);
+    this.joinInProgress.set(true);
 
-    const currentGroup = this.group;
+    try {
+      const response: JoinGroupResponse = await firstValueFrom(
+        this.groupsService.joinGroup(group.id)
+      );
 
-    this.groupsService.joinGroup(currentGroup.id).subscribe({
-      next: (response) => {
-        this.joinInProgress = false;
-        this.isMember = true;
-        this.leaveError = null;
+      this.joinInProgress.set(false);
+      this.isMember.set(true);
+      this.leaveError.set(null);
 
-        const existingMembers = currentGroup.members ?? [];
-        const alreadyPresent = existingMembers.some(
-          (member) => member.userId === this.currentUserId
-        );
+      const existingMembers = group.members ?? [];
+      const alreadyPresent = existingMembers.some(
+        (member) => member.userId === this.currentUserId
+      );
 
-        let updatedMembers = existingMembers;
+      let updatedMembers = existingMembers;
 
-        if (!alreadyPresent) {
-          const currentUser = this.authService.getCurrentUser();
-          const joinedAt = new Date().toISOString();
-          const userId = currentUser?.id ?? this.currentUserId ?? '';
+      if (!alreadyPresent) {
+        const currentUser = this.authService.getCurrentUser();
+        const joinedAt = new Date().toISOString();
+        const userId = currentUser?.id ?? this.currentUserId ?? '';
 
-          if (userId) {
-            const newMember: GroupMember = {
-              userId,
-              user: {
-                id: userId,
-                username: currentUser?.username ?? 'Vous',
-                avatar: currentUser?.avatar ?? null,
-              },
-              joinedAt,
-            };
+        if (userId) {
+          const newMember: GroupMember = {
+            userId,
+            user: {
+              id: userId,
+              username: currentUser?.username ?? 'Vous',
+              avatar: currentUser?.avatar ?? null,
+            },
+            joinedAt,
+          };
 
-            updatedMembers = [...existingMembers, newMember];
-          }
+          updatedMembers = [...existingMembers, newMember];
         }
+      }
 
-        const updatedGroup: GroupDetail = {
-          ...currentGroup,
-          members: updatedMembers,
-          isRecruiting: response.isRecruiting,
-          maxMembers: response.maxMembers ?? currentGroup.maxMembers ?? null,
-          currentUserIsMember: true,
-          _count: {
-            members: response.memberCount,
-          },
-        };
+      const updatedGroup: GroupDetail = {
+        ...group,
+        members: updatedMembers,
+        isRecruiting: response.isRecruiting,
+        maxMembers: response.maxMembers ?? group.maxMembers ?? null,
+        currentUserIsMember: true,
+        _count: {
+          members: response.memberCount,
+        },
+      };
 
-        this.group = updatedGroup;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Error joining group:', err);
-        this.joinInProgress = false;
-        this.joinError =
-          err?.error?.message ??
-          'Impossible de rejoindre le groupe pour le moment.';
-        this.cdr.markForCheck();
-      },
-    });
+      this.group.set(updatedGroup);
+    } catch (err) {
+      console.error('Error joining group:', err);
+      this.joinInProgress.set(false);
+      const httpError = err as HttpErrorResponse;
+      this.joinError.set(
+        httpError?.error?.message ??
+          'Impossible de rejoindre le groupe pour le moment.'
+      );
+    }
   }
 
-  leaveGroup(): void {
-    if (!this.group || !this.isMember || this.leaveInProgress) {
+  async leaveGroup(): Promise<void> {
+    const group = this.group();
+    if (!group || !this.isMember() || this.leaveInProgress()) {
       return;
     }
 
-    const confirmed = window.confirm(
-      'Êtes-vous sûr de vouloir quitter ce groupe ?'
-    );
+    const confirmed =
+      typeof window === 'undefined'
+        ? true
+        : window.confirm('Êtes-vous sûr de vouloir quitter ce groupe ?');
 
     if (!confirmed) {
       return;
     }
 
-    this.leaveError = null;
-    this.leaveInProgress = true;
+    this.leaveError.set(null);
+    this.leaveInProgress.set(true);
 
-    const currentGroup = this.group;
+    try {
+      const response: LeaveGroupResponse = await firstValueFrom(
+        this.groupsService.leaveGroup(group.id)
+      );
 
-    this.groupsService.leaveGroup(currentGroup.id).subscribe({
-      next: (response: LeaveGroupResponse) => {
-        this.leaveInProgress = false;
-        this.isMember = false;
-        this.joinError = null;
+      this.leaveInProgress.set(false);
+      this.isMember.set(false);
+      this.joinError.set(null);
 
-        const remainingMembers = (currentGroup.members ?? []).filter(
-          (member) => member.userId !== this.currentUserId
-        );
+      const remainingMembers = (group.members ?? []).filter(
+        (member) => member.userId !== this.currentUserId
+      );
 
-        const updatedGroup: GroupDetail = {
-          ...currentGroup,
-          members: remainingMembers,
-          isRecruiting: response.isRecruiting,
-          maxMembers: response.maxMembers ?? currentGroup.maxMembers ?? null,
-          currentUserIsMember: false,
-          _count: {
-            members: response.memberCount,
-          },
-        };
+      const updatedGroup: GroupDetail = {
+        ...group,
+        members: remainingMembers,
+        isRecruiting: response.isRecruiting,
+        maxMembers: response.maxMembers ?? group.maxMembers ?? null,
+        currentUserIsMember: false,
+        _count: {
+          members: response.memberCount,
+        },
+      };
 
-        this.group = updatedGroup;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Error leaving group:', err);
-        this.leaveInProgress = false;
-        this.leaveError =
-          err?.error?.message ??
-          'Impossible de quitter le groupe pour le moment.';
-        this.cdr.markForCheck();
-      },
-    });
+      this.group.set(updatedGroup);
+    } catch (err) {
+      console.error('Error leaving group:', err);
+      this.leaveInProgress.set(false);
+      const httpError = err as HttpErrorResponse;
+      this.leaveError.set(
+        httpError?.error?.message ??
+          'Impossible de quitter le groupe pour le moment.'
+      );
+    }
   }
 
   goBack(): void {
@@ -449,18 +461,16 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
     const httpError = error instanceof HttpErrorResponse ? error : null;
 
     if (this.detectOffline(httpError)) {
-      this.error = 'Connexion perdue. Vérifiez votre réseau puis réessayez.';
-      this.cdr.markForCheck();
+      this.error.set('Connexion perdue. Vérifiez votre réseau puis réessayez.');
       return;
     }
 
     const message = this.resolveServerMessage(httpError);
-    this.error = message;
+    this.error.set(message);
 
     if (httpError && this.shouldAutoRetry(httpError)) {
       this.scheduleAutoRetry(message);
     }
-    this.cdr.markForCheck();
   }
 
   private detectOffline(error: HttpErrorResponse | null): boolean {
@@ -469,13 +479,11 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
       error?.status === 0;
 
     if (isOfflineError) {
-      this.isOffline = true;
-      this.cdr.markForCheck();
+      this.isOffline.set(true);
       return true;
     }
 
-    this.isOffline = false;
-    this.cdr.markForCheck();
+    this.isOffline.set(false);
     return false;
   }
 
@@ -529,48 +537,53 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
 
   private scheduleAutoRetry(baseMessage: string): void {
     this.clearAutoRetry();
-    this.pendingErrorBaseMessage = baseMessage;
-    this.autoRetrySeconds = Math.ceil(this.autoRetryDelayMs / 1000);
-    this.error = this.composeErrorMessage();
-    this.cdr.markForCheck();
 
-    this.autoRetryInterval = setInterval(() => {
-      if (this.autoRetrySeconds === null) {
-        return;
-      }
+    const countdownSeconds = signal<number | null>(
+      Math.ceil(this.autoRetryDelayMs / 1000)
+    );
 
-      this.autoRetrySeconds -= 1;
+    this.autoRetryState = {
+      baseMessage,
+      countdownSeconds,
+      subscription: timer(1000, 1000).subscribe(() => {
+        const remaining = countdownSeconds();
+        if (remaining === null) {
+          return;
+        }
 
-      if (this.autoRetrySeconds <= 0) {
-        this.clearAutoRetry();
-        this.retryLoading();
-      } else {
-        this.error = this.composeErrorMessage();
-      }
-      this.cdr.markForCheck();
-    }, 1000);
+        const nextValue = remaining - 1;
+        if (nextValue <= 0) {
+          this.clearAutoRetry();
+          this.retryLoading();
+          return;
+        }
+
+        countdownSeconds.set(nextValue);
+        this.error.set(this.composeErrorMessage(baseMessage, nextValue));
+      }),
+    };
+
+    this.autoRetrySeconds.set(countdownSeconds());
+    this.error.set(
+      this.composeErrorMessage(baseMessage, countdownSeconds() ?? null)
+    );
   }
 
-  private composeErrorMessage(): string {
-    if (!this.pendingErrorBaseMessage) {
-      return this.error ?? this.defaultErrorMessage;
+  private composeErrorMessage(
+    baseMessage: string,
+    remainingSeconds: number | null
+  ): string {
+    if (remainingSeconds === null) {
+      return baseMessage;
     }
 
-    if (this.autoRetrySeconds === null) {
-      return this.pendingErrorBaseMessage;
-    }
-
-    return `${this.pendingErrorBaseMessage} Nouvelle tentative dans ${this.autoRetrySeconds} s.`;
+    return `${baseMessage} Nouvelle tentative dans ${remainingSeconds} s.`;
   }
 
   private clearAutoRetry(): void {
-    if (this.autoRetryInterval) {
-      clearInterval(this.autoRetryInterval);
-      this.autoRetryInterval = null;
-    }
-    this.autoRetrySeconds = null;
-    this.pendingErrorBaseMessage = null;
-    this.cdr.markForCheck();
+    this.autoRetryState?.subscription?.unsubscribe();
+    this.autoRetryState = null;
+    this.autoRetrySeconds.set(null);
   }
 
   formatDate(dateString: string): string {

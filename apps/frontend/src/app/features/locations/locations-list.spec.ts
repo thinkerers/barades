@@ -125,7 +125,7 @@ describe('LocationsListComponent', () => {
 
     fixture.detectChanges();
 
-    expect(component.error).toBeTruthy();
+  expect(component.error).toBe(component.defaultErrorMessage);
     expect(component.loading).toBe(false);
   });
 

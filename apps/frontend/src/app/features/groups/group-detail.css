@@ -29,6 +29,7 @@
   background-color: rgba(59, 130, 246, 0.2);
   color: #60a5fa;
   font-weight: 700;
+  font-size: 1.5rem;
 }
 
 .offline-banner__content {
@@ -83,7 +84,7 @@
   }
 }
 
-.error-state svg {
+.error-state mat-icon {
   color: #ef4444;
 }
 
@@ -128,6 +129,10 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.back-button__icon {
+  font-size: 1.125rem;
 }
 
 .back-button:hover {
@@ -229,8 +234,10 @@
   font-size: 0.875rem;
 }
 
-.meta-item svg {
+.meta-item mat-icon {
   color: #6b7280;
+  font-size: 1.125rem;
+  flex-shrink: 0;
 }
 
 .meta-item strong {
@@ -327,6 +334,10 @@
   color: #a5b4fc;
 }
 
+.member-card__avatar--placeholder mat-icon {
+  font-size: 1.5rem;
+}
+
 .member-card__info {
   display: flex;
   flex-direction: column;
@@ -416,10 +427,16 @@
   font-size: 0.875rem;
 }
 
-.session-card__date svg,
-.session-card__location svg {
-  color: #6b7280;
+.session-card__participants mat-icon,
+.session-card__date mat-icon,
+.session-card__location mat-icon {
+  font-size: 1.1rem;
   flex-shrink: 0;
+}
+
+.session-card__date mat-icon,
+.session-card__location mat-icon {
+  color: #6b7280;
 }
 
 /* Empty States */
@@ -433,8 +450,9 @@
   text-align: center;
 }
 
-.empty-state svg {
+.empty-state mat-icon {
   opacity: 0.5;
+  font-size: 3rem;
 }
 
 .empty-state p {
