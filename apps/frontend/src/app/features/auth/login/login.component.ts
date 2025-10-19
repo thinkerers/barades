@@ -63,7 +63,8 @@ export class LoginComponent {
       error: (error) => {
         this.isLoading = false;
         this.errorMessage =
-          error.error?.message || 'Login failed. Please try again.';
+          error.error?.message ||
+          'Identifiants incorrects. Veuillez réessayer.';
       },
     });
   }

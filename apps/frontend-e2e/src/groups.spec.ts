@@ -27,79 +27,131 @@ test.describe('Groups Navigation', () => {
 
   test('should display public groups for alice_dm', async ({
     authenticatedPage: page,
+    createPollSandbox,
   }) => {
-    await page.goto('/groups');
+    const sandbox = await createPollSandbox({
+      members: ['alice_dm'],
+      isPublic: true,
+      recruiting: true,
+    });
 
-    // Alice should see public groups
-    await expect(page.getByText('Brussels Adventurers Guild')).toBeVisible();
-    await expect(page.getByText('Casual Board Gamers')).toBeVisible();
+    try {
+      await page.goto('/groups');
 
-    // Alice should also see private group (Elite Strategy Players) because she's a member
-    await expect(page.getByText('Elite Strategy Players')).toBeVisible();
+      const groupCard = page.getByTestId(`group-card-${sandbox.groupId}`);
+      await expect(groupCard).toBeVisible();
+      await expect(groupCard.getByText(sandbox.groupName)).toBeVisible();
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 
   test('should hide private groups for non-members', async ({
     page,
     loginAs,
+    createPollSandbox,
   }) => {
-    // Login as bob_boardgamer (not a member of Elite Strategy Players)
-    await loginAs(page, 'bob_boardgamer');
-    await expect(page).toHaveURL('/');
+    const privateSandbox = await createPollSandbox({
+      members: ['alice_dm'],
+      isPublic: false,
+      recruiting: true,
+    });
 
-    await page.goto('/groups');
+    try {
+      await loginAs(page, 'bob_boardgamer');
+      await expect(page).toHaveURL('/');
 
-    // Bob should see public groups
-    await expect(page.getByText('Brussels Adventurers Guild')).toBeVisible();
-    await expect(page.getByText('Casual Board Gamers')).toBeVisible();
+      await page.goto('/groups');
 
-    // Bob should NOT see private group (Elite Strategy Players)
-    await expect(page.getByText('Elite Strategy Players')).toHaveCount(0);
+      await expect(
+        page.getByTestId(`group-card-${privateSandbox.groupId}`)
+      ).toHaveCount(0);
+      await expect(page.getByText(privateSandbox.groupName)).toHaveCount(0);
+    } finally {
+      await privateSandbox.cleanup();
+    }
   });
 
   test('should navigate to group detail page', async ({
     authenticatedPage: page,
+    createPollSandbox,
   }) => {
-    await page.goto('/groups');
-    await openGroupDetails(page, 'Brussels Adventurers Guild');
-
-    // Wait for group detail to load (*ngIf="group && !loading")
-    // Check for the title using class selector (more reliable than role)
-    await expect(page.locator('.group-detail__title')).toBeVisible({
-      timeout: 10000,
+    const sandbox = await createPollSandbox({
+      members: ['alice_dm'],
+      isPublic: true,
+      recruiting: true,
     });
+
+    try {
+      await page.goto('/groups');
+      await openGroupDetails(page, sandbox.groupName);
+
+      await expect(page.locator('.group-detail__title')).toBeVisible({
+        timeout: 10000,
+      });
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 
   test('should display group details correctly', async ({
     authenticatedPage: page,
+    createPollSandbox,
   }) => {
-    await page.goto('/groups');
-    await openGroupDetails(page, 'Brussels Adventurers Guild');
+    const sandbox = await createPollSandbox({
+      members: ['alice_dm'],
+      isPublic: true,
+      recruiting: true,
+      playstyle: 'CASUAL',
+    });
 
-    // Check group information is displayed (using .group-detail-container or .group-detail)
-    const detailSection = page.locator('.group-detail');
-    await expect(detailSection).toBeVisible({ timeout: 10000 });
+    try {
+      await page.goto('/groups');
+      await openGroupDetails(page, sandbox.groupName);
 
-    // Verify playstyle badge is shown (use .playstyle-badge class)
-    await expect(page.locator('.playstyle-badge')).toBeVisible();
+      const detailSection = page.locator('.group-detail');
+      await expect(detailSection).toBeVisible({ timeout: 10000 });
+
+      await expect(page.locator('.playstyle-badge')).toBeVisible();
+      await expect(
+        detailSection.getByText(/Décontracté|CASUAL/i)
+      ).toBeVisible();
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 
   test('should display member count and creator info', async ({
     authenticatedPage: page,
+    createPollSandbox,
   }) => {
-    await page.goto('/groups');
-    await openGroupDetails(page, 'Brussels Adventurers Guild');
+    const sandbox = await createPollSandbox({
+      members: ['alice_dm', 'carol_newbie', 'bob_boardgamer'],
+      isPublic: true,
+    });
 
-    // Wait for group detail to be visible
-    await expect(page.locator('.group-detail')).toBeVisible();
+    try {
+      await page.goto('/groups');
+      await openGroupDetails(page, sandbox.groupName);
 
-    // Check for members section heading (more specific than /membre/i which matches multiple elements)
-    await expect(page.getByRole('heading', { name: /membres/i })).toBeVisible();
+      await expect(page.locator('.group-detail')).toBeVisible();
 
-    // Check creator (alice_dm) is listed in members section
-    // Note: alice_dm appears in top-bar too (logged in user), so scope to member-card
-    await expect(
-      page.locator('.member-card', { hasText: 'alice_dm' })
-    ).toBeVisible();
+      await expect(
+        page.getByRole('heading', { name: /membres/i })
+      ).toBeVisible();
+
+      const membersSection = page.locator('.member-card');
+      await expect(
+        membersSection.filter({ hasText: 'alice_dm' })
+      ).toBeVisible();
+      const countBadge = page
+        .locator('.group-detail__section')
+        .filter({ has: page.getByRole('heading', { name: /membres/i }) })
+        .locator('.count-badge');
+      await expect(countBadge.first()).toContainText('3');
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 
   test('should show recruiting badge and join action when group is recruiting', async ({
@@ -113,18 +165,22 @@ test.describe('Groups Navigation', () => {
       recruiting: true,
     });
 
-    await loginAs(page, 'carol_newbie');
-    await expect(page).toHaveURL('/');
+    try {
+      await loginAs(page, 'carol_newbie');
+      await expect(page).toHaveURL('/');
 
-    await page.goto('/groups');
+      await page.goto('/groups');
 
-    const groupCard = page.getByTestId(`group-card-${sandbox.groupId}`);
-    await expect(groupCard).toBeVisible();
+      const groupCard = page.getByTestId(`group-card-${sandbox.groupId}`);
+      await expect(groupCard).toBeVisible();
 
-    await expect(groupCard.getByText('Recrute')).toBeVisible();
-    const joinButton = groupCard.getByRole('button', { name: 'Rejoindre' });
-    await expect(joinButton).toBeVisible();
-    await expect(joinButton).toBeEnabled();
+      await expect(groupCard.getByText('Recrute')).toBeVisible();
+      const joinButton = groupCard.getByRole('button', { name: 'Rejoindre' });
+      await expect(joinButton).toBeVisible();
+      await expect(joinButton).toBeEnabled();
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 
   test('should prompt login and auto-join after authentication', async ({
@@ -137,53 +193,88 @@ test.describe('Groups Navigation', () => {
       recruiting: true,
     });
 
-    await page.goto('/groups');
+    try {
+      await page.goto('/groups');
 
-    const groupCard = page.getByTestId(`group-card-${sandbox.groupId}`);
-    await expect(groupCard).toBeVisible();
+      const groupCard = page.getByTestId(`group-card-${sandbox.groupId}`);
+      await expect(groupCard).toBeVisible();
 
-    await groupCard.getByRole('button', { name: 'Rejoindre' }).click();
+      await groupCard.getByRole('button', { name: 'Rejoindre' }).click();
 
-    // Should be redirected to login with autoJoin return URL
-    await expect(page).toHaveURL(/\/login\?returnUrl=/);
-    const loginRedirectUrl = page.url();
-    expect(loginRedirectUrl).toContain('autoJoin%3D1');
+      await expect(page).toHaveURL(/\/login\?returnUrl=/);
+      const loginRedirectUrl = page.url();
+      expect(loginRedirectUrl).toContain('autoJoin%3D1');
 
-    await page.getByTestId('username-input').fill('carol_newbie');
-    await page.getByTestId('password-input').fill('password123');
-    await page.getByTestId('login-submit-button').click();
+      await page.getByTestId('username-input').fill('carol_newbie');
+      await page.getByTestId('password-input').fill('password123');
+      await page.getByTestId('login-submit-button').click();
 
-    await page.waitForURL(new RegExp(`/groups/${sandbox.groupId}`), {
-      timeout: 15000,
-    });
+      await page.waitForURL(new RegExp(`/groups/${sandbox.groupId}`), {
+        timeout: 15000,
+      });
 
-    await expect(
-      page.getByRole('button', { name: /quitter le groupe/i })
-    ).toBeVisible({ timeout: 10000 });
+      await expect(
+        page.getByRole('button', { name: /quitter le groupe/i })
+      ).toBeVisible({ timeout: 10000 });
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 
   test('should filter groups by playstyle', async ({
     authenticatedPage: page,
+    createPollSandbox,
   }) => {
-    await page.goto('/groups');
+    const casualGroup = await createPollSandbox({
+      members: ['alice_dm'],
+      isPublic: true,
+      playstyle: 'CASUAL',
+    });
 
-    // Check that different playstyles are visible
-    await expect(
-      page.getByText(/Narratif|STORY_DRIVEN/i).first()
-    ).toBeVisible();
-    await expect(page.getByText(/Décontracté/i).first()).toBeVisible();
+    const competitiveGroup = await createPollSandbox({
+      members: ['alice_dm'],
+      isPublic: true,
+      playstyle: 'COMPETITIVE',
+    });
+
+    try {
+      await page.goto('/groups');
+
+      await expect(
+        page
+          .getByTestId(`group-card-${casualGroup.groupId}`)
+          .getByText(/Décontracté|CASUAL/i)
+      ).toBeVisible();
+
+      await expect(
+        page
+          .getByTestId(`group-card-${competitiveGroup.groupId}`)
+          .getByText(/Compétitif|COMPETITIVE/i)
+      ).toBeVisible();
+    } finally {
+      await casualGroup.cleanup();
+      await competitiveGroup.cleanup();
+    }
   });
 
   test('should navigate back to groups list from detail page', async ({
     authenticatedPage: page,
+    createPollSandbox,
   }) => {
-    await page.goto('/groups');
-    await openGroupDetails(page, 'Brussels Adventurers Guild');
+    const sandbox = await createPollSandbox({
+      members: ['alice_dm'],
+      isPublic: true,
+    });
 
-    // Click back button (has class .back-button, contains text "Retour")
-    await page.getByRole('button', { name: /retour/i }).click();
+    try {
+      await page.goto('/groups');
+      await openGroupDetails(page, sandbox.groupName);
 
-    // Should be back on groups list
-    await expect(page).toHaveURL('/groups');
+      await page.getByRole('button', { name: /retour/i }).click();
+
+      await expect(page).toHaveURL('/groups');
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 });

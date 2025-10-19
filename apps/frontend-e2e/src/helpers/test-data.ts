@@ -47,6 +47,18 @@ export interface SessionSandboxContext {
   cleanup: () => Promise<void>;
 }
 
+export interface PollCreationOptions {
+  title?: string;
+  dates?: string[];
+  votesByUsername?: Record<string, string>;
+}
+
+export interface CreatedPollContext {
+  pollId: string;
+  title: string;
+  dates: string[];
+}
+
 async function resolveUserId(username: string): Promise<string> {
   const user = await prisma.user.findUnique({ where: { username } });
   if (!user) {
@@ -127,6 +139,44 @@ export async function createPollSandbox(
     groupId: group.id,
     groupName,
     cleanup,
+  };
+}
+
+export async function createPollForGroup(
+  groupId: string,
+  options: PollCreationOptions = {}
+): Promise<CreatedPollContext> {
+  const {
+    title = `E2E Poll ${randomUUID().slice(0, 6)}`,
+    dates = [
+      new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+      new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    ],
+    votesByUsername,
+  } = options;
+
+  const votes: Record<string, string> = {};
+
+  if (votesByUsername) {
+    for (const [username, choice] of Object.entries(votesByUsername)) {
+      const userId = await resolveUserId(username);
+      votes[userId] = choice;
+    }
+  }
+
+  const poll = await prisma.poll.create({
+    data: {
+      groupId,
+      title,
+      dates,
+      votes,
+    },
+  });
+
+  return {
+    pollId: poll.id,
+    title: poll.title,
+    dates: poll.dates,
   };
 }
 

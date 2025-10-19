@@ -1,7 +1,10 @@
 import { test as base, Page } from '@playwright/test';
 import {
+  createPollForGroup as createPollForGroupHelper,
   createPollSandbox as createPollSandboxHelper,
   createSessionSandbox as createSessionSandboxHelper,
+  type CreatedPollContext,
+  type PollCreationOptions,
   type PollSandboxContext,
   type PollSandboxOptions,
   type SessionSandboxContext,
@@ -57,6 +60,14 @@ export interface AuthFixtures {
   createPollSandbox: (
     options?: PollSandboxOptions
   ) => Promise<PollSandboxContext>;
+
+  /**
+   * Helper to attach polls to an existing sandbox group
+   */
+  createPollForGroup: (
+    groupId: string,
+    options?: PollCreationOptions
+  ) => Promise<CreatedPollContext>;
 
   /**
    * Helper to create isolated Playwright sessions backed by Prisma
@@ -161,6 +172,13 @@ export const test = base.extend<AuthFixtures>({
       if (!sandbox) continue;
       await sandbox.cleanup();
     }
+  },
+
+  // eslint-disable-next-line no-empty-pattern
+  createPollForGroup: async ({}, use) => {
+    await use(async (groupId: string, options?: PollCreationOptions) => {
+      return createPollForGroupHelper(groupId, options);
+    });
   },
 
   // eslint-disable-next-line no-empty-pattern

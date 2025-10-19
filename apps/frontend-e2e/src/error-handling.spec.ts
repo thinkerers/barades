@@ -56,7 +56,9 @@ test.describe('Error Handling', () => {
 
       // Should show user-friendly error message
       // Note: Adjust selector based on actual error component
-      await expect(page.getByText(/erreur|error|impossible/i)).toBeVisible({
+      await expect(
+        page.getByText(/erreur|error|impossible/i).first()
+      ).toBeVisible({
         timeout: 10000,
       });
     });

@@ -232,7 +232,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
     const httpError = error instanceof HttpErrorResponse ? error : null;
 
     if (this.detectOffline(httpError)) {
-      this.error = 'Connexion perdue. Vérifiez votre réseau puis réessayez.';
+      this.error = 'Erreur de connexion. Vérifiez votre réseau puis réessayez.';
       return;
     }
 

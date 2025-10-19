@@ -200,7 +200,11 @@ test.describe('Edge Cases and Empty States', () => {
       .waitFor({ state: 'visible', timeout: 2_000 })
       .catch(() => undefined);
 
-    await firstVoteButton.click();
+    const removeButton = page.getByRole('button', {
+      name: /retirer mon vote/i,
+    });
+    await expect(removeButton).toBeEnabled();
+    await removeButton.click();
     await pollDisplay
       .locator('.poll-option--selected')
       .waitFor({ state: 'hidden', timeout: 2_000 })
@@ -208,6 +212,7 @@ test.describe('Edge Cases and Empty States', () => {
 
     const finalText = await firstVoteButton.textContent();
     expect(finalText).toContain(initialText || '');
+    await expect(firstVoteButton).toBeEnabled();
   });
 
   test('should handle group with no members except creator', async ({

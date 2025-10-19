@@ -1,228 +1,274 @@
-import { test, expect } from './fixtures/auth.fixture';
+import type { Page } from '@playwright/test';
+import { expect, test } from './fixtures/auth.fixture';
+import type { PollSandboxContext } from './helpers/test-data';
 
 test.describe('Poll Voting', () => {
-  test('should allow member to vote on poll date', async ({
-    authenticatedPage: page,
-  }) => {
-    // Navigate to Brussels Adventurers Guild (has existing poll)
+  const openSandboxGroupDetail = async (
+    page: Page,
+    sandbox: PollSandboxContext
+  ) => {
     await page.goto('/groups');
 
-    // Find Brussels Adventurers Guild card specifically (has poll from seed data)
-    const brusselsCard = page.locator('.group-card', {
-      hasText: 'Brussels Adventurers Guild',
+    const groupCard = page.getByTestId(`group-card-${sandbox.groupId}`);
+    await expect(groupCard).toBeVisible({ timeout: 10000 });
+
+    await groupCard.getByRole('button', { name: 'Voir les détails' }).click();
+    await expect(page.locator('.group-detail__title')).toBeVisible({
+      timeout: 10000,
     });
-    await brusselsCard
-      .getByRole('button', { name: 'Voir les détails' })
-      .click();
+  };
 
-    // Wait for page to load
-    await expect(page.locator('.group-detail__title')).toBeVisible();
+  test('should allow member to vote on poll date', async ({
+    authenticatedPage: page,
+    createPollSandbox,
+    createPollForGroup,
+  }) => {
+    const sandbox = await createPollSandbox({
+      members: ['alice_dm', 'bob_boardgamer'],
+      isPublic: true,
+    });
+    await createPollForGroup(sandbox.groupId);
 
-    // Wait for poll to load
-    const pollDisplay = page.locator('.poll-display').first();
-    await expect(pollDisplay).toBeVisible();
+    try {
+      await openSandboxGroupDetail(page, sandbox);
 
-    // Click on a poll option button to vote
-    const voteButtons = pollDisplay.locator('.poll-option__button');
-    await voteButtons.first().click();
+      const pollDisplay = page.locator('.poll-display').first();
+      await expect(pollDisplay).toBeVisible();
 
-    // Verify vote was registered (check for visual feedback or vote count change)
-    await expect(pollDisplay).toBeVisible();
+      const voteButton = pollDisplay.locator('.poll-option__button').first();
+      const [voteResponse] = await Promise.all([
+        page.waitForResponse((response) => {
+          return (
+            response.request().method() === 'PATCH' &&
+            response.url().includes('/polls/') &&
+            response.url().includes('/vote')
+          );
+        }),
+        voteButton.click(),
+      ]);
+
+      expect(voteResponse.status()).toBe(200);
+      await expect(pollDisplay.locator('.poll-option--selected')).toBeVisible();
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 
   test('should allow member to remove their vote', async ({
     authenticatedPage: page,
+    createPollSandbox,
+    createPollForGroup,
   }) => {
-    // Navigate to Brussels Adventurers Guild
-    await page.goto('/groups');
-
-    const brusselsCard = page.locator('.group-card', {
-      hasText: 'Brussels Adventurers Guild',
+    const sandbox = await createPollSandbox({
+      members: ['alice_dm', 'bob_boardgamer'],
+      isPublic: true,
     });
-    await brusselsCard
-      .getByRole('button', { name: 'Voir les détails' })
-      .click();
+    await createPollForGroup(sandbox.groupId);
 
-    await expect(page.locator('.group-detail__title')).toBeVisible();
+    try {
+      await openSandboxGroupDetail(page, sandbox);
 
-    // Wait for poll to load
-    await expect(page.locator('.poll-display').first()).toBeVisible();
+      const pollDisplay = page.locator('.poll-display').first();
+      await expect(pollDisplay).toBeVisible();
 
-    const pollDisplay = page.locator('.poll-display').first();
+      const voteButton = pollDisplay.locator('.poll-option__button').first();
+      const [voteResponse] = await Promise.all([
+        page.waitForResponse((response) => {
+          return (
+            response.request().method() === 'PATCH' &&
+            response.url().includes('/polls/') &&
+            response.url().includes('/vote')
+          );
+        }),
+        voteButton.click(),
+      ]);
+      expect(voteResponse.status()).toBe(200);
+      await expect(pollDisplay.locator('.poll-option--selected')).toBeVisible();
 
-    // Vote on a date
-    const voteButton = pollDisplay.locator('.poll-option__button').first();
-    await voteButton.click();
-
-    // Click again to remove vote (if the UI supports toggle)
-    // Or look for a remove vote button
-    await voteButton.click();
-
-    // Vote should be removed
-    await expect(pollDisplay).toBeVisible();
+      const removeButton = page.getByRole('button', {
+        name: /retirer mon vote/i,
+      });
+      await expect(removeButton).toBeEnabled();
+      const [removeResponse] = await Promise.all([
+        page.waitForResponse((response) => {
+          return (
+            response.request().method() === 'DELETE' &&
+            response.url().includes('/polls/') &&
+            response.url().includes('/vote/')
+          );
+        }),
+        removeButton.click(),
+      ]);
+      expect(removeResponse.status()).toBe(200);
+      await expect(pollDisplay.locator('.poll-option--selected')).toHaveCount(
+        0
+      );
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 
   test('should show which dates current user voted for', async ({
     authenticatedPage: page,
+    createPollSandbox,
+    createPollForGroup,
   }) => {
-    // Navigate to Brussels Adventurers Guild
-    await page.goto('/groups');
-
-    const brusselsCard = page.locator('.group-card', {
-      hasText: 'Brussels Adventurers Guild',
+    const sandbox = await createPollSandbox({
+      members: ['alice_dm', 'bob_boardgamer'],
+      isPublic: true,
     });
-    await brusselsCard
-      .getByRole('button', { name: 'Voir les détails' })
-      .click();
+    await createPollForGroup(sandbox.groupId);
 
-    await expect(page.locator('.group-detail__title')).toBeVisible();
+    try {
+      await openSandboxGroupDetail(page, sandbox);
 
-    // Wait for poll to load
-    await expect(page.locator('.poll-display').first()).toBeVisible();
+      const pollDisplay = page.locator('.poll-display').first();
+      await expect(pollDisplay).toBeVisible();
 
-    const pollDisplay = page.locator('.poll-display').first();
+      const voteButtons = pollDisplay.locator('.poll-option__button');
+      await voteButtons.first().click();
 
-    // Vote on a date
-    const voteButtons = pollDisplay.locator('.poll-option__button');
-    await voteButtons.first().click();
-
-    // Check for visual indicator (selected class or checkmark)
-    // The UI should show which option is selected
-    await expect(pollDisplay.locator('.poll-option--selected')).toBeVisible();
+      await expect(pollDisplay.locator('.poll-option--selected')).toBeVisible();
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 
   test('should display best date (most votes)', async ({
     authenticatedPage: page,
+    createPollSandbox,
+    createPollForGroup,
   }) => {
-    // Navigate to Brussels Adventurers Guild
-    await page.goto('/groups');
-
-    const brusselsCard = page.locator('.group-card', {
-      hasText: 'Brussels Adventurers Guild',
+    const sandbox = await createPollSandbox({
+      members: ['alice_dm', 'bob_boardgamer', 'carol_newbie'],
+      isPublic: true,
     });
-    await brusselsCard
-      .getByRole('button', { name: 'Voir les détails' })
-      .click();
+    const preferredDates = [
+      new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+      new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    ];
 
-    await expect(page.locator('.group-detail__title')).toBeVisible();
+    await createPollForGroup(sandbox.groupId, {
+      dates: preferredDates,
+      votesByUsername: {
+        alice_dm: preferredDates[0],
+        bob_boardgamer: preferredDates[0],
+        carol_newbie: preferredDates[1],
+      },
+    });
 
-    // Wait for poll to load
-    await expect(page.locator('.poll-display').first()).toBeVisible();
+    try {
+      await openSandboxGroupDetail(page, sandbox);
 
-    const pollDisplay = page.locator('.poll-display').first();
+      const pollDisplay = page.locator('.poll-display').first();
+      await expect(pollDisplay).toBeVisible();
 
-    // Check for "best" indicator (poll-option--best class)
-    await expect(pollDisplay.locator('.poll-option--best')).toBeVisible();
+      await expect(pollDisplay.locator('.poll-option--best')).toBeVisible();
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 
-  test('should prevent non-member from voting', async ({ page, loginAs }) => {
-    // Login as dave_poker (not a member of Brussels Adventurers Guild)
-    await loginAs(page, 'dave_poker');
-    await expect(page).toHaveURL('/');
-
-    // Navigate to Brussels Adventurers Guild (public group, can view but not vote)
-    await page.goto('/groups');
-
-    const brusselsCard = page.locator('.group-card', {
-      hasText: 'Brussels Adventurers Guild',
+  test('should prevent non-member from voting', async ({
+    page,
+    loginAs,
+    createPollSandbox,
+    createPollForGroup,
+  }) => {
+    const sandbox = await createPollSandbox({
+      members: ['alice_dm'],
+      isPublic: true,
     });
-    await brusselsCard
-      .getByRole('button', { name: 'Voir les détails' })
-      .click();
+    await createPollForGroup(sandbox.groupId);
 
-    await expect(page.locator('.group-detail__title')).toBeVisible();
+    try {
+      await loginAs(page, 'dave_poker');
+      await expect(page).toHaveURL('/');
 
-    // Wait for poll to load
-    await expect(page.locator('.poll-display').first()).toBeVisible();
+      await openSandboxGroupDetail(page, sandbox);
 
-    // Check that vote buttons are disabled (dave is not a member)
-    const voteButtons = page.locator('.poll-option__button');
-    await expect(voteButtons.first()).toBeDisabled();
+      const voteButtons = page.locator('.poll-option__button');
+      await expect(voteButtons.first()).toBeDisabled();
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 
   test('should update vote counts in real-time', async ({
     authenticatedPage: page,
+    createPollSandbox,
+    createPollForGroup,
   }) => {
-    // Navigate to Brussels Adventurers Guild
-    await page.goto('/groups');
-
-    const brusselsCard = page.locator('.group-card', {
-      hasText: 'Brussels Adventurers Guild',
+    const sandbox = await createPollSandbox({
+      members: ['alice_dm', 'bob_boardgamer'],
+      isPublic: true,
     });
-    await brusselsCard
-      .getByRole('button', { name: 'Voir les détails' })
-      .click();
+    await createPollForGroup(sandbox.groupId);
 
-    await expect(page.locator('.group-detail__title')).toBeVisible();
+    try {
+      await openSandboxGroupDetail(page, sandbox);
 
-    // Wait for poll to load
-    await expect(page.locator('.poll-display').first()).toBeVisible();
+      const pollDisplay = page.locator('.poll-display').first();
+      await expect(pollDisplay).toBeVisible();
 
-    const pollDisplay = page.locator('.poll-display').first();
+      const voteButton = pollDisplay.locator('.poll-option__button').first();
+      await voteButton.click();
 
-    // Vote on a date
-    const voteButton = pollDisplay.locator('.poll-option__button').first();
-    await voteButton.click();
-
-    // Vote count should be visible in poll stats
-    await expect(pollDisplay.getByText(/\d+\s*vote/i)).toBeVisible();
+      await expect(pollDisplay.getByText(/\d+\s*vote/i)).toBeVisible();
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 
   test('should allow voting on multiple dates in same poll', async ({
     authenticatedPage: page,
+    createPollSandbox,
+    createPollForGroup,
   }) => {
-    // Navigate to Brussels Adventurers Guild
-    await page.goto('/groups');
-
-    const brusselsCard = page.locator('.group-card', {
-      hasText: 'Brussels Adventurers Guild',
+    const sandbox = await createPollSandbox({
+      members: ['alice_dm', 'bob_boardgamer'],
+      isPublic: true,
     });
-    await brusselsCard
-      .getByRole('button', { name: 'Voir les détails' })
-      .click();
+    await createPollForGroup(sandbox.groupId);
 
-    await expect(page.locator('.group-detail__title')).toBeVisible();
+    try {
+      await openSandboxGroupDetail(page, sandbox);
 
-    // Wait for poll to load
-    await expect(page.locator('.poll-display').first()).toBeVisible();
+      const pollDisplay = page.locator('.poll-display').first();
+      await expect(pollDisplay).toBeVisible();
 
-    const pollDisplay = page.locator('.poll-display').first();
+      const voteButton = pollDisplay.locator('.poll-option__button').first();
+      await voteButton.click();
 
-    // Note: The current implementation allows only ONE vote per user (radio button behavior)
-    // This test verifies that voting works, even if multiple votes aren't supported
-    const voteButton = pollDisplay.locator('.poll-option__button').first();
-    await voteButton.click();
-
-    // Verify vote was registered
-    await expect(pollDisplay.locator('.poll-option--selected')).toBeVisible();
+      await expect(pollDisplay.locator('.poll-option--selected')).toBeVisible();
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 
   test('should show vote details tooltip', async ({
     authenticatedPage: page,
+    createPollSandbox,
+    createPollForGroup,
   }) => {
-    // Navigate to Brussels Adventurers Guild
-    await page.goto('/groups');
-
-    const brusselsCard = page.locator('.group-card', {
-      hasText: 'Brussels Adventurers Guild',
+    const sandbox = await createPollSandbox({
+      members: ['alice_dm', 'bob_boardgamer'],
+      isPublic: true,
     });
-    await brusselsCard
-      .getByRole('button', { name: 'Voir les détails' })
-      .click();
+    await createPollForGroup(sandbox.groupId);
 
-    await expect(page.locator('.group-detail__title')).toBeVisible();
+    try {
+      await openSandboxGroupDetail(page, sandbox);
 
-    // Wait for poll to load
-    await expect(page.locator('.poll-display').first()).toBeVisible();
+      const pollDisplay = page.locator('.poll-display').first();
+      await expect(pollDisplay).toBeVisible();
 
-    const pollDisplay = page.locator('.poll-display').first();
-    await expect(pollDisplay).toBeVisible();
+      const pollOption = pollDisplay.locator('.poll-option').first();
+      await pollOption.hover();
 
-    // Hover over a poll option to see vote details
-    const pollOption = pollDisplay.locator('.poll-option').first();
-    await pollOption.hover();
-
-    // Poll should remain visible (validates hover interaction works)
-    await expect(pollDisplay).toBeVisible();
+      await expect(pollDisplay).toBeVisible();
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 });

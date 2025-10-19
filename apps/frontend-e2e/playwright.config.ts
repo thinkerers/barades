@@ -7,6 +7,7 @@ import { join } from 'node:path';
 
 // For CI, you may want to set BASE_URL to the deployed application.
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+const reuseExistingServers = !process.env['CI'];
 
 /**
  * Read environment variables from file.
@@ -31,6 +32,8 @@ for (const candidate of envCandidates) {
 export default defineConfig({
   ...nxE2EPreset(__filename, { testDir: './src' }),
 
+  reporter: 'line',
+
   /* Limit workers to avoid resource exhaustion (EAGAIN errors) */
   workers: process.env['CI'] ? 2 : 3,
 
@@ -44,17 +47,17 @@ export default defineConfig({
   webServer: [
     {
       command: 'npx nx serve backend',
-      url: 'http://localhost:3000/api',
-      reuseExistingServer: true,
+      port: 3000,
+      reuseExistingServer: reuseExistingServers,
       cwd: workspaceRoot,
-      timeout: 120000,
+      timeout: 180000,
     },
     {
       command: 'npx nx serve frontend',
-      url: 'http://localhost:4200',
-      reuseExistingServer: true,
+      port: 4200,
+      reuseExistingServer: reuseExistingServers,
       cwd: workspaceRoot,
-      timeout: 120000,
+      timeout: 180000,
     },
   ],
   projects: [

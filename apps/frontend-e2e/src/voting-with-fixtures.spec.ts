@@ -1,30 +1,57 @@
+import type { Page } from '@playwright/test';
 import { expect, test } from './fixtures/auth.fixture';
+import type { PollSandboxContext } from './helpers/test-data';
+
+const openSandboxGroupDetail = async (
+  page: Page,
+  sandbox: PollSandboxContext
+) => {
+  await page.goto('/groups');
+
+  const groupCard = page.getByTestId(`group-card-${sandbox.groupId}`);
+  await expect(groupCard).toBeVisible({ timeout: 10000 });
+
+  await groupCard.getByRole('button', { name: 'Voir les détails' }).click();
+  await expect(page.locator('.group-detail__title')).toBeVisible({
+    timeout: 10000,
+  });
+};
 
 test.describe('Poll Voting (with fixtures)', () => {
   test('should allow member to vote on poll date', async ({
     authenticatedPage: page,
+    createPollSandbox,
+    createPollForGroup,
   }) => {
-    // Navigate to Brussels Adventurers Guild (has existing poll)
-    await page.goto('/groups');
-
-    const brusselsCard = page.locator('.group-card', {
-      hasText: 'Brussels Adventurers Guild',
+    const sandbox = await createPollSandbox({
+      members: ['alice_dm', 'bob_boardgamer'],
+      isPublic: true,
     });
-    await brusselsCard
-      .getByRole('button', { name: 'Voir les détails' })
-      .click();
+    await createPollForGroup(sandbox.groupId);
 
-    await expect(page.locator('.group-detail__title')).toBeVisible();
+    try {
+      await openSandboxGroupDetail(page, sandbox);
 
-    const pollDisplay = page.locator('.poll-display').first();
-    await expect(pollDisplay).toBeVisible();
+      const pollDisplay = page.locator('.poll-display').first();
+      await expect(pollDisplay).toBeVisible();
 
-    // Click on a poll option button to vote
-    const voteButtons = pollDisplay.locator('.poll-option__button');
-    await voteButtons.first().click();
+      const voteButton = pollDisplay.locator('.poll-option__button').first();
+      const [voteResponse] = await Promise.all([
+        page.waitForResponse((response) => {
+          return (
+            response.request().method() === 'PATCH' &&
+            response.url().includes('/polls/') &&
+            response.url().includes('/vote')
+          );
+        }),
+        voteButton.click(),
+      ]);
 
-    // Verify vote was registered
-    await expect(pollDisplay).toBeVisible();
+      expect(voteResponse.status()).toBe(200);
+      await expect(pollDisplay.locator('.poll-option--selected')).toBeVisible();
+    } finally {
+      await sandbox.cleanup();
+    }
   });
 
   test('should allow switching users', async ({ page, logout, loginAs }) => {
