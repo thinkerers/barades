@@ -1,0 +1,87 @@
+<section class="careers-page">
+  <header class="careers-header">
+    <p class="careers-tag">Nous recrutons</p>
+    <h1 class="careers-title">Rejoignez l'aventure Bar à Dés</h1>
+    <p class="careers-subtitle">
+      Nous créons la plateforme de référence pour connecter MJ, joueurs et lieux
+      de jeu. Si vous aimez les dés, les histoires et le produit bien fini, vous
+      êtes au bon endroit.
+    </p>
+  </header>
+
+  <section class="careers-openings">
+    <h2 class="section-title">
+      <mat-icon aria-hidden="true">campaign</mat-icon>
+      Postes ouverts
+    </h2>
+
+    <div class="openings-grid">
+      @for (job of jobOpenings; track job.title) {
+      <article class="opening-card">
+        <div class="opening-header">
+          <h3 class="opening-title">{{ job.title }}</h3>
+          <p class="opening-meta">{{ job.location }} · {{ job.contract }}</p>
+        </div>
+        <p class="opening-description">{{ job.description }}</p>
+        <a class="opening-cta" [href]="buildMailto(job.emailSubject)">
+          {{ job.ctaLabel }}
+        </a>
+      </article>
+      }
+    </div>
+  </section>
+
+  <section class="careers-benefits">
+    <h2 class="section-title">
+      <mat-icon aria-hidden="true">workspace_premium</mat-icon>
+      Pourquoi nous rejoindre ?
+    </h2>
+    <div class="benefits-grid">
+      @for (highlight of highlights; track highlight.title) {
+      <article class="benefit-card">
+        <mat-icon class="benefit-icon" aria-hidden="true">
+          {{ highlight.icon }}
+        </mat-icon>
+        <h3 class="benefit-title">{{ highlight.title }}</h3>
+        <p class="benefit-description">{{ highlight.description }}</p>
+      </article>
+      }
+    </div>
+  </section>
+
+  <section class="careers-values">
+    <div class="values-header">
+      <h2 class="section-title">
+        <mat-icon aria-hidden="true">handshake</mat-icon>
+        Notre manière de travailler
+      </h2>
+      <p class="values-intro">
+        Nous sommes une petite équipe distribuée qui valorise la transparence et
+        la responsabilité partagée. Les rituels sont légers, les feedbacks
+        fréquents et la communication est async-first.
+      </p>
+    </div>
+
+    <div class="values-grid">
+      @for (value of values; track value.title) {
+      <article class="value-card">
+        <mat-icon class="value-icon" aria-hidden="true"
+          >{{ value.icon }}</mat-icon
+        >
+        <h3 class="value-title">{{ value.title }}</h3>
+        <p class="value-description">{{ value.description }}</p>
+      </article>
+      }
+    </div>
+
+    <div class="careers-footer">
+      <p class="careers-footer-text">
+        Vous ne voyez pas de poste fait pour vous ? Envoyez-nous une candidature
+        spontanée avec vos projets préférés, nous adorons les initiatives !
+      </p>
+      <a class="careers-footer-link" href="mailto:talents@barades.com">
+        talents@barades.com
+      </a>
+    </div>
+  </section>
+</section>
