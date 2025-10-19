@@ -1,0 +1,34 @@
+<section class="charter-page">
+  <header class="charter-header">
+    <p class="charter-tag">Charte communautaire</p>
+    <h1 class="charter-title">Un espace sûr pour chaque aventurier·e</h1>
+    <p class="charter-subtitle">
+      Bar à Dés rassemble des profils variés. Cette charte pose le cadre pour
+      que chacun puisse raconter des histoires mémorables avec respect.
+    </p>
+  </header>
+
+  <section class="charter-grid">
+    @for (principle of principles; track principle.title) {
+    <article
+      class="charter-card"
+      [class.charter-card--highlight]="principle.emphasis"
+    >
+      <mat-icon class="charter-card-icon" aria-hidden="true">
+        {{ principle.icon }}
+      </mat-icon>
+      <h2 class="charter-card-title">{{ principle.title }}</h2>
+      <p class="charter-card-description">{{ principle.description }}</p>
+      @if (principle.emphasis) {
+      <div class="charter-callout">
+        <p>
+          Témoins ou victimes d'un comportement inapproprié ? Prévenez notre
+          équipe via la <a routerLink="/contact">page de contact</a> ou signalez
+          un profil depuis l'application.
+        </p>
+      </div>
+      }
+    </article>
+    }
+  </section>
+</section>

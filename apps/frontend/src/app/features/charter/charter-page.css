@@ -1,0 +1,110 @@
+.charter-page {
+  max-width: 68rem;
+  margin: 2.5rem auto;
+  padding: 0 1.5rem;
+  display: grid;
+  gap: 3rem;
+}
+
+.charter-header {
+  text-align: center;
+  display: grid;
+  gap: 1rem;
+}
+
+.charter-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 1rem;
+  border-radius: 999px;
+  background: rgba(6, 182, 212, 0.15);
+  color: #2dd4bf;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.charter-title {
+  font-size: clamp(2rem, 3vw + 1rem, 2.75rem);
+  font-weight: 800;
+  color: var(--color-text-primary, #f9fafb);
+}
+
+.charter-subtitle {
+  max-width: 48rem;
+  margin: 0 auto;
+  color: var(--color-text-secondary, #cbd5f5);
+  font-size: 1.125rem;
+  line-height: 1.7;
+}
+
+.charter-grid {
+  display: grid;
+  gap: 1.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+}
+
+.charter-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 1.25rem;
+  padding: 2rem;
+  display: grid;
+  gap: 1rem;
+  position: relative;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.charter-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(125, 211, 252, 0.6);
+}
+
+.charter-card--highlight {
+  border-color: rgba(226, 29, 72, 0.6);
+  background: rgba(40, 13, 16, 0.75);
+}
+
+.charter-card-icon {
+  font-size: 2.5rem;
+  color: var(--color-primary, #6366f1);
+  width: 1em;
+  height: 1em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.charter-card--highlight .charter-card-icon {
+  color: #f97316;
+}
+
+.charter-card-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-text-primary, #f9fafb);
+}
+
+.charter-card-description {
+  color: var(--color-text-secondary, #cbd5f5);
+  line-height: 1.7;
+}
+
+.charter-callout {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+  color: var(--color-text-primary, #f9fafb);
+  font-size: 0.95rem;
+}
+
+.charter-callout a {
+  color: var(--color-primary, #6366f1);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.charter-callout a:hover {
+  text-decoration: underline;
+}
