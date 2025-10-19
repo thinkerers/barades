@@ -1,11 +1,5 @@
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectorRef,
-  Component,
-  inject,
-  Input,
-  OnInit,
-} from '@angular/core';
+import { Component, inject, Input, OnInit, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
@@ -27,11 +21,10 @@ export class SessionCardComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private notifications = inject(NotificationService);
-  private cdr = inject(ChangeDetectorRef);
 
-  loading = false;
-  error: string | null = null;
-  isRegistered = false;
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
+  readonly isRegistered = signal(false);
 
   ngOnInit(): void {
     this.checkIfRegistered();
@@ -91,22 +84,20 @@ export class SessionCardComponent implements OnInit {
   checkIfRegistered(): void {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
-      this.isRegistered = false;
+      this.isRegistered.set(false);
       return;
     }
 
     // Load user's reservations and check if one matches this session
     this.reservationsService.getReservations(currentUser.id).subscribe({
       next: (reservations) => {
-        this.isRegistered = reservations.some(
-          (r) => r.sessionId === this.session.id
+        this.isRegistered.set(
+          reservations.some((r) => r.sessionId === this.session.id)
         );
-        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error checking registration status:', err);
-        this.isRegistered = false;
-        this.cdr.markForCheck();
+        this.isRegistered.set(false);
       },
     });
   }
@@ -124,13 +115,13 @@ export class SessionCardComponent implements OnInit {
 
     // Vérifier si la session est complète
     if (this.isFull()) {
-      this.error = 'Cette session est complète';
+      this.error.set('Cette session est complète');
       this.notifications.info('Cette session est complète.');
       return;
     }
 
-    this.loading = true;
-    this.error = null;
+    this.loading.set(true);
+    this.error.set(null);
 
     this.reservationsService
       .createReservation(this.session.id, currentUser.id)
@@ -142,21 +133,19 @@ export class SessionCardComponent implements OnInit {
             this.session.playersMax,
             this.session.playersCurrent + 1
           );
-          this.isRegistered = true;
-          this.loading = false;
+          this.isRegistered.set(true);
+          this.loading.set(false);
           this.notifications.success(
             'Réservation confirmée ! Vous avez reçu un email de confirmation.'
           );
-          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Erreur lors de la réservation:', err);
-          this.error = err.error?.message || 'Erreur lors de la réservation';
-          this.loading = false;
-          this.notifications.error(
-            this.error || 'Erreur lors de la réservation.'
-          );
-          this.cdr.markForCheck();
+          const errorMsg =
+            err.error?.message || 'Erreur lors de la réservation';
+          this.error.set(errorMsg);
+          this.loading.set(false);
+          this.notifications.error(errorMsg);
         },
       });
   }

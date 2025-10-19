@@ -482,7 +482,7 @@ describe('SessionCardComponent', () => {
         .spyOn(component['reservationsService'], 'getReservations')
         .mockReturnValue(of([]));
       component.checkIfRegistered();
-      expect(component.isRegistered).toBe(false);
+      expect(component.isRegistered()).toBe(false);
     });
 
     it('should set isRegistered to true when user has reservation for this session', () => {
@@ -499,7 +499,7 @@ describe('SessionCardComponent', () => {
         .spyOn(component['reservationsService'], 'getReservations')
         .mockReturnValue(of(mockReservations));
       component.checkIfRegistered();
-      expect(component.isRegistered).toBe(true);
+      expect(component.isRegistered()).toBe(true);
     });
 
     it('should set isRegistered to false when user has reservations for other sessions', () => {
@@ -523,13 +523,13 @@ describe('SessionCardComponent', () => {
         .spyOn(component['reservationsService'], 'getReservations')
         .mockReturnValue(of(mockReservations));
       component.checkIfRegistered();
-      expect(component.isRegistered).toBe(false);
+      expect(component.isRegistered()).toBe(false);
     });
 
     it('should set isRegistered to false when user is not authenticated', () => {
       mockAuthService.getCurrentUser.mockReturnValue(null);
       component.checkIfRegistered();
-      expect(component.isRegistered).toBe(false);
+      expect(component.isRegistered()).toBe(false);
     });
 
     it('should display "Inscrit" badge when user is registered', () => {
@@ -540,7 +540,7 @@ describe('SessionCardComponent', () => {
           .mockImplementation(() => {
             /* intentionally blank for zoneless test */
           });
-        component.isRegistered = true;
+        component.isRegistered.set(true);
       });
       checkSpy?.mockRestore();
       const badge = compiled.querySelector('.session-card__registered');
@@ -556,7 +556,7 @@ describe('SessionCardComponent', () => {
           .mockImplementation(() => {
             /* intentionally blank for zoneless test */
           });
-        component.isRegistered = false;
+        component.isRegistered.set(false);
       });
       checkSpy?.mockRestore();
       const badge = compiled.querySelector('.session-card__registered');
@@ -571,7 +571,7 @@ describe('SessionCardComponent', () => {
           .mockImplementation(() => {
             /* intentionally blank for zoneless test */
           });
-        component.isRegistered = true;
+        component.isRegistered.set(true);
       });
       checkSpy?.mockRestore();
       const button = compiled.querySelector(
@@ -588,7 +588,7 @@ describe('SessionCardComponent', () => {
           .mockImplementation(() => {
             /* intentionally blank for zoneless test */
           });
-        component.isRegistered = true;
+        component.isRegistered.set(true);
       });
       checkSpy?.mockRestore();
       const button = compiled.querySelector(
@@ -605,7 +605,7 @@ describe('SessionCardComponent', () => {
           .mockImplementation(() => {
             /* intentionally blank for zoneless test */
           });
-        component.isRegistered = true;
+        component.isRegistered.set(true);
       });
       checkSpy?.mockRestore();
       const button = compiled.querySelector('.button--primary');
@@ -628,7 +628,7 @@ describe('SessionCardComponent', () => {
         /* noop */
       });
 
-      component.isRegistered = false;
+      component.isRegistered.set(false);
       const initialPlayers = component.session.playersCurrent;
 
       // Subscribe to verify the observable completes
@@ -638,9 +638,9 @@ describe('SessionCardComponent', () => {
         .subscribe({
           next: () => {
             component.session.playersCurrent++;
-            component.isRegistered = true;
+            component.isRegistered.set(true);
 
-            expect(component.isRegistered).toBe(true);
+            expect(component.isRegistered()).toBe(true);
             expect(component.session.playersCurrent).toBe(initialPlayers + 1);
             done();
           },
