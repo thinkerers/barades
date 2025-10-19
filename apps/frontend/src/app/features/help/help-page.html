@@ -1,0 +1,38 @@
+<section class="help-page">
+  <header class="help-header">
+    <h1 class="help-title">Centre d'aide</h1>
+    <p class="help-subtitle">Comment pouvons-nous vous accompagner ?</p>
+    <div class="help-search">
+      <mat-icon aria-hidden="true">search</mat-icon>
+      <input
+        type="search"
+        placeholder="Rechercher une question (ex : profil, créer un groupe)"
+        [(ngModel)]="searchTerm"
+        name="help-search"
+        aria-label="Rechercher dans les questions fréquentes"
+      />
+    </div>
+  </header>
+
+  @if (hasResults) {
+  <section class="faq-list" aria-live="polite">
+    @for (faq of filteredFaqs; track faq.question) {
+    <article class="faq-item">
+      <p class="faq-category">{{ faq.category }}</p>
+      <h2 class="faq-question">{{ faq.question }}</h2>
+      <p class="faq-answer">{{ faq.answer }}</p>
+    </article>
+    }
+  </section>
+  } @else {
+  <div class="faq-empty" aria-live="polite">
+    <mat-icon aria-hidden="true">help_center</mat-icon>
+    <h2>Pas encore de réponse</h2>
+    <p>
+      Essayez un autre mot-clé ou contactez-nous directement. Notre équipe est
+      disponible pour vous aider à organiser vos prochaines sessions.
+    </p>
+    <a routerLink="/contact" class="faq-empty-action">Nous contacter</a>
+  </div>
+  }
+</section>
