@@ -1,0 +1,129 @@
+<section class="partner-page">
+  <header class="partner-hero">
+    <h1 class="partner-title">Devenez partenaire Bar à Dés</h1>
+    <p class="partner-subtitle">
+      Gagnez en visibilité, connectez-vous aux joueuses et joueurs passionnés et
+      créez des expériences mémorables dans votre lieu ou votre communauté.
+    </p>
+  </header>
+
+  <section class="partner-highlights">
+    <h2 class="section-title">
+      <mat-icon aria-hidden="true">auto_awesome</mat-icon>
+      Vos avantages
+    </h2>
+    <div class="highlight-grid">
+      @for (highlight of highlights; track highlight.title) {
+      <article class="highlight-card">
+        <mat-icon class="highlight-icon" aria-hidden="true">
+          {{ highlight.icon }}
+        </mat-icon>
+        <h3 class="highlight-title">{{ highlight.title }}</h3>
+        <p class="highlight-description">{{ highlight.description }}</p>
+      </article>
+      }
+    </div>
+  </section>
+
+  <section class="partner-profiles">
+    <h2 class="section-title">
+      <mat-icon aria-hidden="true">diversity_1</mat-icon>
+      Qui peut nous rejoindre ?
+    </h2>
+    <div class="profile-grid">
+      @for (profile of profiles; track profile.title) {
+      <article class="profile-card">
+        <mat-icon class="profile-icon" aria-hidden="true">
+          {{ profile.icon }}
+        </mat-icon>
+        <h3 class="profile-title">{{ profile.title }}</h3>
+        <p class="profile-details">{{ profile.details }}</p>
+      </article>
+      }
+    </div>
+  </section>
+
+  <section class="partner-form-section">
+    <div class="form-header">
+      <h2>Discutons de votre projet</h2>
+      <p>
+        Remplissez ce formulaire. Nous analysons chaque candidature et vous
+        contactons avec des idées d'activation adaptées à votre audience.
+      </p>
+    </div>
+
+    <form
+      class="partner-form"
+      [formGroup]="partnerForm"
+      (ngSubmit)="onSubmit()"
+      novalidate
+    >
+      <div class="form-field">
+        <label for="organization">Nom de la structure *</label>
+        <input
+          id="organization"
+          type="text"
+          formControlName="organization"
+          [class.field-error]="submitted && organization?.invalid"
+          placeholder="Bar ludique, boutique, association..."
+        />
+        @if (submitted && organization?.invalid) {
+        <p class="field-hint">Veuillez indiquer le nom de votre structure.</p>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="contactName">Votre nom *</label>
+        <input
+          id="contactName"
+          type="text"
+          formControlName="contactName"
+          [class.field-error]="submitted && contactName?.invalid"
+          placeholder="Prénom Nom"
+        />
+        @if (submitted && contactName?.invalid) {
+        <p class="field-hint">Ce champ est requis.</p>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="email">Email *</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          [class.field-error]="submitted && email?.invalid"
+          placeholder="contact@votresociete.com"
+        />
+        @if (submitted && email?.invalid) {
+        <p class="field-hint">Renseignez une adresse e-mail valide.</p>
+        }
+      </div>
+
+      <div class="form-field">
+        <label for="message">Dites-nous en plus *</label>
+        <textarea
+          id="message"
+          rows="5"
+          formControlName="message"
+          [class.field-error]="submitted && message?.invalid"
+          placeholder="Présentez votre activité, vos attentes et vos disponibilités."
+        ></textarea>
+        @if (submitted && message?.invalid) {
+        <p class="field-hint">
+          Ajoutez quelques détails pour que nous puissions préparer notre
+          réponse.
+        </p>
+        }
+      </div>
+
+      @if (errorMessage) {
+      <p class="form-feedback form-feedback--error">{{ errorMessage }}</p>
+      } @if (successMessage) {
+      <p class="form-feedback form-feedback--success">{{ successMessage }}</p>
+      }
+
+      <button type="submit" class="partner-submit">Envoyer la demande</button>
+    </form>
+  </section>
+</section>
