@@ -139,49 +139,15 @@
   color: rgba(226, 232, 240, 0.85);
 }
 
-/* Material Form Field Styling */
-:host ::ng-deep {
-  .locations-filters-card__field--search .mat-mdc-form-field {
-    width: 100%;
-  }
+.locations-filters-card__field--search {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
 
-  .locations-filters-card__field--search .mdc-notched-outline__leading,
-  .locations-filters-card__field--search .mdc-notched-outline__notch,
-  .locations-filters-card__field--search .mdc-notched-outline__trailing {
-    border-color: rgba(148, 163, 184, 0.28) !important;
-  }
-
-  .locations-filters-card__field--search:hover .mdc-notched-outline__leading,
-  .locations-filters-card__field--search:hover .mdc-notched-outline__notch,
-  .locations-filters-card__field--search:hover .mdc-notched-outline__trailing {
-    border-color: rgba(99, 102, 241, 0.45) !important;
-  }
-
-  .locations-filters-card__field--search.mat-focused
-    .mdc-notched-outline__leading,
-  .locations-filters-card__field--search.mat-focused
-    .mdc-notched-outline__notch,
-  .locations-filters-card__field--search.mat-focused
-    .mdc-notched-outline__trailing {
-    border-color: rgba(99, 102, 241, 0.8) !important;
-  }
-
-  .locations-filters-card__field--search .mat-mdc-icon-prefix {
-    color: rgba(148, 163, 184, 0.85);
-  }
-
-  .locations-filters-card__field--search .mdc-text-field {
-    background-color: rgba(17, 24, 39, 0.65);
-  }
-
-  .locations-filters-card__field--search .mdc-text-field__input {
-    color: #f8fafc;
-    font-size: 1rem;
-  }
-
-  .locations-filters-card__field--search .mat-mdc-form-field-label {
-    color: rgba(226, 232, 240, 0.85);
-  }
+.locations-filters-card__field--search lib-search-input {
+  display: block;
+  width: 100%;
 }
 
 .locations-filters-card__amenities {

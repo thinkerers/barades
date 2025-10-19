@@ -1,4 +1,7 @@
-<div class="search-input">
+<div class="search-input" [class.search-input--with-icon]="!!icon">
+  @if (icon) {
+  <mat-icon class="search-input__icon" aria-hidden="true">{{ icon }}</mat-icon>
+  }
   <input
     type="text"
     class="search-input__field"

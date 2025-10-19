@@ -42,3 +42,17 @@
 .search-input__clear:hover {
   color: var(--color-text-primary, #ffffff);
 }
+
+.search-input__icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.25rem;
+  color: var(--color-text-secondary, #d1d5db);
+  pointer-events: none;
+}
+
+.search-input--with-icon .search-input__field {
+  padding-left: 2.75rem;
+}

@@ -1,4 +1,3 @@
-
 import {
   ChangeDetectionStrategy,
   Component,
@@ -8,11 +7,12 @@ import {
   Output,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'lib-search-input',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, MatIconModule],
   templateUrl: './search-input.html',
   styleUrls: ['./search-input.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -22,6 +22,7 @@ export class SearchInputComponent implements OnDestroy {
   @Input() placeholder = 'Rechercher...';
   @Input() inputId?: string;
   @Input() debounce = 0;
+  @Input() icon?: string;
   @Output() valueChange = new EventEmitter<string>();
 
   private debounceTimer?: ReturnType<typeof setTimeout>;

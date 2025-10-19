@@ -46,21 +46,18 @@
         </header>
 
         <div class="locations-filters-card__grid">
-          <mat-form-field
-            appearance="outline"
+          <div
             class="locations-filters-card__field locations-filters-card__field--search"
           >
-            <mat-label>Recherche</mat-label>
-            <mat-icon matPrefix aria-hidden="true">search</mat-icon>
-            <input
-              matInput
-              id="search"
+            <label class="field-label" for="search">Recherche</label>
+            <lib-search-input
+              icon="search"
+              inputId="search"
               placeholder="Nom, adresse, ville..."
-              [(ngModel)]="searchTerm"
-              (ngModelChange)="applyFilters()"
-              autocomplete="off"
-            />
-          </mat-form-field>
+              [value]="searchTerm"
+              (valueChange)="onSearchTermChange($event)"
+            ></lib-search-input>
+          </div>
 
           <mat-form-field
             appearance="outline"

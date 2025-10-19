@@ -543,7 +543,7 @@ describe('LocationsListComponent', () => {
         expect(component.selectedLocationId).toBe('1');
       });
 
-      it('should call scrollIntoView if element exists', () => {
+      it('should call scrollIntoView if element exists', fakeAsync(() => {
         const mockElement = {
           scrollIntoView: jest.fn(),
           classList: {
@@ -558,13 +558,15 @@ describe('LocationsListComponent', () => {
 
         component.onMarkerClick('1');
 
+        tick();
+
         expect(mockElement.scrollIntoView).toHaveBeenCalledWith({
           behavior: 'smooth',
           block: 'center',
         });
 
         jest.restoreAllMocks();
-      });
+      }));
 
       it('should add and remove highlight class', fakeAsync(() => {
         const mockElement = {
@@ -582,7 +584,9 @@ describe('LocationsListComponent', () => {
 
         component.onMarkerClick('1');
 
-        // Verify class is added immediately
+        tick();
+
+        // Verify class is added after scroll handler runs
         expect(mockElement.classList.add).toHaveBeenCalledWith('highlight');
 
         // Fast-forward time by 2 seconds
@@ -647,8 +651,8 @@ describe('LocationsListComponent', () => {
       it('should return WiFi icon HTML', () => {
         const html = component['getAmenityIcon']('WiFi');
         expect(html).toContain('amenity-icon');
+        expect(html).toContain('material-icons');
         expect(html).toContain('WiFi');
-        expect(html).toContain('<svg');
       });
 
       it('should return Tables icon HTML', () => {
@@ -660,13 +664,13 @@ describe('LocationsListComponent', () => {
       it('should return Food icon HTML', () => {
         const html = component['getAmenityIcon']('Food');
         expect(html).toContain('amenity-icon');
-        expect(html).toContain('Food');
+        expect(html).toContain('Restauration');
       });
 
       it('should return Drinks icon HTML', () => {
         const html = component['getAmenityIcon']('Drinks');
         expect(html).toContain('amenity-icon');
-        expect(html).toContain('Drinks');
+        expect(html).toContain('Boissons');
       });
 
       it('should return Parking icon HTML', () => {
@@ -685,189 +689,128 @@ describe('LocationsListComponent', () => {
   });
 
   describe('Geolocation', () => {
-    let mockGeolocation: {
-      getCurrentPosition: jest.Mock;
+    type LocationsListPrivateApi = {
+      handleLocateSuccess(event: {
+        latlng: { lat: number; lng: number };
+      }): void;
+      handleLocateError(event: { message: string }): void;
+      triggerInitialLocate(): void;
+      addUserMarker(options?: { animate?: boolean }): void;
+      findNearestLocation(options?: { adjustMap?: boolean }): void;
+      persistUserPosition(position: { lat: number; lon: number }): void;
+      locateControl: { start: jest.Mock } | null;
+      map: { locate: jest.Mock } | null;
+      skipNextNearestAdjust: boolean;
+      initialLocateRequested: boolean;
+      restoredUserPosition: boolean;
     };
 
+    const originalGeolocation = navigator.geolocation;
+    let componentPrivate: LocationsListPrivateApi;
+
     beforeEach(() => {
-      // Mock initMap to prevent Leaflet initialization
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      jest.spyOn(component as any, 'initMap').mockImplementation(jest.fn());
+      jest
+        .spyOn(component as unknown as { initMap: () => void }, 'initMap')
+        .mockImplementation(() => undefined);
 
       jest
         .spyOn(locationsService, 'getLocations')
         .mockReturnValue(of(mockLocations));
 
-      mockGeolocation = {
-        getCurrentPosition: jest.fn(),
-      };
-
-      Object.defineProperty(global.navigator, 'geolocation', {
-        value: mockGeolocation,
-        writable: true,
-        configurable: true,
-      });
-
       fixture.detectChanges();
+
+      componentPrivate = component as unknown as LocationsListPrivateApi;
     });
 
-    describe('getUserLocation', () => {
-      it('should set error if geolocation not supported', () => {
-        Object.defineProperty(global.navigator, 'geolocation', {
-          value: undefined,
-          writable: true,
-          configurable: true,
-        });
-
-        component.getUserLocation();
-
-        expect(component.geolocationError).toBe(
-          "La géolocalisation n'est pas supportée par votre navigateur"
-        );
+    afterEach(() => {
+      jest.restoreAllMocks();
+      Object.defineProperty(global.navigator, 'geolocation', {
+        configurable: true,
+        writable: true,
+        value: originalGeolocation,
       });
+    });
 
-      it('should set geolocating to true when called', () => {
-        component.getUserLocation();
-        expect(component.geolocating).toBe(true);
-      });
+    describe('handleLocateSuccess', () => {
+      it('should update user position, clear error, persist position and adjust map', () => {
+        componentPrivate.skipNextNearestAdjust = true;
 
-      it('should handle successful geolocation', fakeAsync(() => {
-        const mockPosition = {
-          coords: {
-            latitude: 50.8476,
-            longitude: 4.3572,
-            accuracy: 10,
-            altitude: null,
-            altitudeAccuracy: null,
-            heading: null,
-            speed: null,
-          },
-          timestamp: Date.now(),
-        };
+        const addUserMarkerSpy = jest
+          .spyOn(componentPrivate, 'addUserMarker')
+          .mockImplementation(() => undefined);
+        const findNearestLocationSpy = jest
+          .spyOn(componentPrivate, 'findNearestLocation')
+          .mockImplementation(() => undefined);
+        const persistUserPositionSpy = jest
+          .spyOn(componentPrivate, 'persistUserPosition')
+          .mockImplementation(() => undefined);
 
-        mockGeolocation.getCurrentPosition.mockImplementation((success) => {
-          success(mockPosition);
-        });
+        const event = { latlng: { lat: 50.8476, lng: 4.3572 } };
 
-        component.getUserLocation();
-
-        // Fast-forward timers
-        tick(100);
+        componentPrivate.handleLocateSuccess(event);
 
         expect(component.userPosition).toEqual({
           lat: 50.8476,
           lon: 4.3572,
         });
-        expect(component.geolocating).toBe(false);
         expect(component.geolocationError).toBeNull();
-      }));
+        expect(componentPrivate.restoredUserPosition).toBe(true);
+        expect(componentPrivate.skipNextNearestAdjust).toBe(false);
+        expect(addUserMarkerSpy).toHaveBeenCalledWith({ animate: false });
+        expect(findNearestLocationSpy).toHaveBeenCalledWith({
+          adjustMap: false,
+        });
+        expect(persistUserPositionSpy).toHaveBeenCalledWith({
+          lat: 50.8476,
+          lon: 4.3572,
+        });
+      });
+    });
 
-      it('should handle PERMISSION_DENIED error', fakeAsync(() => {
-        const mockError = {
-          code: 1, // PERMISSION_DENIED
-          message: 'User denied geolocation',
-          PERMISSION_DENIED: 1,
-          POSITION_UNAVAILABLE: 2,
-          TIMEOUT: 3,
+    describe('handleLocateError', () => {
+      it('should store error message and reset skipNextNearestAdjust', () => {
+        componentPrivate.skipNextNearestAdjust = true;
+
+        componentPrivate.handleLocateError({ message: 'Location failed' });
+
+        expect(component.geolocationError).toBe('Location failed');
+        expect(componentPrivate.skipNextNearestAdjust).toBe(false);
+      });
+    });
+
+    describe('triggerInitialLocate', () => {
+      it('should start locate control when available', () => {
+        const startMock = jest.fn();
+        componentPrivate.locateControl = {
+          start: startMock,
         };
 
-        mockGeolocation.getCurrentPosition.mockImplementation(
-          (success, error) => {
-            error(mockError);
-          }
-        );
+        componentPrivate.triggerInitialLocate();
 
-        component.getUserLocation();
-        tick(100);
+        expect(startMock).toHaveBeenCalled();
+        expect(componentPrivate.initialLocateRequested).toBe(true);
+        expect(componentPrivate.skipNextNearestAdjust).toBe(true);
+      });
 
-        expect(component.geolocating).toBe(false);
-        expect(component.geolocationError).toBe(
-          'Permission de géolocalisation refusée'
-        );
-      }));
+      it('should fall back to map.locate when control unavailable', () => {
+        const mapLocate = jest.fn();
+        componentPrivate.locateControl = null;
+        componentPrivate.map = { locate: mapLocate };
 
-      it('should handle POSITION_UNAVAILABLE error', fakeAsync(() => {
-        const mockError = {
-          code: 2, // POSITION_UNAVAILABLE
-          message: 'Position unavailable',
-          PERMISSION_DENIED: 1,
-          POSITION_UNAVAILABLE: 2,
-          TIMEOUT: 3,
-        };
+        Object.defineProperty(global.navigator, 'geolocation', {
+          configurable: true,
+          writable: true,
+          value: { getCurrentPosition: jest.fn() },
+        });
 
-        mockGeolocation.getCurrentPosition.mockImplementation(
-          (success, error) => {
-            error(mockError);
-          }
-        );
+        componentPrivate.triggerInitialLocate();
 
-        component.getUserLocation();
-        tick(100);
-
-        expect(component.geolocating).toBe(false);
-        expect(component.geolocationError).toBe('Position non disponible');
-      }));
-
-      it('should handle TIMEOUT error', fakeAsync(() => {
-        const mockError = {
-          code: 3, // TIMEOUT
-          message: 'Timeout',
-          PERMISSION_DENIED: 1,
-          POSITION_UNAVAILABLE: 2,
-          TIMEOUT: 3,
-        };
-
-        mockGeolocation.getCurrentPosition.mockImplementation(
-          (success, error) => {
-            error(mockError);
-          }
-        );
-
-        component.getUserLocation();
-        tick(100);
-
-        expect(component.geolocating).toBe(false);
-        expect(component.geolocationError).toBe(
-          'Délai de géolocalisation dépassé'
-        );
-      }));
-
-      it('should handle unknown error', fakeAsync(() => {
-        const mockError = {
-          code: 999, // Unknown
-          message: 'Unknown error',
-          PERMISSION_DENIED: 1,
-          POSITION_UNAVAILABLE: 2,
-          TIMEOUT: 3,
-        };
-
-        mockGeolocation.getCurrentPosition.mockImplementation(
-          (success, error) => {
-            error(mockError);
-          }
-        );
-
-        component.getUserLocation();
-        tick(100);
-
-        expect(component.geolocating).toBe(false);
-        expect(component.geolocationError).toBe(
-          'Erreur de géolocalisation inconnue'
-        );
-      }));
-
-      it('should request high accuracy position', () => {
-        component.getUserLocation();
-
-        expect(mockGeolocation.getCurrentPosition).toHaveBeenCalledWith(
-          expect.any(Function),
-          expect.any(Function),
-          {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0,
-          }
-        );
+        expect(mapLocate).toHaveBeenCalledWith({
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 10000,
+          setView: false,
+        });
       });
     });
   });

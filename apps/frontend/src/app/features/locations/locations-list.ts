@@ -2,9 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { AsyncStateComponent, AsyncStateStatus } from '@org/ui';
+import {
+  AsyncStateComponent,
+  AsyncStateStatus,
+  SearchInputComponent,
+} from '@org/ui';
 import * as L from 'leaflet';
 import 'leaflet.locatecontrol';
 import {
@@ -65,9 +68,9 @@ interface StoredUserPosition {
     FormsModule,
     MatIconModule,
     MatFormFieldModule,
-    MatInputModule,
     MatSelectModule,
     AsyncStateComponent,
+    SearchInputComponent,
   ],
   templateUrl: './locations-list.html',
   styleUrl: './locations-list.css',
@@ -185,6 +188,11 @@ export class LocationsListComponent implements OnInit {
   private readonly userLocationStorageKey = 'barades.locations.userPosition';
   geolocationError: string | null = null;
   isDetailsCollapsed = false;
+
+  onSearchTermChange(value: string): void {
+    this.searchTerm = value;
+    this.applyFilters();
+  }
 
   ngOnInit(): void {
     console.log('[LocationsList] Component initialized');

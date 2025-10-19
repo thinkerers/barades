@@ -26,14 +26,18 @@ describe('SearchInputComponent', () => {
     expect(input.placeholder).toBe('Rechercher...');
   });
 
-  it('should render input with custom placeholder', () => {
+  it('should render input with custom placeholder and icon', () => {
     fixture = TestBed.createComponent(SearchInputComponent);
     component = fixture.componentInstance;
     component.placeholder = 'Custom placeholder';
+    component.icon = 'search';
     fixture.detectChanges();
 
     const input = fixture.nativeElement.querySelector('.search-input__field');
     expect(input.placeholder).toBe('Custom placeholder');
+
+    const iconEl = fixture.nativeElement.querySelector('.search-input__icon');
+    expect(iconEl?.textContent?.trim()).toBe('search');
   });
 
   it('should emit valueChange on input', (done) => {
