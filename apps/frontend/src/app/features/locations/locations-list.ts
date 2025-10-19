@@ -1,4 +1,13 @@
-import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  afterNextRender,
+  Injector,
+  inject,
+  runInInjectionContext,
+  signal,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +23,7 @@ import {
   Location,
   LocationsService,
 } from '../../core/services/locations.service';
+import { take } from 'rxjs';
 
 type AmenityFilterKey = 'wifi' | 'tables' | 'food' | 'drinks' | 'parking';
 
@@ -23,6 +33,8 @@ interface AmenityConfig {
   icon: string;
   amenityName: string;
 }
+
+type AmenityFilterState = Record<AmenityFilterKey, boolean>;
 
 type LeafletLocateControl = L.Control & {
   start(): void;
@@ -74,6 +86,7 @@ interface StoredUserPosition {
   ],
   templateUrl: './locations-list.html',
   styleUrl: './locations-list.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LocationsListComponent implements OnInit {
   private static readonly LOCATION_TYPE_LABELS: Record<string, string> = {
@@ -135,15 +148,15 @@ export class LocationsListComponent implements OnInit {
       {} as Record<AmenityFilterKey, string>
     );
 
-  private static createAmenityFilterState(): Record<AmenityFilterKey, boolean> {
+  private static createAmenityFilterState(): AmenityFilterState {
     return LocationsListComponent.AMENITY_CONFIG.reduce((state, { key }) => {
       state[key] = false;
       return state;
-    }, {} as Record<AmenityFilterKey, boolean>);
+    }, {} as AmenityFilterState);
   }
 
   private locationsService = inject(LocationsService);
-  private cdr = inject(ChangeDetectorRef);
+  private readonly injector = inject(Injector);
 
   readonly locationTypeOptions: ReadonlyArray<{
     value: string;
@@ -159,24 +172,94 @@ export class LocationsListComponent implements OnInit {
   readonly amenityFilters: ReadonlyArray<AmenityConfig> =
     LocationsListComponent.AMENITY_CONFIG;
 
-  locations: Location[] = [];
-  filteredLocations: Location[] = [];
-  loading = true;
-  error: string | null = null;
+  private readonly locationsSignal = signal<Location[]>([]);
+  private readonly filteredLocationsSignal = signal<Location[]>([]);
+  private readonly loadingSignal = signal(true);
+  private readonly errorSignal = signal<string | null>(null);
+  private readonly searchTermSignal = signal('');
+  private readonly selectedTypeSignal = signal('');
+  private readonly filtersSignal = signal<AmenityFilterState>(
+    LocationsListComponent.createAmenityFilterState()
+  );
+  private readonly geolocationErrorSignal = signal<string | null>(null);
+  private readonly isDetailsCollapsedSignal = signal(false);
+  private readonly selectedLocationIdSignal = signal<string | null>(null);
+
   readonly loadingMessage = 'Chargement des lieux...';
   readonly defaultErrorMessage =
     'Impossible de charger les lieux. Veuillez réessayer.';
 
-  // Filter properties
-  searchTerm = '';
-  selectedType = '';
-  filters: Record<AmenityFilterKey, boolean> =
-    LocationsListComponent.createAmenityFilterState();
+  private scheduleAfterNextRender(callback: () => void): void {
+    runInInjectionContext(this.injector, () => afterNextRender(callback));
+  }
+
+  get locations(): Location[] {
+    return this.locationsSignal();
+  }
+
+  set locations(value: Location[]) {
+    this.locationsSignal.set(value);
+  }
+
+  get filteredLocations(): Location[] {
+    return this.filteredLocationsSignal();
+  }
+
+  set filteredLocations(value: Location[]) {
+    this.filteredLocationsSignal.set(value);
+  }
+
+  get loading(): boolean {
+    return this.loadingSignal();
+  }
+
+  get error(): string | null {
+    return this.errorSignal();
+  }
+
+  get searchTerm(): string {
+    return this.searchTermSignal();
+  }
+
+  set searchTerm(value: string) {
+    this.searchTermSignal.set(value);
+  }
+
+  get selectedType(): string {
+    return this.selectedTypeSignal();
+  }
+
+  set selectedType(value: string) {
+    this.selectedTypeSignal.set(value);
+  }
+
+  get filters(): AmenityFilterState {
+    return this.filtersSignal();
+  }
+
+  get geolocationError(): string | null {
+    return this.geolocationErrorSignal();
+  }
+
+  get isDetailsCollapsed(): boolean {
+    return this.isDetailsCollapsedSignal();
+  }
+
+  set isDetailsCollapsed(value: boolean) {
+    this.isDetailsCollapsedSignal.set(value);
+  }
+
+  get selectedLocationId(): string | null {
+    return this.selectedLocationIdSignal();
+  }
+
+  set selectedLocationId(value: string | null) {
+    this.selectedLocationIdSignal.set(value);
+  }
 
   private map: L.Map | null = null;
   private markers: L.Marker[] = [];
   private markersByLocationId: Map<string, L.Marker> = new Map();
-  selectedLocationId: string | null = null;
   userPosition: { lat: number; lon: number } | null = null;
   private userMarker: L.Marker | null = null;
   private locateControl: LeafletLocateControl | null = null;
@@ -187,8 +270,6 @@ export class LocationsListComponent implements OnInit {
   private initialLocateRequested = false;
   private skipNextNearestAdjust = false;
   private readonly userLocationStorageKey = 'barades.locations.userPosition';
-  geolocationError: string | null = null;
-  isDetailsCollapsed = false;
 
   onSearchTermChange(value: string): void {
     this.searchTerm = value;
@@ -205,68 +286,58 @@ export class LocationsListComponent implements OnInit {
       };
       this.preloadedUserPositionFromStorage = true;
     }
-    // Initialize map immediately since container is always in DOM
-    setTimeout(() => {
+    this.scheduleAfterNextRender(() => {
       console.log('[LocationsList] Attempting to initialize map...');
       this.initMap();
-    }, 100);
+    });
 
-    this.loadLocations();
+    void this.loadLocations();
   }
 
   private loadLocations(): void {
     console.log('[LocationsList] Loading locations...');
-    this.loading = true;
-    this.error = null;
-    this.cdr.markForCheck();
+    this.loadingSignal.set(true);
+    this.errorSignal.set(null);
 
-    this.locationsService.getLocations().subscribe({
-      next: (data) => {
-        console.log(
-          '[LocationsList] Locations loaded:',
-          data.length,
-          'locations'
-        );
-        // Filter out online/private locations with no coordinates
-        this.locations = data.filter(
-          (loc) => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0)
-        );
-        this.filteredLocations = [...this.locations]; // Initialize filtered list
-        this.loading = false;
-        this.cdr.markForCheck();
+    this.locationsService
+      .getLocations()
+      .pipe(take(1))
+      .subscribe({
+        next: (data) => {
+          console.log(
+            '[LocationsList] Locations loaded:',
+            data.length,
+            'locations'
+          );
+          const filtered = data.filter(
+            (loc) => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0)
+          );
+          this.locationsSignal.set(filtered);
+          this.filteredLocationsSignal.set(filtered);
+          this.loadingSignal.set(false);
+          this.scheduleMapRefresh();
+        },
+        error: (error) => {
+          console.error('[LocationsList] Error loading locations:', error);
+          this.errorSignal.set(this.defaultErrorMessage);
+          this.loadingSignal.set(false);
+        },
+      });
+  }
 
-        // CRITICAL: Wait for Angular to remove the 'hidden' class, then force map resize
-        setTimeout(() => {
-          if (this.map) {
-            console.log(
-              '[LocationsList] Container now visible, forcing map resize...'
-            );
-            const container = document.getElementById('map');
-            console.log(
-              '[LocationsList] Container dimensions NOW:',
-              container?.offsetWidth,
-              'x',
-              container?.offsetHeight
-            );
-            this.map.invalidateSize(true);
-            console.log(
-              '[LocationsList] Map size after visibility change:',
-              this.map.getSize()
-            );
-          }
+  private scheduleMapRefresh(): void {
+    this.scheduleAfterNextRender(() => {
+      if (!this.map) {
+        this.initMap();
+      }
 
-          console.log('[LocationsList] Adding markers to map...');
-          this.addMarkers();
-          this.maybeRestoreUserPosition();
-          this.cdr.markForCheck();
-        }, 100);
-      },
-      error: (err) => {
-        console.error('[LocationsList] Error loading locations:', err);
-        this.error = this.defaultErrorMessage;
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
+      if (this.map) {
+        console.log('[LocationsList] Refreshing map size and markers');
+        this.map.invalidateSize(true);
+      }
+
+      this.addMarkers();
+      this.maybeRestoreUserPosition();
     });
   }
 
@@ -480,7 +551,7 @@ export class LocationsListComponent implements OnInit {
   }
 
   private handleLocateSuccess(event: L.LocationEvent): void {
-    this.geolocationError = null;
+    this.geolocationErrorSignal.set(null);
     this.userPosition = {
       lat: event.latlng.lat,
       lon: event.latlng.lng,
@@ -493,14 +564,12 @@ export class LocationsListComponent implements OnInit {
     this.findNearestLocation({ adjustMap });
     this.persistUserPosition(this.userPosition);
     this.restoredUserPosition = true;
-    this.cdr.markForCheck();
   }
 
   private handleLocateError(event: L.ErrorEvent): void {
     console.error('[LocationsList] Locate failed:', event.message);
-    this.geolocationError = event.message;
+    this.geolocationErrorSignal.set(event.message);
     this.skipNextNearestAdjust = false;
-    this.cdr.markForCheck();
   }
 
   private persistUserPosition(position: { lat: number; lon: number }): void {
@@ -571,7 +640,6 @@ export class LocationsListComponent implements OnInit {
       this.preloadedUserPositionFromStorage = false;
       this.addUserMarker({ animate: false });
       this.findNearestLocation({ adjustMap: false });
-      this.cdr.markForCheck();
       return;
     }
 
@@ -584,7 +652,6 @@ export class LocationsListComponent implements OnInit {
     this.restoredUserPosition = true;
     this.addUserMarker({ animate: false });
     this.findNearestLocation({ adjustMap: false });
-    this.cdr.markForCheck();
   }
 
   private addMarkers(): void {
@@ -835,7 +902,7 @@ export class LocationsListComponent implements OnInit {
   }
 
   retry(): void {
-    this.loadLocations();
+    void this.loadLocations();
   }
 
   get locationsState(): AsyncStateStatus {
@@ -860,78 +927,83 @@ export class LocationsListComponent implements OnInit {
       filters: this.filters,
     });
 
-    this.filteredLocations = this.locations.filter((location) => {
-      // Search filter (name, address, city)
-      if (this.searchTerm) {
-        const term = this.searchTerm.toLowerCase();
-        const matchesSearch =
-          location.name.toLowerCase().includes(term) ||
-          (location.address && location.address.toLowerCase().includes(term)) ||
-          location.city.toLowerCase().includes(term);
+    const searchTerm = this.searchTerm.trim().toLowerCase();
+    const selectedType = this.selectedType;
+    const filters = this.filters;
 
-        if (!matchesSearch) return false;
+    const selectedAmenities = this.amenityFilters
+      .filter(({ key }) => filters[key])
+      .map(({ amenityName }) => amenityName);
+
+    const filtered = this.locations.filter((location) => {
+      if (searchTerm) {
+        const matchesSearch =
+          location.name.toLowerCase().includes(searchTerm) ||
+          (location.address &&
+            location.address.toLowerCase().includes(searchTerm)) ||
+          location.city.toLowerCase().includes(searchTerm);
+
+        if (!matchesSearch) {
+          return false;
+        }
       }
 
-      // Type filter
-      if (this.selectedType && location.type !== this.selectedType) {
+      if (selectedType && location.type !== selectedType) {
         return false;
       }
 
-      // Amenities filters
-      const selectedAmenities = this.amenityFilters
-        .filter(({ key }) => this.filters[key])
-        .map(({ amenityName }) => amenityName);
-
       if (selectedAmenities.length > 0) {
         const hasAllAmenities = selectedAmenities.every((amenity) =>
-          location.amenities.some((a) =>
-            a.toLowerCase().includes(amenity.toLowerCase())
+          location.amenities.some((item) =>
+            item.toLowerCase().includes(amenity.toLowerCase())
           )
         );
-        if (!hasAllAmenities) return false;
+
+        if (!hasAllAmenities) {
+          return false;
+        }
       }
 
       return true;
     });
 
-    console.log(
-      '[LocationsList] Filtered locations:',
-      this.filteredLocations.length,
-      '/',
-      this.locations.length
-    );
+    this.filteredLocationsSignal.set(filtered);
 
     if (
       this.selectedLocationId &&
-      !this.filteredLocations.some(
-        (location) => location.id === this.selectedLocationId
-      )
+      !filtered.some((location) => location.id === this.selectedLocationId)
     ) {
       this.selectedLocationId = null;
     }
 
-    // Update markers on map
-    this.updateMarkers();
-    this.cdr.markForCheck();
+    this.scheduleAfterNextRender(() => {
+      this.updateMarkers();
+    });
   }
 
   /**
    * Reset all filters to default values
    */
   resetFilters(): void {
-    this.searchTerm = '';
-    this.selectedType = '';
-    this.filters = LocationsListComponent.createAmenityFilterState();
+    this.searchTermSignal.set('');
+    this.selectedTypeSignal.set('');
+    this.filtersSignal.set(LocationsListComponent.createAmenityFilterState());
     this.applyFilters();
   }
 
   toggleAmenity(filterKey: AmenityFilterKey): void {
-    this.filters[filterKey] = !this.filters[filterKey];
+    this.filtersSignal.update((filters) => ({
+      ...filters,
+      [filterKey]: !filters[filterKey],
+    }));
     this.applyFilters();
   }
 
   toggleDetailsCollapse(): void {
-    this.isDetailsCollapsed = !this.isDetailsCollapsed;
+    this.isDetailsCollapsedSignal.update((current) => !current);
+    this.scheduleAfterNextRender(() => {
+      this.map?.invalidateSize(true);
+    });
   }
 
   get selectedLocation(): Location | null {
