@@ -1,10 +1,12 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import {
-  ChangeDetectorRef,
   Component,
   OnDestroy,
   OnInit,
+  WritableSignal,
+  computed,
   inject,
+  signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import {
@@ -32,89 +34,87 @@ export class GroupsListComponent implements OnInit, OnDestroy {
   private groupsService = inject(GroupsService);
   private router = inject(Router);
   private authService = inject(AuthService);
-  private cdr = inject(ChangeDetectorRef);
-
-  groups: Group[] = [];
-  loading = true;
-  error: string | null = null;
-  isOffline = false;
-  autoRetrySeconds: number | null = null;
-  private joiningGroups = new Set<string>();
-  private joinedGroups = new Set<string>();
-  private recentlyJoined = new Set<string>();
-  private joinErrors = new Map<string, string>();
+  readonly groups = signal<Group[]>([]);
+  readonly loading = signal<boolean>(true);
+  readonly error = signal<string | null>(null);
+  readonly isOffline = signal<boolean>(false);
+  readonly autoRetrySeconds = signal<number | null>(null);
+  private readonly joiningGroups = signal(new Set<string>());
+  private readonly joinedGroups = signal(new Set<string>());
+  private readonly recentlyJoined = signal(new Set<string>());
+  private readonly joinErrors = signal(new Map<string, string>());
   private currentUserId: string | null = null;
   private autoRetryInterval: ReturnType<typeof setInterval> | null = null;
   private readonly autoRetryDelayMs = 15000;
   private readonly offlineHandler = () => {
-    this.isOffline = true;
-    this.cdr.markForCheck();
+    this.isOffline.set(true);
   };
   private readonly onlineHandler = () => {
-    this.isOffline = false;
-    if (!this.loading && (this.error || this.groups.length === 0)) {
+    this.isOffline.set(false);
+    if (!this.loading() && (this.error() || this.groups().length === 0)) {
       this.retry();
     }
-    this.cdr.markForCheck();
   };
   private pendingErrorBaseMessage: string | null = null;
   readonly defaultErrorMessage =
     'Impossible de charger les groupes. Veuillez réessayer.';
 
+  readonly groupsState = computed<AsyncStateStatus>(() => {
+    if (this.loading()) {
+      return 'loading';
+    }
+
+    if (this.error()) {
+      return 'error';
+    }
+
+    return 'ready';
+  });
+
   ngOnInit(): void {
     this.currentUserId = this.authService.getCurrentUserId();
-    this.isOffline =
-      typeof navigator !== 'undefined' && navigator.onLine === false;
-    window.addEventListener('offline', this.offlineHandler);
-    window.addEventListener('online', this.onlineHandler);
+    if (typeof navigator !== 'undefined') {
+      this.isOffline.set(navigator.onLine === false);
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('offline', this.offlineHandler);
+      window.addEventListener('online', this.onlineHandler);
+    }
     void this.loadGroups();
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('offline', this.offlineHandler);
-    window.removeEventListener('online', this.onlineHandler);
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('offline', this.offlineHandler);
+      window.removeEventListener('online', this.onlineHandler);
+    }
     this.clearAutoRetry();
   }
 
   private async loadGroups(): Promise<void> {
-    this.loading = true;
-    this.error = null;
+    this.loading.set(true);
+    this.error.set(null);
     this.pendingErrorBaseMessage = null;
     this.clearAutoRetry();
-    this.cdr.markForCheck();
 
     try {
       const data = await firstValueFrom(this.groupsService.getGroups());
-      this.groups = data;
+      this.groups.set(data);
       this.syncJoinedGroups(data);
-      this.loading = false;
-      this.error = null;
-      this.isOffline = false;
+      this.loading.set(false);
+      this.error.set(null);
+      this.isOffline.set(false);
     } catch (err) {
       console.error('Error loading groups:', err);
-      this.loading = false;
+      this.loading.set(false);
       this.handleLoadError(err);
-    } finally {
-      this.cdr.markForCheck();
     }
   }
 
   retry(): void {
     this.clearAutoRetry();
     void this.loadGroups();
-    this.cdr.markForCheck();
-  }
-
-  get groupsState(): AsyncStateStatus {
-    if (this.loading) {
-      return 'loading';
-    }
-
-    if (this.error) {
-      return 'error';
-    }
-
-    return 'ready';
   }
 
   viewGroupDetails(groupId: string): void {
@@ -140,20 +140,18 @@ export class GroupsListComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.joinErrors.delete(groupId);
-    this.joiningGroups.add(groupId);
-    this.cdr.markForCheck();
+    this.updateJoinErrors((map) => map.delete(groupId));
+    this.updateSet(this.joiningGroups, (set) => set.add(groupId));
 
     try {
       await this.attemptJoin(group, true);
     } finally {
-      this.joiningGroups.delete(groupId);
-      this.cdr.markForCheck();
+      this.updateSet(this.joiningGroups, (set) => set.delete(groupId));
     }
   }
 
   isJoining(groupId: string): boolean {
-    return this.joiningGroups.has(groupId);
+    return this.joiningGroups().has(groupId);
   }
 
   private async attemptJoin(group: Group, allowRetry: boolean): Promise<void> {
@@ -163,9 +161,9 @@ export class GroupsListComponent implements OnInit, OnDestroy {
       const response = await firstValueFrom(
         this.groupsService.joinGroup(groupId)
       );
-      this.joinErrors.delete(groupId);
-      this.joinedGroups.add(groupId);
-      this.recentlyJoined.add(groupId);
+      this.updateJoinErrors((map) => map.delete(groupId));
+      this.updateSet(this.joinedGroups, (set) => set.add(groupId));
+      this.updateSet(this.recentlyJoined, (set) => set.add(groupId));
       group.currentUserIsMember = true;
       if (!this.currentUserId) {
         this.currentUserId = this.authService.getCurrentUserId();
@@ -186,69 +184,69 @@ export class GroupsListComponent implements OnInit, OnDestroy {
         error instanceof HttpErrorResponse && error.error?.message
           ? error.error.message
           : 'Impossible de rejoindre le groupe pour le moment.';
-      this.joinErrors.set(groupId, message);
-      this.joinedGroups.delete(groupId);
-      this.recentlyJoined.delete(groupId);
+      this.updateJoinErrors((map) => map.set(groupId, message));
+      this.updateSet(this.joinedGroups, (set) => set.delete(groupId));
+      this.updateSet(this.recentlyJoined, (set) => set.delete(groupId));
     }
   }
 
   hasJoined(groupId: string): boolean {
-    return this.joinedGroups.has(groupId);
+    return this.joinedGroups().has(groupId);
   }
 
   isRecentlyJoined(groupId: string): boolean {
-    return this.recentlyJoined.has(groupId);
+    return this.recentlyJoined().has(groupId);
   }
 
   getJoinError(groupId: string): string | null {
-    return this.joinErrors.get(groupId) ?? null;
+    return this.joinErrors().get(groupId) ?? null;
   }
 
   private updateLocalGroupState(
     groupId: string,
     response: JoinGroupResponse
   ): void {
-    this.groups = this.groups.map((existing) => {
-      if (existing.id !== groupId) {
-        return existing;
-      }
+    this.groups.update((existingGroups) =>
+      existingGroups.map((existing) => {
+        if (existing.id !== groupId) {
+          return existing;
+        }
 
-      const maxMembers = response.maxMembers ?? existing.maxMembers ?? null;
-      const members = existing.members ?? [];
-      const userId = this.currentUserId;
-      let updatedMembers: GroupMemberSummary[] = members;
+        const maxMembers = response.maxMembers ?? existing.maxMembers ?? null;
+        const members = existing.members ?? [];
+        const userId = this.currentUserId;
+        let updatedMembers: GroupMemberSummary[] = members;
 
-      if (userId && !members.some((member) => member.userId === userId)) {
-        const currentUser = this.authService.getCurrentUser();
-        updatedMembers = [
-          ...members,
-          {
-            userId,
-            user: currentUser
-              ? {
-                  id: currentUser.id,
-                  username: currentUser.username,
-                  avatar: currentUser.avatar ?? null,
-                }
-              : members.find((member) => member.userId === userId)?.user ??
-                null,
+        if (userId && !members.some((member) => member.userId === userId)) {
+          const currentUser = this.authService.getCurrentUser();
+          updatedMembers = [
+            ...members,
+            {
+              userId,
+              user: currentUser
+                ? {
+                    id: currentUser.id,
+                    username: currentUser.username,
+                    avatar: currentUser.avatar ?? null,
+                  }
+                : members.find((member) => member.userId === userId)?.user ??
+                  null,
+            },
+          ];
+        }
+
+        return {
+          ...existing,
+          isRecruiting: response.isRecruiting,
+          maxMembers,
+          members: updatedMembers,
+          currentUserIsMember: true,
+          _count: {
+            members: response.memberCount,
           },
-        ];
-      }
-
-      return {
-        ...existing,
-        isRecruiting: response.isRecruiting,
-        maxMembers,
-        members: updatedMembers,
-        currentUserIsMember: true,
-        _count: {
-          members: response.memberCount,
-        },
-      };
-    });
-
-    this.cdr.markForCheck();
+        };
+      })
+    );
   }
 
   private syncJoinedGroups(groups: Group[]): void {
@@ -256,32 +254,33 @@ export class GroupsListComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const joined = new Set<string>();
+
     groups.forEach((group) => {
       if (group.currentUserIsMember === true) {
-        this.joinedGroups.add(group.id);
-      } else {
-        this.joinedGroups.delete(group.id);
+        joined.add(group.id);
       }
     });
+
+    this.joinedGroups.set(joined);
   }
 
   private handleLoadError(error: unknown): void {
     const httpError = error instanceof HttpErrorResponse ? error : null;
 
     if (this.detectOffline(httpError)) {
-      this.error = 'Erreur de connexion. Vérifiez votre réseau puis réessayez.';
-      this.cdr.markForCheck();
+      this.error.set(
+        'Erreur de connexion. Vérifiez votre réseau puis réessayez.'
+      );
       return;
     }
 
     const message = this.resolveServerMessage(httpError);
-    this.error = message;
+    this.error.set(message);
 
     if (httpError && this.shouldAutoRetry(httpError)) {
       this.scheduleAutoRetry(message);
     }
-
-    this.cdr.markForCheck();
   }
 
   private detectOffline(error: HttpErrorResponse | null): boolean {
@@ -290,11 +289,11 @@ export class GroupsListComponent implements OnInit, OnDestroy {
       error?.status === 0;
 
     if (isOfflineError) {
-      this.isOffline = true;
+      this.isOffline.set(true);
       return true;
     }
 
-    this.isOffline = false;
+    this.isOffline.set(false);
     return false;
   }
 
@@ -349,37 +348,38 @@ export class GroupsListComponent implements OnInit, OnDestroy {
   private scheduleAutoRetry(baseMessage: string): void {
     this.clearAutoRetry();
     this.pendingErrorBaseMessage = baseMessage;
-    this.autoRetrySeconds = Math.ceil(this.autoRetryDelayMs / 1000);
-    this.error = this.composeErrorMessage();
-    this.cdr.markForCheck();
+    this.autoRetrySeconds.set(Math.ceil(this.autoRetryDelayMs / 1000));
+    this.error.set(this.composeErrorMessage());
 
     this.autoRetryInterval = setInterval(() => {
-      if (this.autoRetrySeconds === null) {
+      const remaining = this.autoRetrySeconds();
+
+      if (remaining === null) {
         return;
       }
 
-      this.autoRetrySeconds -= 1;
-
-      if (this.autoRetrySeconds <= 0) {
+      if (remaining <= 1) {
         this.clearAutoRetry();
         void this.loadGroups();
       } else {
-        this.error = this.composeErrorMessage();
-        this.cdr.markForCheck();
+        this.autoRetrySeconds.set(remaining - 1);
+        this.error.set(this.composeErrorMessage());
       }
     }, 1000);
   }
 
   private composeErrorMessage(): string {
     if (!this.pendingErrorBaseMessage) {
-      return this.error ?? this.defaultErrorMessage;
+      return this.error() ?? this.defaultErrorMessage;
     }
 
-    if (this.autoRetrySeconds === null) {
+    const seconds = this.autoRetrySeconds();
+
+    if (seconds === null) {
       return this.pendingErrorBaseMessage;
     }
 
-    return `${this.pendingErrorBaseMessage} Nouvelle tentative dans ${this.autoRetrySeconds} s.`;
+    return `${this.pendingErrorBaseMessage} Nouvelle tentative dans ${seconds} s.`;
   }
 
   private clearAutoRetry(): void {
@@ -387,8 +387,26 @@ export class GroupsListComponent implements OnInit, OnDestroy {
       clearInterval(this.autoRetryInterval);
       this.autoRetryInterval = null;
     }
-    this.autoRetrySeconds = null;
+    this.autoRetrySeconds.set(null);
     this.pendingErrorBaseMessage = null;
-    this.cdr.markForCheck();
+  }
+
+  private updateSet(
+    target: WritableSignal<Set<string>>,
+    mutate: (set: Set<string>) => void
+  ): void {
+    target.update((current) => {
+      const next = new Set(current);
+      mutate(next);
+      return next;
+    });
+  }
+
+  private updateJoinErrors(mutate: (map: Map<string, string>) => void): void {
+    this.joinErrors.update((current) => {
+      const next = new Map(current);
+      mutate(next);
+      return next;
+    });
   }
 }

@@ -54,6 +54,13 @@ describe('GroupsListComponent', () => {
     await Promise.resolve();
   };
 
+  const detectChangesAsync = async (): Promise<void> => {
+    fixture.detectChanges();
+    await flushMicrotasks();
+    fixture.detectChanges();
+    await flushMicrotasks();
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
     routerMock.navigate.mockClear();
@@ -85,12 +92,10 @@ describe('GroupsListComponent', () => {
     jest.spyOn(groupsService, 'getGroups').mockReturnValue(of(mockGroups));
     routerMock.navigate.mockResolvedValue(true);
 
-    fixture.detectChanges();
+    await detectChangesAsync();
 
-    await flushMicrotasks();
-
-    expect(component.groups).toEqual(mockGroups);
-    expect(component.loading).toBe(false);
+    expect(component.groups()).toEqual(mockGroups);
+    expect(component.loading()).toBe(false);
   });
 
   it('should handle error when loading groups fails', async () => {
@@ -98,12 +103,10 @@ describe('GroupsListComponent', () => {
       .spyOn(groupsService, 'getGroups')
       .mockReturnValue(throwError(() => new Error('Failed to load')));
 
-    fixture.detectChanges();
+    await detectChangesAsync();
 
-    await flushMicrotasks();
-
-    expect(component.error).toBe(component.defaultErrorMessage);
-    expect(component.loading).toBe(false);
+    expect(component.error()).toBe(component.defaultErrorMessage);
+    expect(component.loading()).toBe(false);
   });
 
   it('should surface friendly message for 404 errors', async () => {
@@ -113,11 +116,9 @@ describe('GroupsListComponent', () => {
         throwError(() => new HttpErrorResponse({ status: 404 }))
       );
 
-    fixture.detectChanges();
+    await detectChangesAsync();
 
-    await flushMicrotasks();
-
-    expect(component.error).toBe('Aucun groupe disponible pour le moment.');
+    expect(component.error()).toBe('Aucun groupe disponible pour le moment.');
   });
 
   it('should show offline message when network request fails', async () => {
@@ -125,14 +126,12 @@ describe('GroupsListComponent', () => {
       .spyOn(groupsService, 'getGroups')
       .mockReturnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
 
-    fixture.detectChanges();
+    await detectChangesAsync();
 
-    await flushMicrotasks();
-
-    expect(component.error).toBe(
+    expect(component.error()).toBe(
       'Erreur de connexion. Vérifiez votre réseau puis réessayez.'
     );
-    expect(component.isOffline).toBe(true);
+    expect(component.isOffline()).toBe(true);
   });
 
   it('should auto retry after transient server errors', async () => {
@@ -146,14 +145,12 @@ describe('GroupsListComponent', () => {
       .mockReturnValue(of(mockGroups));
 
     try {
-      fixture.detectChanges();
+      await detectChangesAsync();
 
-      await flushMicrotasks();
-
-      expect(component.error).toContain(
+      expect(component.error()).toContain(
         'Nos serveurs sont momentanément indisponibles'
       );
-      expect(component.autoRetrySeconds).toBeGreaterThan(0);
+      expect(component.autoRetrySeconds()).toBeGreaterThan(0);
 
       jest.advanceTimersByTime(15000);
       jest.runOnlyPendingTimers();
@@ -161,8 +158,8 @@ describe('GroupsListComponent', () => {
       await flushMicrotasks();
 
       expect(getGroupsSpy).toHaveBeenCalledTimes(2);
-      expect(component.error).toBeNull();
-      expect(component.groups).toEqual(mockGroups);
+      expect(component.error()).toBeNull();
+      expect(component.groups()).toEqual(mockGroups);
     } finally {
       jest.runOnlyPendingTimers();
       jest.clearAllTimers();
@@ -184,9 +181,7 @@ describe('GroupsListComponent', () => {
     jest.spyOn(groupsService, 'getGroups').mockReturnValue(of(mockGroups));
     routerMock.navigate.mockResolvedValue(true);
 
-    fixture.detectChanges();
-
-    await flushMicrotasks();
+    await detectChangesAsync();
 
     component.viewGroupDetails('1');
 
@@ -213,9 +208,8 @@ describe('GroupsListComponent', () => {
       username: 'member123',
     });
 
-    component.groups = mockGroups.map((group) => ({ ...group }));
-
-    const targetGroup = component.groups[0];
+    component.groups.set(mockGroups.map((group) => ({ ...group })));
+    const [targetGroup] = component.groups();
 
     await component.requestToJoin(targetGroup);
 
@@ -223,13 +217,13 @@ describe('GroupsListComponent', () => {
     expect(component.hasJoined('1')).toBe(true);
     expect(component.isRecentlyJoined('1')).toBe(true);
     expect(component.isJoining('1')).toBe(false);
-    expect(component.groups[0]._count?.members).toBe(6);
-    expect(component.groups[0].isRecruiting).toBe(true);
-    expect(component.groups[0].currentUserIsMember).toBe(true);
+    const updatedGroup = component.groups()[0];
+
+    expect(updatedGroup._count?.members).toBe(6);
+    expect(updatedGroup.isRecruiting).toBe(true);
+    expect(updatedGroup.currentUserIsMember).toBe(true);
     expect(
-      component.groups[0].members?.some(
-        (member) => member.userId === 'member-123'
-      )
+      updatedGroup.members?.some((member) => member.userId === 'member-123')
     ).toBe(true);
   });
 
@@ -238,10 +232,12 @@ describe('GroupsListComponent', () => {
       .spyOn(groupsService, 'joinGroup')
       .mockReturnValue(throwError(() => new Error('Failed')));
 
-    component.groups = [...mockGroups];
+    component.groups.set([...mockGroups]);
     authServiceMock.isAuthenticated.mockReturnValue(true);
 
-    await component.requestToJoin(mockGroups[0]);
+    const [targetGroup] = component.groups();
+
+    await component.requestToJoin(targetGroup);
 
     expect(component.isJoining('1')).toBe(false);
     expect(component.hasJoined('1')).toBe(false);
@@ -270,9 +266,7 @@ describe('GroupsListComponent', () => {
     authServiceMock.getCurrentUserId.mockReturnValue('user-current');
     jest.spyOn(groupsService, 'getGroups').mockReturnValue(of([memberGroup]));
 
-    fixture.detectChanges();
-
-    await flushMicrotasks();
+    await detectChangesAsync();
 
     expect(component.hasJoined('2')).toBe(true);
     expect(component.isJoining('2')).toBe(false);

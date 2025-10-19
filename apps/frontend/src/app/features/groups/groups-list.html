@@ -4,7 +4,7 @@
     <p>Rejoignez une communauté de joueurs passionnés</p>
   </header>
 
-  @if (isOffline) {
+  @if (isOffline()) {
   <div class="offline-banner" role="status">
     <span class="offline-banner__icon" aria-hidden="true">!</span>
     <div class="offline-banner__content">
@@ -18,15 +18,15 @@
   }
 
   <lib-async-state
-    [status]="groupsState"
+    [status]="groupsState()"
     [loadingMessage]="'Chargement des groupes...'"
-    [errorMessage]="error ?? defaultErrorMessage"
-    [showRetry]="!isOffline"
+    [errorMessage]="error() ?? defaultErrorMessage"
+    [showRetry]="!isOffline()"
     (retry)="retry()"
   >
     <div class="groups-list">
       <!-- Empty State -->
-      @if (groups.length === 0) {
+      @if (groups().length === 0) {
       <div class="empty-state">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -48,9 +48,9 @@
       }
 
       <!-- Groups Grid -->
-      @if (groups.length > 0) {
+      @if (groups().length > 0) {
       <div class="groups-grid">
-        @for (group of groups; track group) {
+        @for (group of groups(); track group) {
         <lib-group-card
           [group]="group"
           [secondaryActionLabel]="hasJoined(group.id) ? 'Rejoint' : 'Rejoindre'"
