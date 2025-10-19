@@ -147,42 +147,42 @@
         aria-label="Liste des lieux"
         [class.locations-list--collapsed]="isDetailsCollapsed"
       >
-        <div id="locations-details">
-          <button
-            type="button"
-            class="locations-list__status-pill"
-            (click)="toggleDetailsCollapse()"
-            [attr.aria-expanded]="!isDetailsCollapsed"
-            aria-controls="locations-details"
-            [title]="
-              isDetailsCollapsed
-                ? 'Afficher la liste des lieux'
-                : 'Masquer la liste des lieux'
-            "
+        <button
+          type="button"
+          class="locations-list__status-pill"
+          (click)="toggleDetailsCollapse()"
+          [attr.aria-expanded]="!isDetailsCollapsed"
+          aria-controls="locations-details"
+          [title]="
+            isDetailsCollapsed
+              ? 'Afficher la liste des lieux'
+              : 'Masquer la liste des lieux'
+          "
+        >
+          <mat-icon aria-hidden="true">
+            {{ isDetailsCollapsed ? 'map' : 'assistant_navigation' }}
+          </mat-icon>
+          @if (isDetailsCollapsed) {
+          <span class="locations-list__status-pill-text">Liste masquée</span>
+          } @if (selectedLocation) {
+          <span
+            class="locations-list__status-pill-count"
+            [class.locations-list__status-pill-count--with-separator]="isDetailsCollapsed"
           >
-            <mat-icon aria-hidden="true">
-              {{ isDetailsCollapsed ? 'map' : 'assistant_navigation' }}
-            </mat-icon>
-            @if (isDetailsCollapsed) {
-            <span class="locations-list__status-pill-text">Liste masquée</span>
-            } @if (selectedLocation) {
-            <span
-              class="locations-list__status-pill-count"
-              [class.locations-list__status-pill-count--with-separator]="isDetailsCollapsed"
-            >
-              Lieu sélectionné (1 / {{ filteredLocations.length }})
-            </span>
-            } @else {
-            <span
-              class="locations-list__status-pill-count"
-              [class.locations-list__status-pill-count--with-separator]="isDetailsCollapsed"
-            >
-              Liste des lieux ({{ filteredLocations.length }} / {{
-              locations.length }})
-            </span>
-            }
-          </button>
+            Lieu sélectionné (1 / {{ filteredLocations.length }})
+          </span>
+          } @else {
+          <span
+            class="locations-list__status-pill-count"
+            [class.locations-list__status-pill-count--with-separator]="isDetailsCollapsed"
+          >
+            Liste des lieux ({{ filteredLocations.length }} / {{
+            locations.length }})
+          </span>
+          }
+        </button>
 
+        <div id="locations-details">
           @if (!isDetailsCollapsed) {
           <h2>Liste des lieux</h2>
 
