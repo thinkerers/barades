@@ -2,7 +2,8 @@
 <section class="hero">
   <div class="hero__content">
     <h1 class="hero__title">
-      Votre Prochaine Aventure <span class="hero__highlight">Commence Ici</span>
+      Votre Prochaine Aventure
+      <p class="hero__highlight">Commence Ici</p>
     </h1>
     <p class="hero__subtitle">
       Trouvez des joueurs, des maîtres de jeu et des lieux pour vos parties de
@@ -22,14 +23,10 @@
             placeholder="ex: D&D 5e, Cthulhu..."
             [formControl]="gameControl"
             [matAutocomplete]="autoGame"
-            />
+          />
           <mat-autocomplete #autoGame="matAutocomplete">
             @for (game of filteredGames$ | async; track game) {
-              <mat-option
-                [value]="game"
-                >
-                {{ game }}
-              </mat-option>
+            <mat-option [value]="game"> {{ game }} </mat-option>
             }
           </mat-autocomplete>
         </mat-form-field>
@@ -44,14 +41,10 @@
             placeholder="ex: Bruxelles, En ligne..."
             [formControl]="cityControl"
             [matAutocomplete]="autoCity"
-            />
+          />
           <mat-autocomplete #autoCity="matAutocomplete">
             @for (city of filteredCities$ | async; track city) {
-              <mat-option
-                [value]="city"
-                >
-                {{ city }}
-              </mat-option>
+            <mat-option [value]="city"> {{ city }} </mat-option>
             }
           </mat-autocomplete>
         </mat-form-field>
@@ -62,7 +55,7 @@
           color="primary"
           class="search-button"
           (click)="onSearch()"
-          >
+        >
           <mat-icon>search</mat-icon>
           <span>Rechercher</span>
         </button>
@@ -87,12 +80,10 @@
     [errorMessage]="error ?? defaultErrorMessage"
     [emptyMessage]="emptyMessage"
     (retry)="loadFeaturedSessions()"
-    >
+  >
     <div class="sessions-grid">
       @for (session of featuredSessions; track session) {
-        <app-session-card
-          [session]="session"
-        ></app-session-card>
+      <app-session-card [session]="session"></app-session-card>
       }
     </div>
   </lib-async-state>
