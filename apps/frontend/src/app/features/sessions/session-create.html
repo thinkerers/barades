@@ -6,7 +6,7 @@
 
   <form [formGroup]="sessionForm" (ngSubmit)="onSubmit()" class="session-form">
     <!-- Error Message -->
-    @if (error) {
+    @if (error(); as errorMessage) {
     <div class="error-message">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -21,7 +21,7 @@
         <line x1="12" y1="8" x2="12" y2="12"></line>
         <line x1="12" y1="16" x2="12.01" y2="16"></line>
       </svg>
-      {{ error }}
+      {{ errorMessage }}
     </div>
     }
 
@@ -30,7 +30,7 @@
       <div class="form-group">
         <lib-game-system-input
           formControlName="game"
-          [gameSystems]="existingGames"
+          [gameSystems]="existingGames()"
           [placeholder]="'ex: Dungeons & Dragons 5e, Pathfinder...'"
           [required]="true"
           [maxSuggestions]="3"
@@ -145,18 +145,18 @@
         type="button"
         (click)="cancel()"
         class="button button--secondary"
-        [disabled]="loading"
+        [disabled]="loading()"
       >
         Annuler
       </button>
       <button
         type="submit"
         class="button button--primary"
-        [disabled]="loading || sessionForm.invalid"
+        [disabled]="loading() || sessionForm.invalid"
       >
-        @if (!loading) {
+        @if (!loading()) {
         <span>Créer la session</span>
-        } @if (loading) {
+        } @if (loading()) {
         <span>Création en cours...</span>
         }
       </button>

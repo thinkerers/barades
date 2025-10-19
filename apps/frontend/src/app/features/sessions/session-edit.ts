@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -9,6 +9,8 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
 import { findClosestMatches } from '@org/ui';
+import { finalize } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Session, SessionsService } from '../../core/services/sessions.service';
@@ -27,20 +29,22 @@ export class SessionEditComponent implements OnInit {
   private readonly sessionsService = inject(SessionsService);
   private readonly authService = inject(AuthService);
   private readonly notifications = inject(NotificationService);
-  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
 
   sessionForm!: FormGroup;
-  loading = true;
-  saving = false;
-  error: string | null = null;
+  readonly loading = signal(true);
+  readonly saving = signal(false);
+  readonly error = signal<string | null>(null);
   sessionId: string | null = null;
-  session: Session | null = null;
+  readonly session = signal<Session | null>(null);
 
   // Liste des jeux existants pour l'autocomplétion
-  existingGames: string[] = [];
+  readonly existingGames = signal<string[]>([]);
 
   // Suggestions de correction pour le jeu
-  gameSuggestions: Array<{ value: string; similarity: number }> = [];
+  readonly gameSuggestions = signal<
+    Array<{ value: string; similarity: number }>
+  >([]);
 
   levels = [
     { value: 'BEGINNER', label: 'Débutant' },
@@ -81,18 +85,20 @@ export class SessionEditComponent implements OnInit {
     });
 
     // Écouter les changements du champ "game" pour détecter les fautes
-    this.sessionForm.get('game')?.valueChanges.subscribe((value) => {
-      this.checkGameSuggestions(value);
-    });
+    this.sessionForm
+      .get('game')
+      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        this.checkGameSuggestions(value);
+      });
   }
 
   ngOnInit(): void {
     // Récupérer l'ID de la session depuis l'URL
     this.sessionId = this.route.snapshot.paramMap.get('id');
     if (!this.sessionId) {
-      this.error = 'ID de session invalide';
-      this.loading = false;
-      this.cdr.markForCheck();
+      this.error.set('ID de session invalide');
+      this.loading.set(false);
       return;
     }
 
@@ -104,81 +110,86 @@ export class SessionEditComponent implements OnInit {
   }
 
   loadSession(id: string): void {
-    this.loading = true;
-    this.error = null;
+    this.loading.set(true);
+    this.error.set(null);
 
-    this.sessionsService.getSession(id).subscribe({
-      next: (session) => {
-        this.session = session;
+    this.sessionsService
+      .getSession(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (session) => {
+          this.session.set(session);
 
-        // Vérifier que l'utilisateur est le créateur
-        const currentUser = this.authService.getCurrentUser();
-        if (!currentUser || session.hostId !== currentUser.id) {
-          this.error = "Vous n'êtes pas autorisé à modifier cette session";
-          this.loading = false;
-          this.cdr.markForCheck();
-          return;
-        }
+          // Vérifier que l'utilisateur est le créateur
+          const currentUser = this.authService.getCurrentUser();
+          if (!currentUser || session.hostId !== currentUser.id) {
+            this.error.set("Vous n'êtes pas autorisé à modifier cette session");
+            this.loading.set(false);
+            return;
+          }
 
-        // Pré-remplir le formulaire
-        const dateForInput = new Date(session.date).toISOString().slice(0, 16);
-        this.sessionForm.patchValue({
-          game: session.game,
-          title: session.title,
-          description: session.description || '',
-          date: dateForInput,
-          online: session.online,
-          level: session.level,
-          playersMax: session.playersMax,
-          tagColor: session.tagColor || 'BLUE',
-        });
+          // Pré-remplir le formulaire
+          const dateForInput = new Date(session.date)
+            .toISOString()
+            .slice(0, 16);
+          this.sessionForm.patchValue({
+            game: session.game,
+            title: session.title,
+            description: session.description || '',
+            date: dateForInput,
+            online: session.online,
+            level: session.level,
+            playersMax: session.playersMax,
+            tagColor: session.tagColor || 'BLUE',
+          });
 
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement de la session:', err);
-        this.error =
-          "Impossible de charger la session. Elle n'existe peut-être pas.";
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-    });
+          this.loading.set(false);
+        },
+        error: (err) => {
+          console.error('Erreur lors du chargement de la session:', err);
+          this.error.set(
+            "Impossible de charger la session. Elle n'existe peut-être pas."
+          );
+          this.loading.set(false);
+        },
+      });
   }
 
   loadExistingGames(): void {
-    this.sessionsService.getSessions().subscribe({
-      next: (sessions) => {
-        this.existingGames = [...new Set(sessions.map((s) => s.game))].sort();
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des jeux:', err);
-        this.cdr.markForCheck();
-      },
-    });
+    this.sessionsService
+      .getSessions()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (sessions) => {
+          const games = [...new Set(sessions.map((s) => s.game))].sort();
+          this.existingGames.set(games);
+        },
+        error: (err) => {
+          console.error('Erreur lors du chargement des jeux:', err);
+        },
+      });
   }
 
   checkGameSuggestions(value: string): void {
     if (!value || value.length < 2) {
-      this.gameSuggestions = [];
+      this.gameSuggestions.set([]);
       return;
     }
 
     // Vérifier si le jeu existe déjà exactement
-    if (this.existingGames.includes(value)) {
-      this.gameSuggestions = [];
+    if (this.existingGames().includes(value)) {
+      this.gameSuggestions.set([]);
       return;
     }
 
     // Trouver les correspondances proches
-    const matches = findClosestMatches(value, this.existingGames, 3, 0.6);
-    this.gameSuggestions = matches;
+    const matches = findClosestMatches(value, this.existingGames(), 3, 0.6);
+    this.gameSuggestions.set(matches);
   }
 
   applySuggestion(game: string): void {
     this.sessionForm.patchValue({ game });
-    this.gameSuggestions = [];
+    this.gameSuggestions.set([]);
   }
 
   onSubmit(): void {
@@ -189,19 +200,16 @@ export class SessionEditComponent implements OnInit {
           control.markAsTouched();
         }
       });
-      this.cdr.markForCheck();
       return;
     }
 
     if (!this.sessionId) {
-      this.error = 'ID de session invalide';
-      this.cdr.markForCheck();
+      this.error.set('ID de session invalide');
       return;
     }
 
-    this.saving = true;
-    this.error = null;
-    this.cdr.markForCheck();
+    this.saving.set(true);
+    this.error.set(null);
 
     const formValue = this.sessionForm.value;
     const sessionData = {
@@ -209,22 +217,25 @@ export class SessionEditComponent implements OnInit {
       date: new Date(formValue.date).toISOString(),
     };
 
-    this.sessionsService.updateSession(this.sessionId, sessionData).subscribe({
-      next: (updatedSession) => {
-        this.saving = false;
-        this.notifications.success('Session modifiée avec succès.');
-        this.router.navigate(['/sessions', updatedSession.id]);
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Erreur lors de la modification:', err);
-        this.error =
-          err.error?.message ||
-          'Une erreur est survenue lors de la modification de la session';
-        this.saving = false;
-        this.cdr.markForCheck();
-      },
-    });
+    this.sessionsService
+      .updateSession(this.sessionId, sessionData)
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        finalize(() => this.saving.set(false))
+      )
+      .subscribe({
+        next: (updatedSession) => {
+          this.notifications.success('Session modifiée avec succès.');
+          this.router.navigate(['/sessions', updatedSession.id]);
+        },
+        error: (err) => {
+          console.error('Erreur lors de la modification:', err);
+          this.error.set(
+            err.error?.message ||
+              'Une erreur est survenue lors de la modification de la session'
+          );
+        },
+      });
   }
 
   cancel(): void {

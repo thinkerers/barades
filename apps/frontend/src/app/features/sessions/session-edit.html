@@ -1,224 +1,201 @@
-@if (!loading) {
-  <div class="create-session-page">
-    <header class="create-session-page__header">
-      <h1>Modifier la session</h1>
-      <p>Mettez à jour les informations de votre session</p>
-    </header>
-    <form [formGroup]="sessionForm" (ngSubmit)="onSubmit()" class="session-form">
-      <!-- Error Message -->
-      @if (error) {
-        <div class="error-message">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            >
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-          {{ error }}
-        </div>
-      }
-      <!-- Game & Title -->
-      <div class="form-row">
-        <div class="form-group">
-          <label for="game">
-            Système de jeu <span class="required">*</span>
-          </label>
-          <input
-            type="text"
-            id="game"
-            list="game-list"
-            formControlName="game"
-            placeholder="ex: Dungeons & Dragons 5e, Pathfinder..."
-            [class.error]="sessionForm.get('game')?.touched && sessionForm.get('game')?.invalid"
-            />
-          <datalist id="game-list">
-            @for (game of existingGames; track game) {
-              <option [value]="game">
-                {{ game }}
-              </option>
-            }
-          </datalist>
-          <!-- Suggestions de correction -->
-          @if (gameSuggestions.length > 0) {
-            <div class="suggestions-box">
-              <div class="suggestions-header">
-                <mat-icon>lightbulb</mat-icon> Tu voulais peut-être dire :
-              </div>
-              <div class="suggestions-list">
-                @for (suggestion of gameSuggestions; track suggestion) {
-                  <button
-                    type="button"
-                    class="suggestion-item"
-                    (click)="applySuggestion(suggestion.value)"
-                    >
-                    <span class="suggestion-name">{{ suggestion.value }}</span>
-                    <span class="suggestion-score"
-                      >{{ (suggestion.similarity * 100) | number:'1.0-0' }}%
-                      similaire</span
-                      >
-                    </button>
-                  }
-                </div>
-              </div>
-            }
-            @if (existingGames.length > 0 && gameSuggestions.length === 0) {
-              <span
-                class="help-text"
-                >
-                💡 Suggestions basées sur les jeux existants
-              </span>
-            }
-            @if (sessionForm.get('game')?.touched && sessionForm.get('game')?.invalid) {
-              <span
-                class="error-text"
-                >
-                {{ getErrorMessage('game') }}
-              </span>
-            }
-          </div>
-          <div class="form-group">
-            <label for="title">
-              Titre de la session <span class="required">*</span>
-            </label>
-            <input
-              type="text"
-              id="title"
-              formControlName="title"
-              placeholder="ex: Les Mines de Phandelver - Chapitre 1"
-              [class.error]="sessionForm.get('title')?.touched && sessionForm.get('title')?.invalid"
-              />
-            @if (sessionForm.get('title')?.touched && sessionForm.get('title')?.invalid) {
-              <span
-                class="error-text"
-                >
-                {{ getErrorMessage('title') }}
-              </span>
-            }
-          </div>
-        </div>
-        <!-- Description -->
-        <div class="form-group">
-          <label for="description">Description</label>
-          <textarea
-            id="description"
-            formControlName="description"
-            rows="4"
-            placeholder="Décrivez votre session, l'ambiance, ce qui attend les joueurs..."
-          ></textarea>
-        </div>
-        <!-- Date & Players -->
-        <div class="form-row">
-          <div class="form-group">
-            <label for="date">
-              Date et heure <span class="required">*</span>
-            </label>
-            <input
-              type="datetime-local"
-              id="date"
-              formControlName="date"
-              [class.error]="sessionForm.get('date')?.touched && sessionForm.get('date')?.invalid"
-              />
-            @if (sessionForm.get('date')?.touched && sessionForm.get('date')?.invalid) {
-              <span
-                class="error-text"
-                >
-                {{ getErrorMessage('date') }}
-              </span>
-            }
-          </div>
-          <div class="form-group">
-            <label for="playersMax">
-              Nombre de joueurs max <span class="required">*</span>
-            </label>
-            <input
-              type="number"
-              id="playersMax"
-              formControlName="playersMax"
-              min="2"
-              max="12"
-              [class.error]="sessionForm.get('playersMax')?.touched && sessionForm.get('playersMax')?.invalid"
-              />
-            @if (sessionForm.get('playersMax')?.touched && sessionForm.get('playersMax')?.invalid) {
-              <span
-                class="error-text"
-                >
-                {{ getErrorMessage('playersMax') }}
-              </span>
-            }
-          </div>
-        </div>
-        <!-- Level & Tag Color -->
-        <div class="form-row">
-          <div class="form-group">
-            <label for="level">
-              Niveau requis <span class="required">*</span>
-            </label>
-            <select id="level" formControlName="level">
-              @for (level of levels; track level) {
-                <option [value]="level.value">
-                  {{ level.label }}
-                </option>
-              }
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="tagColor">
-              Couleur du tag <span class="required">*</span>
-            </label>
-            <select id="tagColor" formControlName="tagColor">
-              @for (color of tagColors; track color) {
-                <option [value]="color.value">
-                  {{ color.label }}
-                </option>
-              }
-            </select>
-          </div>
-        </div>
-        <!-- Online Checkbox -->
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" formControlName="online" />
-            <span>Session en ligne (Discord, Roll20, etc.)</span>
-          </label>
-        </div>
-        <!-- Actions -->
-        <div class="form-actions">
-          <button
-            type="button"
-            (click)="cancel()"
-            class="button button--secondary"
-            [disabled]="saving"
-            >
-            Annuler
-          </button>
-          <button
-            type="submit"
-            class="button button--primary"
-            [disabled]="saving || sessionForm.invalid"
-            >
-            @if (!saving) {
-              <span>Enregistrer les modifications</span>
-            }
-            @if (saving) {
-              <span>Enregistrement en cours...</span>
-            }
-          </button>
-        </div>
-      </form>
+@if (!loading()) {
+<div class="create-session-page">
+  <header class="create-session-page__header">
+    <h1>Modifier la session</h1>
+    <p>Mettez à jour les informations de votre session</p>
+  </header>
+  <form [formGroup]="sessionForm" (ngSubmit)="onSubmit()" class="session-form">
+    <!-- Error Message -->
+    @if (error(); as errorMessage) {
+    <div class="error-message">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      {{ errorMessage }}
     </div>
-  }
+    }
+    <!-- Game & Title -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="game">
+          Système de jeu <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="game"
+          list="game-list"
+          formControlName="game"
+          placeholder="ex: Dungeons & Dragons 5e, Pathfinder..."
+          [class.error]="sessionForm.get('game')?.touched && sessionForm.get('game')?.invalid"
+        />
+        <datalist id="game-list">
+          @let games = existingGames(); @for (game of games; track game) {
+          <option [value]="game">{{ game }}</option>
+          }
+        </datalist>
+        <!-- Suggestions de correction -->
+        @let suggestions = gameSuggestions(); @if (suggestions.length > 0) {
+        <div class="suggestions-box">
+          <div class="suggestions-header">
+            <mat-icon>lightbulb</mat-icon> Tu voulais peut-être dire :
+          </div>
+          <div class="suggestions-list">
+            @for (suggestion of suggestions; track suggestion) {
+            <button
+              type="button"
+              class="suggestion-item"
+              (click)="applySuggestion(suggestion.value)"
+            >
+              <span class="suggestion-name">{{ suggestion.value }}</span>
+              <span class="suggestion-score"
+                >{{ (suggestion.similarity * 100) | number:'1.0-0' }}%
+                similaire</span
+              >
+            </button>
+            }
+          </div>
+        </div>
+        } @if (existingGames().length > 0 && suggestions.length === 0) {
+        <span class="help-text">
+          💡 Suggestions basées sur les jeux existants
+        </span>
+        } @if (sessionForm.get('game')?.touched &&
+        sessionForm.get('game')?.invalid) {
+        <span class="error-text"> {{ getErrorMessage('game') }} </span>
+        }
+      </div>
+      <div class="form-group">
+        <label for="title">
+          Titre de la session <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="title"
+          formControlName="title"
+          placeholder="ex: Les Mines de Phandelver - Chapitre 1"
+          [class.error]="sessionForm.get('title')?.touched && sessionForm.get('title')?.invalid"
+        />
+        @if (sessionForm.get('title')?.touched &&
+        sessionForm.get('title')?.invalid) {
+        <span class="error-text"> {{ getErrorMessage('title') }} </span>
+        }
+      </div>
+    </div>
+    <!-- Description -->
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea
+        id="description"
+        formControlName="description"
+        rows="4"
+        placeholder="Décrivez votre session, l'ambiance, ce qui attend les joueurs..."
+      ></textarea>
+    </div>
+    <!-- Date & Players -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="date">
+          Date et heure <span class="required">*</span>
+        </label>
+        <input
+          type="datetime-local"
+          id="date"
+          formControlName="date"
+          [class.error]="sessionForm.get('date')?.touched && sessionForm.get('date')?.invalid"
+        />
+        @if (sessionForm.get('date')?.touched &&
+        sessionForm.get('date')?.invalid) {
+        <span class="error-text"> {{ getErrorMessage('date') }} </span>
+        }
+      </div>
+      <div class="form-group">
+        <label for="playersMax">
+          Nombre de joueurs max <span class="required">*</span>
+        </label>
+        <input
+          type="number"
+          id="playersMax"
+          formControlName="playersMax"
+          min="2"
+          max="12"
+          [class.error]="sessionForm.get('playersMax')?.touched && sessionForm.get('playersMax')?.invalid"
+        />
+        @if (sessionForm.get('playersMax')?.touched &&
+        sessionForm.get('playersMax')?.invalid) {
+        <span class="error-text"> {{ getErrorMessage('playersMax') }} </span>
+        }
+      </div>
+    </div>
+    <!-- Level & Tag Color -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="level">
+          Niveau requis <span class="required">*</span>
+        </label>
+        <select id="level" formControlName="level">
+          @for (level of levels; track level) {
+          <option [value]="level.value">{{ level.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="tagColor">
+          Couleur du tag <span class="required">*</span>
+        </label>
+        <select id="tagColor" formControlName="tagColor">
+          @for (color of tagColors; track color) {
+          <option [value]="color.value">{{ color.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+    <!-- Online Checkbox -->
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" formControlName="online" />
+        <span>Session en ligne (Discord, Roll20, etc.)</span>
+      </label>
+    </div>
+    <!-- Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        (click)="cancel()"
+        class="button button--secondary"
+        [disabled]="saving()"
+      >
+        Annuler
+      </button>
+      <button
+        type="submit"
+        class="button button--primary"
+        [disabled]="saving() || sessionForm.invalid"
+      >
+        @if (!saving()) {
+        <span>Enregistrer les modifications</span>
+        } @if (saving()) {
+        <span>Enregistrement en cours...</span>
+        }
+      </button>
+    </div>
+  </form>
+</div>
+}
 
-  <!-- Loading State -->
-  @if (loading) {
-    <div class="loading-container">
-      <mat-icon class="loading-icon">hourglass_empty</mat-icon>
-      <p>Chargement de la session...</p>
-    </div>
-  }
+<!-- Loading State -->
+@if (loading()) {
+<div class="loading-container">
+  <mat-icon class="loading-icon">hourglass_empty</mat-icon>
+  <p>Chargement de la session...</p>
+</div>
+}

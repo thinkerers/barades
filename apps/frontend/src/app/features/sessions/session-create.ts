@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -10,6 +10,8 @@ import { Router } from '@angular/router';
 import { GameSystemInputComponent } from '@org/ui';
 import { AuthService } from '../../core/services/auth.service';
 import { SessionsService } from '../../core/services/sessions.service';
+import { finalize } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-session-create',
@@ -23,14 +25,13 @@ export class SessionCreateComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly sessionsService = inject(SessionsService);
   private readonly authService = inject(AuthService);
-  private readonly cdr = inject(ChangeDetectorRef);
 
   sessionForm!: FormGroup;
-  loading = false;
-  error: string | null = null;
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
 
   // Liste des jeux existants pour l'autocomplétion
-  existingGames: string[] = [];
+  readonly existingGames = signal<string[]>([]);
 
   levels = [
     { value: 'BEGINNER', label: 'Débutant' },
@@ -79,18 +80,21 @@ export class SessionCreateComponent implements OnInit {
   }
 
   loadExistingGames(): void {
-    this.sessionsService.getSessions().subscribe({
-      next: (sessions) => {
-        // Extraire les noms de jeux uniques et les trier
-        this.existingGames = [...new Set(sessions.map((s) => s.game))].sort();
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Erreur lors du chargement des jeux:', err);
-        // Continuer même si le chargement échoue
-        this.cdr.markForCheck();
-      },
-    });
+    this.sessionsService
+      .getSessions()
+      .pipe(takeUntilDestroyed())
+      .subscribe({
+        next: (sessions) => {
+          // Extraire les noms de jeux uniques et les trier
+          this.existingGames.set(
+            [...new Set(sessions.map((s) => s.game))].sort()
+          );
+        },
+        error: (err) => {
+          console.error('Erreur lors du chargement des jeux:', err);
+          // Continuer même si le chargement échoue
+        },
+      });
   }
 
   onSubmit(): void {
@@ -101,19 +105,16 @@ export class SessionCreateComponent implements OnInit {
           control.markAsTouched();
         }
       });
-      this.cdr.markForCheck();
       return;
     }
 
-    this.loading = true;
-    this.error = null;
-    this.cdr.markForCheck();
+    this.loading.set(true);
+    this.error.set(null);
 
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
-      this.error = 'Vous devez être connecté pour créer une session';
-      this.loading = false;
-      this.cdr.markForCheck();
+      this.error.set('Vous devez être connecté pour créer une session');
+      this.loading.set(false);
       return;
     }
 
@@ -124,21 +125,24 @@ export class SessionCreateComponent implements OnInit {
       hostId: currentUser.id,
     };
 
-    this.sessionsService.createSession(sessionData).subscribe({
-      next: (session) => {
-        console.log('Session créée:', session);
-        this.router.navigate(['/sessions']);
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        console.error('Erreur création session:', err);
-        this.error =
-          err.error?.message || 'Erreur lors de la création de la session';
-        this.loading = false;
-        this.cdr.markForCheck();
-      },
-    });
+    this.sessionsService
+      .createSession(sessionData)
+      .pipe(
+        takeUntilDestroyed(),
+        finalize(() => this.loading.set(false))
+      )
+      .subscribe({
+        next: (session) => {
+          console.log('Session créée:', session);
+          this.router.navigate(['/sessions']);
+        },
+        error: (err) => {
+          console.error('Erreur création session:', err);
+          this.error.set(
+            err.error?.message || 'Erreur lors de la création de la session'
+          );
+        },
+      });
   }
 
   cancel(): void {
