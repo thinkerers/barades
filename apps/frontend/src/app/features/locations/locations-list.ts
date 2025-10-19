@@ -667,6 +667,29 @@ export class LocationsListComponent implements OnInit {
     `;
   }
 
+  getAmenityIconName(amenity: string): string {
+    const normalized = amenity.toLowerCase();
+    const iconMatchers: Array<{ keywords: string[]; icon: string }> = [
+      { keywords: ['wifi'], icon: 'wifi' },
+      { keywords: ['table'], icon: 'table_restaurant' },
+      { keywords: ['food', 'resto', 'restaurant'], icon: 'restaurant' },
+      { keywords: ['drink', 'bar', 'café', 'coffee'], icon: 'local_cafe' },
+      { keywords: ['parking'], icon: 'local_parking' },
+      { keywords: ['board', 'game'], icon: 'casino' },
+      { keywords: ['library'], icon: 'local_library' },
+      { keywords: ['shop', 'store'], icon: 'storefront' },
+      { keywords: ['tournament'], icon: 'emoji_events' },
+    ];
+
+    for (const matcher of iconMatchers) {
+      if (matcher.keywords.some((keyword) => normalized.includes(keyword))) {
+        return matcher.icon;
+      }
+    }
+
+    return 'check_circle';
+  }
+
   private formatOpeningHours(hours: Record<string, string>): string {
     const daysOrder = [
       'monday',

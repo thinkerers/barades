@@ -184,20 +184,21 @@
 
         <div id="locations-details">
           @if (!isDetailsCollapsed) {
-          <h2>Liste des lieux</h2>
+          <h2 class="locations-details__heading">Détails du lieu</h2>
 
-          <div class="location-cards">
+          <div class="locations-details__content">
             @if (selectedLocation; as location) {
-            <article class="locations-details__selected-card">
+            <article
+              [id]="'location-' + location.id"
+              class="locations-details__selected-card"
+            >
               <header class="locations-details__selected-header">
                 <div class="locations-details__selected-title">
-                  <mat-icon aria-hidden="true">assistant_navigation</mat-icon>
+                  <mat-icon aria-hidden="true">push_pin</mat-icon>
                   <div class="locations-details__selected-meta">
-                    <span class="locations-details__selected-label"
-                      >Lieu sélectionné</span
-                    >
-                    <span class="locations-details__selected-count"
-                      >(1 / {{ filteredLocations.length }})</span
+                    <h3>{{ location.name }}</h3>
+                    <span class="locations-details__type"
+                      >{{ getLocationTypeLabel(location.type) }}</span
                     >
                   </div>
                 </div>
@@ -212,44 +213,42 @@
               </header>
 
               <section class="locations-details__selected-body">
-                <header class="locations-details__place-header">
-                  <h3>{{ location.name }}</h3>
-                  <span class="locations-details__type"
-                    >{{ getLocationTypeLabel(location.type) }}</span
-                  >
-                </header>
-
-                <dl class="locations-details__info-list">
+                <ul class="locations-details__info-list">
                   @if (location.address || location.city) {
-                  <div class="locations-details__info-row">
-                    <dt><mat-icon aria-hidden="true">place</mat-icon></dt>
-                    <dd>
+                  <li class="locations-details__info-row">
+                    <mat-icon aria-hidden="true">location_on</mat-icon>
+                    <span>
                       {{ location.address ? (location.address + ', ' +
                       location.city) : location.city }}
-                    </dd>
-                  </div>
+                    </span>
+                  </li>
                   }
-                  <div class="locations-details__info-row">
-                    <dt><mat-icon aria-hidden="true">star</mat-icon></dt>
-                    <dd>{{ location.rating.toFixed(1) }}/5</dd>
-                  </div>
+                  <li class="locations-details__info-row">
+                    <mat-icon aria-hidden="true">star</mat-icon>
+                    <span>{{ location.rating.toFixed(1) }}/5</span>
+                  </li>
                   @if (location.capacity) {
-                  <div class="locations-details__info-row">
-                    <dt><mat-icon aria-hidden="true">groups</mat-icon></dt>
-                    <dd>Capacité: {{ location.capacity }} personnes</dd>
-                  </div>
+                  <li class="locations-details__info-row">
+                    <mat-icon aria-hidden="true">groups</mat-icon>
+                    <span>Capacité: {{ location.capacity }} personnes</span>
+                  </li>
                   }
-                </dl>
+                </ul>
 
                 @if (location.amenities.length > 0) {
                 <div class="locations-details__amenities">
                   @for (amenity of location.amenities; track amenity) {
-                  <span class="locations-details__amenity">{{ amenity }}</span>
+                  <span class="locations-details__amenity">
+                    <mat-icon aria-hidden="true">
+                      {{ getAmenityIconName(amenity) }}
+                    </mat-icon>
+                    <span>{{ amenity }}</span>
+                  </span>
                   }
                 </div>
                 }
 
-                <footer class="locations-details__actions">
+                <div class="locations-details__actions">
                   @if (location.website) {
                   <a
                     [href]="location.website"
@@ -257,15 +256,15 @@
                     rel="noopener"
                     class="locations-details__action-link"
                   >
-                    <mat-icon aria-hidden="true">public</mat-icon>
+                    <mat-icon aria-hidden="true">language</mat-icon>
                     Site web
                   </a>
                   }
-                </footer>
+                </div>
               </section>
             </article>
             } @else {
-            <div class="locations-list__empty">
+            <div class="locations-details__placeholder">
               <mat-icon aria-hidden="true">touch_app</mat-icon>
               <div>
                 <h3>Sélectionnez un lieu sur la carte</h3>
