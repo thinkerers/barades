@@ -196,10 +196,12 @@ describe('ContactPage', () => {
   });
 
   it('should show error messages when submitted with invalid data', () => {
-    component.onSubmit();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const form = compiled.querySelector('form') as HTMLFormElement;
+
+    form.dispatchEvent(new Event('submit'));
     fixture.detectChanges();
 
-    const compiled = fixture.nativeElement as HTMLElement;
     const errorMessages = compiled.querySelectorAll('.error-message');
 
     expect(errorMessages.length).toBeGreaterThan(0);

@@ -1,7 +1,14 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { Directive, HostListener, Input } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import {
+  ActivatedRoute,
+  ActivatedRouteSnapshot,
+  convertToParamMap,
+  Router,
+  RouterLink,
+} from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
@@ -9,9 +16,76 @@ import { Reservation } from '../../core/services/reservations.service';
 import { Session } from '../../core/services/sessions.service';
 import { SessionCardComponent } from './session-card';
 
+/* eslint-disable @angular-eslint/directive-selector */
+@Directive({
+  selector: '[routerLink]',
+  standalone: true,
+})
+class RouterLinkStubDirective {
+  @Input('routerLink') linkParams: unknown;
+  @Input() queryParams: unknown;
+  navigatedTo: unknown = null;
+
+  @HostListener('click')
+  onClick(): void {
+    this.navigatedTo = this.linkParams;
+  }
+}
+/* eslint-enable @angular-eslint/directive-selector */
+
 describe('SessionCardComponent', () => {
   let component: SessionCardComponent;
   let fixture: ComponentFixture<SessionCardComponent>;
+  let renderComponent: (
+    overrides?: Partial<Session>,
+    setup?: () => void
+  ) => HTMLElement;
+  const routerMock = {
+    navigate: jest.fn().mockResolvedValue(true),
+    navigateByUrl: jest.fn().mockResolvedValue(true),
+    createUrlTree: jest.fn(),
+    serializeUrl: jest.fn((url) => (typeof url === 'string' ? url : '/')),
+    events: of(),
+    url: '/',
+  };
+
+  const activatedRouteSnapshotStub: Partial<ActivatedRouteSnapshot> = {
+    paramMap: convertToParamMap({}),
+    queryParamMap: convertToParamMap({}),
+    url: [],
+    params: {},
+    queryParams: {},
+    fragment: null,
+    data: {},
+    outlet: 'primary',
+    component: null,
+    routeConfig: null,
+    root: undefined as unknown as ActivatedRouteSnapshot,
+    parent: null,
+    firstChild: null,
+    children: [],
+    pathFromRoot: [],
+    title: undefined,
+    toString: () => 'ActivatedRouteSnapshotStub',
+  };
+
+  const activatedRouteStub = {
+    snapshot: activatedRouteSnapshotStub as ActivatedRouteSnapshot,
+    url: of([]),
+    params: of({}),
+    queryParams: of({}),
+    fragment: of(null),
+    data: of({}),
+    outlet: 'primary',
+    component: null,
+    routeConfig: null,
+    root: undefined,
+    parent: null,
+    firstChild: null,
+    children: [],
+    pathFromRoot: [],
+    toString: () => 'ActivatedRouteStub',
+  } as unknown as ActivatedRoute;
 
   const mockAuthService = {
     getCurrentUser: jest
@@ -60,6 +134,8 @@ describe('SessionCardComponent', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    routerMock.navigate.mockClear();
+    routerMock.navigateByUrl.mockClear();
     // Reset mocks before each test
     mockAuthService.getCurrentUser.mockReturnValue({
       id: 'user-1',
@@ -67,15 +143,24 @@ describe('SessionCardComponent', () => {
     });
     mockAuthService.isAuthenticated.mockReturnValue(true);
 
-    await TestBed.configureTestingModule({
-      imports: [SessionCardComponent, RouterTestingModule],
+    TestBed.configureTestingModule({
+      imports: [SessionCardComponent],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: AuthService, useValue: mockAuthService },
         { provide: NotificationService, useValue: mockNotificationService },
+        { provide: Router, useValue: routerMock },
+        { provide: ActivatedRoute, useValue: activatedRouteStub },
       ],
-    }).compileComponents();
+    });
+
+    TestBed.overrideComponent(SessionCardComponent, {
+      remove: { imports: [RouterLink] },
+      add: { imports: [RouterLinkStubDirective] },
+    });
+
+    await TestBed.compileComponents();
 
     fixture = TestBed.createComponent(SessionCardComponent);
     component = fixture.componentInstance;
@@ -86,7 +171,16 @@ describe('SessionCardComponent', () => {
       .spyOn(component['reservationsService'], 'getReservations')
       .mockReturnValue(of([]));
 
-    fixture.detectChanges();
+    renderComponent = (overrides = {}, setup) => {
+      component.session = { ...mockSession, ...overrides };
+      // In zoneless mode, we need to call setup BEFORE detectChanges
+      // so that any component property changes are set before the first render
+      if (setup) {
+        setup();
+      }
+      fixture.detectChanges();
+      return fixture.nativeElement as HTMLElement;
+    };
   });
 
   it('should create', () => {
@@ -237,59 +331,51 @@ describe('SessionCardComponent', () => {
 
   describe('Display Logic', () => {
     it('should display session title', () => {
-      const compiled = fixture.nativeElement;
+      const compiled = renderComponent();
       const title = compiled.querySelector('.session-card__title');
-      expect(title.textContent).toContain('Les Mines de Phandelver');
+      expect(title?.textContent ?? '').toContain('Les Mines de Phandelver');
     });
 
     it('should display game name', () => {
-      const compiled = fixture.nativeElement;
+      const compiled = renderComponent();
       const game = compiled.querySelector('.session-card__game');
-      expect(game.textContent).toContain('Dungeons & Dragons 5e');
+      expect(game?.textContent ?? '').toContain('Dungeons & Dragons 5e');
     });
 
     it('should display host username', () => {
-      const compiled = fixture.nativeElement;
+      const compiled = renderComponent();
       const details = compiled.textContent;
       expect(details).toContain('GameMaster42');
     });
 
     it('should display location name and city', () => {
-      const compiled = fixture.nativeElement;
+      const compiled = renderComponent();
       const details = compiled.textContent;
       expect(details).toContain('Brussels Game Store');
       expect(details).toContain('Brussels');
     });
 
     it('should display description when provided', () => {
-      const compiled = fixture.nativeElement;
+      const compiled = renderComponent();
       const description = compiled.querySelector('.session-card__description');
       expect(description).toBeTruthy();
-      expect(description.textContent).toContain('Une aventure épique');
+      expect(description?.textContent ?? '').toContain('Une aventure épique');
     });
 
     it('should not display description section when null', () => {
-      component.session.description = null;
-      fixture.detectChanges();
-      const compiled = fixture.nativeElement;
+      const compiled = renderComponent({ description: null });
       const description = compiled.querySelector('.session-card__description');
       expect(description).toBeFalsy();
     });
 
     it('should display online indicator when session is online', () => {
-      component.session.online = true;
-      component.session.location = undefined;
-      fixture.detectChanges();
-      const compiled = fixture.nativeElement;
+      const compiled = renderComponent({ online: true, location: undefined });
       const details = compiled.textContent;
       expect(details).toContain('En ligne');
     });
 
     it('should not display location when session is online', () => {
-      component.session.online = true;
-      component.session.location = undefined;
-      fixture.detectChanges();
-      const compiled = fixture.nativeElement;
+      const compiled = renderComponent({ online: true, location: undefined });
       const details = compiled.textContent;
       expect(details).not.toContain('Brussels Game Store');
     });
@@ -297,83 +383,73 @@ describe('SessionCardComponent', () => {
 
   describe('Button States', () => {
     it('should enable reserve button when spots available', () => {
-      component.session.playersMax = 5;
-      component.session.playersCurrent = 3;
-      fixture.detectChanges();
-      const button = fixture.nativeElement.querySelector('.button--primary');
-      expect(button.disabled).toBe(false);
-      expect(button.textContent).toContain('Réserver ma place');
+      const compiled = renderComponent({
+        playersMax: 5,
+        playersCurrent: 3,
+      });
+      const button =
+        compiled.querySelector<HTMLButtonElement>('.button--primary');
+      expect(button?.disabled).toBe(false);
+      expect(button?.textContent ?? '').toContain('Réserver ma place');
     });
 
     it('should disable reserve button when session is full', () => {
-      component.session.playersMax = 5;
-      component.session.playersCurrent = 5;
-      fixture.detectChanges();
-      const button = fixture.nativeElement.querySelector('.button--primary');
-      expect(button.disabled).toBe(true);
-      expect(button.textContent).toContain('Complet');
+      const compiled = renderComponent({
+        playersMax: 5,
+        playersCurrent: 5,
+      });
+      const button =
+        compiled.querySelector<HTMLButtonElement>('.button--primary');
+      expect(button?.disabled).toBe(true);
+      expect(button?.textContent ?? '').toContain('Complet');
     });
   });
 
   describe('Status Badge', () => {
     it('should show available status with correct spots count', () => {
-      component.session.playersMax = 5;
-      component.session.playersCurrent = 2;
-      fixture.detectChanges();
-      const badge = fixture.nativeElement.querySelector(
-        '.session-card__status'
-      );
-      expect(badge.textContent).toContain('3 place(s) disponible(s)');
-      expect(badge.classList.contains('status--available')).toBe(true);
+      const compiled = renderComponent({ playersMax: 5, playersCurrent: 2 });
+      const badge = compiled.querySelector('.session-card__status');
+      expect(badge?.textContent ?? '').toContain('3 place(s) disponible(s)');
+      expect(badge?.classList.contains('status--available')).toBe(true);
     });
 
     it('should show limited status when 2 spots left', () => {
-      component.session.playersMax = 5;
-      component.session.playersCurrent = 3;
-      fixture.detectChanges();
-      const badge = fixture.nativeElement.querySelector(
-        '.session-card__status'
-      );
-      expect(badge.textContent).toContain('2 place(s) disponible(s)');
-      expect(badge.classList.contains('status--limited')).toBe(true);
+      const compiled = renderComponent({ playersMax: 5, playersCurrent: 3 });
+      const badge = compiled.querySelector('.session-card__status');
+      expect(badge?.textContent ?? '').toContain('2 place(s) disponible(s)');
+      expect(badge?.classList.contains('status--limited')).toBe(true);
     });
 
     it('should show full status when no spots left', () => {
-      component.session.playersMax = 5;
-      component.session.playersCurrent = 5;
-      fixture.detectChanges();
-      const badge = fixture.nativeElement.querySelector(
-        '.session-card__status'
-      );
-      expect(badge.textContent).toContain('Complet');
-      expect(badge.classList.contains('status--full')).toBe(true);
+      const compiled = renderComponent({ playersMax: 5, playersCurrent: 5 });
+      const badge = compiled.querySelector('.session-card__status');
+      expect(badge?.textContent ?? '').toContain('Complet');
+      expect(badge?.classList.contains('status--full')).toBe(true);
     });
   });
 
   describe('Color Coding', () => {
     it('should apply correct CSS class for session tag color', () => {
-      component.session.tagColor = 'RED';
-      fixture.detectChanges();
-      const card = fixture.nativeElement.querySelector('.session-card');
-      expect(card.classList.contains('session-card--red')).toBe(true);
+      const compiled = renderComponent({ tagColor: 'RED' });
+      const card = compiled.querySelector('.session-card');
+      expect(card?.classList.contains('session-card--red')).toBe(true);
     });
 
     it('should update color class when tag color changes', () => {
-      component.session.tagColor = 'BLUE';
-      fixture.detectChanges();
-      const card = fixture.nativeElement.querySelector('.session-card');
-      expect(card.classList.contains('session-card--blue')).toBe(true);
+      const compiled = renderComponent({ tagColor: 'BLUE' });
+      const card = compiled.querySelector('.session-card');
+      expect(card?.classList.contains('session-card--blue')).toBe(true);
     });
   });
 
   describe('Authentication Redirect', () => {
     it('should redirect to login when user is not authenticated', () => {
       mockAuthService.getCurrentUser.mockReturnValue(null);
-      const navigateSpy = jest.spyOn(component['router'], 'navigate');
+      routerMock.navigate.mockResolvedValue(true);
 
       component.onReserve();
 
-      expect(navigateSpy).toHaveBeenCalledWith(['/login'], {
+      expect(routerMock.navigate).toHaveBeenCalledWith(['/login'], {
         queryParams: { returnUrl: '/sessions' },
       });
     });
@@ -457,43 +533,83 @@ describe('SessionCardComponent', () => {
     });
 
     it('should display "Inscrit" badge when user is registered', () => {
-      component.isRegistered = true;
-      fixture.detectChanges();
-      const badge = fixture.nativeElement.querySelector(
-        '.session-card__registered'
-      );
+      let checkSpy: jest.SpyInstance | undefined;
+      const compiled = renderComponent({}, () => {
+        checkSpy = jest
+          .spyOn(component, 'checkIfRegistered')
+          .mockImplementation(() => {
+            /* intentionally blank for zoneless test */
+          });
+        component.isRegistered = true;
+      });
+      checkSpy?.mockRestore();
+      const badge = compiled.querySelector('.session-card__registered');
       expect(badge).toBeTruthy();
-      expect(badge.textContent).toContain('Inscrit');
+      expect(badge?.textContent ?? '').toContain('Inscrit');
     });
 
     it('should not display "Inscrit" badge when user is not registered', () => {
-      component.isRegistered = false;
-      fixture.detectChanges();
-      const badge = fixture.nativeElement.querySelector(
-        '.session-card__registered'
-      );
+      let checkSpy: jest.SpyInstance | undefined;
+      const compiled = renderComponent({}, () => {
+        checkSpy = jest
+          .spyOn(component, 'checkIfRegistered')
+          .mockImplementation(() => {
+            /* intentionally blank for zoneless test */
+          });
+        component.isRegistered = false;
+      });
+      checkSpy?.mockRestore();
+      const badge = compiled.querySelector('.session-card__registered');
       expect(badge).toBeFalsy();
     });
 
     it('should show "Déjà inscrit" button text when registered', () => {
-      component.isRegistered = true;
-      fixture.detectChanges();
-      const button = fixture.nativeElement.querySelector('.button--primary');
-      expect(button.textContent).toContain('Déjà inscrit');
+      let checkSpy: jest.SpyInstance | undefined;
+      const compiled = renderComponent({}, () => {
+        checkSpy = jest
+          .spyOn(component, 'checkIfRegistered')
+          .mockImplementation(() => {
+            /* intentionally blank for zoneless test */
+          });
+        component.isRegistered = true;
+      });
+      checkSpy?.mockRestore();
+      const button = compiled.querySelector(
+        '.button--primary'
+      ) as HTMLButtonElement;
+      expect(button?.textContent ?? '').toContain('Déjà inscrit');
     });
 
     it('should disable button when user is already registered', () => {
-      component.isRegistered = true;
-      fixture.detectChanges();
-      const button = fixture.nativeElement.querySelector('.button--primary');
-      expect(button.disabled).toBe(true);
+      let checkSpy: jest.SpyInstance | undefined;
+      const compiled = renderComponent({}, () => {
+        checkSpy = jest
+          .spyOn(component, 'checkIfRegistered')
+          .mockImplementation(() => {
+            /* intentionally blank for zoneless test */
+          });
+        component.isRegistered = true;
+      });
+      checkSpy?.mockRestore();
+      const button = compiled.querySelector(
+        '.button--primary'
+      ) as HTMLButtonElement;
+      expect(button?.disabled).toBe(true);
     });
 
     it('should apply success class to button when registered', () => {
-      component.isRegistered = true;
-      fixture.detectChanges();
-      const button = fixture.nativeElement.querySelector('.button--primary');
-      expect(button.classList.contains('button--success')).toBe(true);
+      let checkSpy: jest.SpyInstance | undefined;
+      const compiled = renderComponent({}, () => {
+        checkSpy = jest
+          .spyOn(component, 'checkIfRegistered')
+          .mockImplementation(() => {
+            /* intentionally blank for zoneless test */
+          });
+        component.isRegistered = true;
+      });
+      checkSpy?.mockRestore();
+      const button = compiled.querySelector('.button--primary');
+      expect(button?.classList.contains('button--success')).toBe(true);
     });
 
     it('should update isRegistered and playersCurrent after successful reservation', (done) => {

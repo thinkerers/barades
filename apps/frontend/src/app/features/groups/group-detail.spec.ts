@@ -1,13 +1,36 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { Directive, HostListener, Input } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute, Router } from '@angular/router';
-import { RouterTestingModule } from '@angular/router/testing';
+import {
+  ActivatedRoute,
+  ActivatedRouteSnapshot,
+  ParamMap,
+  Router,
+  RouterLink,
+} from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { GroupsService } from '../../core/services/groups.service';
 import { PollsService } from '../../core/services/polls.service';
 import { GroupDetailComponent } from './group-detail';
+
+/* eslint-disable @angular-eslint/directive-selector */
+@Directive({
+  selector: '[routerLink]',
+  standalone: true,
+})
+class RouterLinkStubDirective {
+  @Input('routerLink') linkParams: unknown;
+  @Input() queryParams: unknown;
+  navigatedTo: unknown = null;
+
+  @HostListener('click')
+  onClick(): void {
+    this.navigatedTo = this.linkParams;
+  }
+}
+/* eslint-enable @angular-eslint/directive-selector */
 
 describe('GroupDetailComponent', () => {
   let component: GroupDetailComponent;
@@ -19,11 +42,76 @@ describe('GroupDetailComponent', () => {
   let getCurrentUserSpy: jest.SpyInstance;
   let getGroupSpy: jest.SpyInstance;
   let getPollsSpy: jest.SpyInstance;
-  let router: Router;
   let routeParamMapGet: jest.Mock;
   let routeQueryParamMapGet: jest.Mock;
   let routeQueryParamMapHas: jest.Mock;
   let isAuthenticatedSpy: jest.SpyInstance;
+  const routerMock = {
+    navigate: jest.fn().mockResolvedValue(true),
+    navigateByUrl: jest.fn().mockResolvedValue(true),
+    createUrlTree: jest.fn(),
+    serializeUrl: jest.fn((url) => (typeof url === 'string' ? url : '/')),
+    events: of(),
+    url: '/',
+  };
+
+  const buildActivatedRouteStub = (
+    paramGet: jest.Mock,
+    queryParamGet: jest.Mock,
+    queryParamHas: jest.Mock
+  ): ActivatedRoute => {
+    const paramMapStub: ParamMap = {
+      keys: [],
+      get: (key: string) => paramGet(key),
+      getAll: () => [],
+      has: () => false,
+    };
+
+    const queryParamMapStub: ParamMap = {
+      keys: [],
+      get: (key: string) => queryParamGet(key),
+      getAll: () => [],
+      has: (key: string) => queryParamHas(key),
+    };
+
+    const snapshotStub: Partial<ActivatedRouteSnapshot> = {
+      paramMap: paramMapStub,
+      queryParamMap: queryParamMapStub,
+      url: [],
+      params: {},
+      queryParams: {},
+      fragment: null,
+      data: {},
+      outlet: 'primary',
+      component: null,
+      routeConfig: null,
+      root: undefined as unknown as ActivatedRouteSnapshot,
+      parent: null,
+      firstChild: null,
+      children: [],
+      pathFromRoot: [],
+      title: undefined,
+      toString: () => 'ActivatedRouteSnapshotStub',
+    };
+
+    return {
+      snapshot: snapshotStub as ActivatedRouteSnapshot,
+      url: of([]),
+      params: of({}),
+      queryParams: of({}),
+      fragment: of(null),
+      data: of({}),
+      outlet: 'primary',
+      component: null,
+      routeConfig: null,
+      root: undefined,
+      parent: null,
+      firstChild: null,
+      children: [],
+      pathFromRoot: [],
+      toString: () => 'ActivatedRouteStub',
+    } as unknown as ActivatedRoute;
+  };
 
   const mockGroup = {
     id: '1',
@@ -95,36 +183,38 @@ describe('GroupDetailComponent', () => {
     routeQueryParamMapGet = jest.fn().mockReturnValue(null);
     routeQueryParamMapHas = jest.fn().mockReturnValue(false);
 
-    await TestBed.configureTestingModule({
-      imports: [
-        GroupDetailComponent,
-        RouterTestingModule,
-        HttpClientTestingModule,
-      ],
+    routerMock.navigate.mockClear();
+    routerMock.navigateByUrl.mockClear();
+
+    const activatedRouteStub = buildActivatedRouteStub(
+      routeParamMapGet,
+      routeQueryParamMapGet,
+      routeQueryParamMapHas
+    );
+
+    TestBed.configureTestingModule({
+      imports: [GroupDetailComponent, HttpClientTestingModule],
       providers: [
         {
           provide: ActivatedRoute,
-          useValue: {
-            snapshot: {
-              paramMap: {
-                get: routeParamMapGet,
-              },
-              queryParamMap: {
-                get: routeQueryParamMapGet,
-                has: routeQueryParamMapHas,
-              },
-            },
-          },
+          useValue: activatedRouteStub,
         },
+        { provide: Router, useValue: routerMock },
       ],
-    }).compileComponents();
+    });
+
+    TestBed.overrideComponent(GroupDetailComponent, {
+      remove: { imports: [RouterLink] },
+      add: { imports: [RouterLinkStubDirective] },
+    });
+
+    await TestBed.compileComponents();
 
     fixture = TestBed.createComponent(GroupDetailComponent);
     component = fixture.componentInstance;
     groupsService = TestBed.inject(GroupsService);
     pollsService = TestBed.inject(PollsService);
     authService = TestBed.inject(AuthService);
-    router = TestBed.inject(Router);
 
     getGroupSpy = jest.spyOn(groupsService, 'getGroup');
     getGroupSpy.mockReturnValue(of(nonMemberGroup));
@@ -451,7 +541,7 @@ describe('GroupDetailComponent', () => {
     });
 
     afterEach(() => {
-      confirmSpy.mockRestore();
+      confirmSpy?.mockRestore();
     });
 
     it('should request confirmation before leaving', () => {
@@ -507,9 +597,9 @@ describe('GroupDetailComponent', () => {
 
   describe('Navigation', () => {
     it('should navigate back to groups list', () => {
-      const navigateSpy = jest.spyOn(router, 'navigate');
+      routerMock.navigate.mockResolvedValue(true);
       component.goBack();
-      expect(navigateSpy).toHaveBeenCalledWith(['/groups']);
+      expect(routerMock.navigate).toHaveBeenCalledWith(['/groups']);
     });
   });
 
@@ -564,19 +654,25 @@ describe('GroupDetailComponent', () => {
     });
 
     it('should show join button when can join', () => {
-      if (!component.group) {
-        throw new Error('Group should be defined');
-      }
-      component.group = {
-        ...component.group,
-        currentUserIsMember: false,
-        isRecruiting: true,
-        maxMembers: 10,
-      };
-      component.isMember = false;
-      fixture.detectChanges();
+      // Create a fresh fixture without running ngOnInit from beforeEach
+      const freshFixture = TestBed.createComponent(GroupDetailComponent);
+      const freshComponent = freshFixture.componentInstance;
 
-      const compiled = fixture.nativeElement as HTMLElement;
+      // Set up the mock to return a group where user is not a member
+      getGroupSpy.mockReturnValueOnce(
+        of({
+          ...mockGroup,
+          currentUserIsMember: false,
+          isRecruiting: true,
+          maxMembers: 10,
+        })
+      );
+
+      // Trigger initialization and change detection
+      freshComponent.ngOnInit();
+      freshFixture.detectChanges();
+
+      const compiled = freshFixture.nativeElement as HTMLElement;
       const joinButton = compiled.querySelector(
         '.section-actions .btn--primary'
       );
@@ -590,6 +686,8 @@ describe('GroupDetailComponent', () => {
         members: mockGroup.members,
       };
       component.isMember = true;
+
+      // In zoneless mode, we need full change detection
       fixture.detectChanges();
 
       const compiled = fixture.nativeElement as HTMLElement;
@@ -601,21 +699,53 @@ describe('GroupDetailComponent', () => {
     });
 
     it('should show loading state', () => {
-      component.loading = true;
-      component.group = null;
-      fixture.detectChanges();
+      // Create a fresh fixture without running ngOnInit
+      const freshFixture = TestBed.createComponent(GroupDetailComponent);
+      const freshComponent = freshFixture.componentInstance;
+      const loadGroupSpy = jest
+        .spyOn(
+          freshComponent as unknown as { loadGroup: (id: string) => void },
+          'loadGroup'
+        )
+        .mockImplementation(() => {
+          /* intentionally blank */
+        });
 
-      const compiled = fixture.nativeElement as HTMLElement;
+      // Set state before first detectChanges
+      freshComponent.loading = true;
+      freshComponent.group = null;
+
+      // Now run change detection
+      freshFixture.detectChanges();
+      loadGroupSpy.mockRestore();
+
+      const compiled = freshFixture.nativeElement as HTMLElement;
       expect(compiled.querySelector('.loading-state')).toBeTruthy();
     });
 
     it('should show error state', () => {
-      component.loading = false;
-      component.error = 'Test error';
-      component.group = null;
-      fixture.detectChanges();
+      // Create a fresh fixture without running ngOnInit
+      const freshFixture = TestBed.createComponent(GroupDetailComponent);
+      const freshComponent = freshFixture.componentInstance;
+      const loadGroupSpy = jest
+        .spyOn(
+          freshComponent as unknown as { loadGroup: (id: string) => void },
+          'loadGroup'
+        )
+        .mockImplementation(() => {
+          /* intentionally blank */
+        });
 
-      const compiled = fixture.nativeElement as HTMLElement;
+      // Set state before first detectChanges
+      freshComponent.loading = false;
+      freshComponent.error = 'Test error';
+      freshComponent.group = null;
+
+      // Now run change detection
+      freshFixture.detectChanges();
+      loadGroupSpy.mockRestore();
+
+      const compiled = freshFixture.nativeElement as HTMLElement;
       expect(compiled.querySelector('lib-error-message')).toBeTruthy();
       expect(compiled.textContent).toContain('Test error');
     });

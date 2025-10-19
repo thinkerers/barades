@@ -1,5 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+  inject,
+} from '@angular/core';
 import { Router } from '@angular/router';
 import {
   AsyncStateComponent,
@@ -25,6 +31,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
   private groupsService = inject(GroupsService);
   private router = inject(Router);
   private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
 
   groups: Group[] = [];
   loading = true;
@@ -40,12 +47,14 @@ export class GroupsListComponent implements OnInit, OnDestroy {
   private readonly autoRetryDelayMs = 15000;
   private readonly offlineHandler = () => {
     this.isOffline = true;
+    this.cdr.markForCheck();
   };
   private readonly onlineHandler = () => {
     this.isOffline = false;
     if (!this.loading && (this.error || this.groups.length === 0)) {
       this.retry();
     }
+    this.cdr.markForCheck();
   };
   private pendingErrorBaseMessage: string | null = null;
   readonly defaultErrorMessage =
@@ -71,6 +80,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
     this.error = null;
     this.pendingErrorBaseMessage = null;
     this.clearAutoRetry();
+    this.cdr.markForCheck();
 
     this.groupsService.getGroups().subscribe({
       next: (data) => {
@@ -79,11 +89,13 @@ export class GroupsListComponent implements OnInit, OnDestroy {
         this.loading = false;
         this.error = null;
         this.isOffline = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error loading groups:', err);
         this.loading = false;
         this.handleLoadError(err);
+        this.cdr.markForCheck();
       },
     });
   }
@@ -91,6 +103,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
   retry(): void {
     this.clearAutoRetry();
     this.loadGroups();
+    this.cdr.markForCheck();
   }
 
   get groupsState(): AsyncStateStatus {
@@ -141,6 +154,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
           this.currentUserId = this.authService.getCurrentUserId();
         }
         this.updateLocalGroupState(groupId, response);
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error joining group:', err);
@@ -149,6 +163,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
           err?.error?.message ??
           'Impossible de rejoindre le groupe pour le moment.';
         this.joinErrors.set(groupId, message);
+        this.cdr.markForCheck();
       },
     });
   }
@@ -212,6 +227,8 @@ export class GroupsListComponent implements OnInit, OnDestroy {
         },
       };
     });
+
+    this.cdr.markForCheck();
   }
 
   private syncJoinedGroups(groups: Group[]): void {
@@ -233,6 +250,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
 
     if (this.detectOffline(httpError)) {
       this.error = 'Erreur de connexion. Vérifiez votre réseau puis réessayez.';
+      this.cdr.markForCheck();
       return;
     }
 
@@ -242,6 +260,8 @@ export class GroupsListComponent implements OnInit, OnDestroy {
     if (httpError && this.shouldAutoRetry(httpError)) {
       this.scheduleAutoRetry(message);
     }
+
+    this.cdr.markForCheck();
   }
 
   private detectOffline(error: HttpErrorResponse | null): boolean {
@@ -311,6 +331,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
     this.pendingErrorBaseMessage = baseMessage;
     this.autoRetrySeconds = Math.ceil(this.autoRetryDelayMs / 1000);
     this.error = this.composeErrorMessage();
+    this.cdr.markForCheck();
 
     this.autoRetryInterval = setInterval(() => {
       if (this.autoRetrySeconds === null) {
@@ -324,6 +345,7 @@ export class GroupsListComponent implements OnInit, OnDestroy {
         this.loadGroups();
       } else {
         this.error = this.composeErrorMessage();
+        this.cdr.markForCheck();
       }
     }, 1000);
   }
@@ -347,5 +369,6 @@ export class GroupsListComponent implements OnInit, OnDestroy {
     }
     this.autoRetrySeconds = null;
     this.pendingErrorBaseMessage = null;
+    this.cdr.markForCheck();
   }
 }

@@ -11,7 +11,13 @@ describe('GroupsListComponent', () => {
   let component: GroupsListComponent;
   let fixture: ComponentFixture<GroupsListComponent>;
   let groupsService: GroupsService;
-  let router: Router;
+  const routerMock = {
+    navigate: jest.fn().mockResolvedValue(true),
+    navigateByUrl: jest.fn().mockResolvedValue(true),
+    createUrlTree: jest.fn(),
+    events: of(),
+    url: '/',
+  };
 
   const mockGroups = [
     {
@@ -45,6 +51,8 @@ describe('GroupsListComponent', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    routerMock.navigate.mockClear();
+    routerMock.navigateByUrl.mockClear();
     authServiceMock.getCurrentUserId.mockReturnValue(null);
     authServiceMock.getCurrentUser.mockReturnValue(null);
     authServiceMock.isAuthenticated.mockReturnValue(false);
@@ -55,13 +63,13 @@ describe('GroupsListComponent', () => {
         provideHttpClient(),
         provideRouter([]),
         { provide: AuthService, useValue: authServiceMock },
+        { provide: Router, useValue: routerMock },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(GroupsListComponent);
     component = fixture.componentInstance;
     groupsService = TestBed.inject(GroupsService);
-    router = TestBed.inject(Router);
   });
 
   it('should create', () => {
@@ -70,7 +78,7 @@ describe('GroupsListComponent', () => {
 
   it('should load groups on init', () => {
     jest.spyOn(groupsService, 'getGroups').mockReturnValue(of(mockGroups));
-    jest.spyOn(router, 'navigate').mockResolvedValue(true);
+    routerMock.navigate.mockResolvedValue(true);
 
     fixture.detectChanges();
 
@@ -141,13 +149,13 @@ describe('GroupsListComponent', () => {
 
   it('should navigate to group detail when primary action triggered', async () => {
     jest.spyOn(groupsService, 'getGroups').mockReturnValue(of(mockGroups));
-    const navigateSpy = jest.spyOn(router, 'navigate').mockResolvedValue(true);
+    routerMock.navigate.mockResolvedValue(true);
 
     fixture.detectChanges();
 
     component.viewGroupDetails('1');
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/groups', '1']);
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/groups', '1']);
   });
 
   it('should request to join a group and update local state on success', () => {
@@ -233,13 +241,13 @@ describe('GroupsListComponent', () => {
 
   it('should redirect to login when requesting to join while unauthenticated', () => {
     const group = { ...mockGroups[0] };
-    const navigateSpy = jest.spyOn(router, 'navigate').mockResolvedValue(true);
+    routerMock.navigate.mockResolvedValue(true);
     const joinSpy = jest.spyOn(groupsService, 'joinGroup');
 
     component.requestToJoin(group);
 
     expect(joinSpy).not.toHaveBeenCalled();
-    expect(navigateSpy).toHaveBeenCalledWith(['/login'], {
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/login'], {
       queryParams: { returnUrl: `/groups/${group.id}?autoJoin=1` },
     });
   });

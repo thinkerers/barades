@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import {
+  ChangeDetectorRef,
   Component,
   DestroyRef,
   OnInit,
@@ -40,6 +41,7 @@ export class SessionsListPage implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly authService = inject(AuthService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   @ViewChild('scopeBanner')
   scopeBanner?: SessionsScopeBanner;
@@ -85,6 +87,8 @@ export class SessionsListPage implements OnInit {
 
         if (shouldReload) {
           this.loadSessions();
+        } else {
+          this.cdr.markForCheck();
         }
       });
   }
@@ -92,6 +96,7 @@ export class SessionsListPage implements OnInit {
   loadSessions(): void {
     this.loading = true;
     this.error = null;
+    this.cdr.markForCheck();
 
     const source$ =
       this.filterMode === 'my-hosted'
@@ -126,11 +131,14 @@ export class SessionsListPage implements OnInit {
             this.scopeBanner?.focus();
           }, 100);
         }
+
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error loading sessions:', err);
         this.error = this.defaultErrorMessage;
         this.loading = false;
+        this.cdr.markForCheck();
       },
     });
   }
@@ -200,6 +208,8 @@ export class SessionsListPage implements OnInit {
 
       return true;
     });
+
+    this.cdr.markForCheck();
   }
 
   onSearchTermChange(term: string): void {

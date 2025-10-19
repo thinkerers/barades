@@ -1,6 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+  inject,
+} from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ErrorMessageComponent } from '@org/ui';
 import { AuthService } from '../../core/services/auth.service';
@@ -58,6 +64,7 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
   private groupsService = inject(GroupsService);
   private pollsService = inject(PollsService);
   private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
 
   group: GroupDetail | null = null;
   polls: Poll[] = [];
@@ -155,11 +162,14 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
         if (this.autoJoinRequested) {
           this.handlePendingAutoJoin();
         }
+
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error loading group:', err);
         this.loading = false;
         this.handleGroupError(err);
+        this.cdr.markForCheck();
       },
     });
   }
@@ -172,9 +182,11 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
           // Load full details for the most recent poll
           this.loadPollDetails(polls[0].id);
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error loading polls:', err);
+        this.cdr.markForCheck();
       },
     });
   }
@@ -183,9 +195,11 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
     this.pollsService.getPoll(pollId).subscribe({
       next: (poll) => {
         this.activePoll = poll;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error loading poll details:', err);
+        this.cdr.markForCheck();
       },
     });
   }
@@ -361,6 +375,7 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
         };
 
         this.group = updatedGroup;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error joining group:', err);
@@ -368,6 +383,7 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
         this.joinError =
           err?.error?.message ??
           'Impossible de rejoindre le groupe pour le moment.';
+        this.cdr.markForCheck();
       },
     });
   }
@@ -412,6 +428,7 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
         };
 
         this.group = updatedGroup;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error leaving group:', err);
@@ -419,6 +436,7 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
         this.leaveError =
           err?.error?.message ??
           'Impossible de quitter le groupe pour le moment.';
+        this.cdr.markForCheck();
       },
     });
   }
@@ -432,6 +450,7 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
 
     if (this.detectOffline(httpError)) {
       this.error = 'Connexion perdue. Vérifiez votre réseau puis réessayez.';
+      this.cdr.markForCheck();
       return;
     }
 
@@ -441,6 +460,7 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
     if (httpError && this.shouldAutoRetry(httpError)) {
       this.scheduleAutoRetry(message);
     }
+    this.cdr.markForCheck();
   }
 
   private detectOffline(error: HttpErrorResponse | null): boolean {
@@ -450,10 +470,12 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
 
     if (isOfflineError) {
       this.isOffline = true;
+      this.cdr.markForCheck();
       return true;
     }
 
     this.isOffline = false;
+    this.cdr.markForCheck();
     return false;
   }
 
@@ -510,6 +532,7 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
     this.pendingErrorBaseMessage = baseMessage;
     this.autoRetrySeconds = Math.ceil(this.autoRetryDelayMs / 1000);
     this.error = this.composeErrorMessage();
+    this.cdr.markForCheck();
 
     this.autoRetryInterval = setInterval(() => {
       if (this.autoRetrySeconds === null) {
@@ -524,6 +547,7 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
       } else {
         this.error = this.composeErrorMessage();
       }
+      this.cdr.markForCheck();
     }, 1000);
   }
 
@@ -546,6 +570,7 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
     }
     this.autoRetrySeconds = null;
     this.pendingErrorBaseMessage = null;
+    this.cdr.markForCheck();
   }
 
   formatDate(dateString: string): string {

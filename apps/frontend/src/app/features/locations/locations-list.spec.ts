@@ -1,11 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import {
-  ComponentFixture,
-  TestBed,
-  fakeAsync,
-  tick,
-} from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { LocationsService } from '../../core/services/locations.service';
 import { LocationsListComponent } from './locations-list';
@@ -538,12 +533,18 @@ describe('LocationsListComponent', () => {
     });
 
     describe('onMarkerClick', () => {
+      afterEach(() => {
+        jest.clearAllTimers();
+        jest.useRealTimers();
+      });
+
       it('should set selectedLocationId', () => {
         component.onMarkerClick('1');
         expect(component.selectedLocationId).toBe('1');
       });
 
-      it('should call scrollIntoView if element exists', fakeAsync(() => {
+      it('should call scrollIntoView if element exists', () => {
+        jest.useFakeTimers();
         const mockElement = {
           scrollIntoView: jest.fn(),
           classList: {
@@ -557,8 +558,7 @@ describe('LocationsListComponent', () => {
           .mockReturnValue(mockElement as unknown as HTMLElement);
 
         component.onMarkerClick('1');
-
-        tick();
+        jest.runOnlyPendingTimers();
 
         expect(mockElement.scrollIntoView).toHaveBeenCalledWith({
           behavior: 'smooth',
@@ -566,9 +566,10 @@ describe('LocationsListComponent', () => {
         });
 
         jest.restoreAllMocks();
-      }));
+      });
 
-      it('should add and remove highlight class', fakeAsync(() => {
+      it('should add and remove highlight class', () => {
+        jest.useFakeTimers();
         const mockElement = {
           scrollIntoView: jest.fn(),
           classList: {
@@ -583,20 +584,19 @@ describe('LocationsListComponent', () => {
           .mockReturnValue(mockElement as unknown as HTMLElement);
 
         component.onMarkerClick('1');
-
-        tick();
+        jest.advanceTimersByTime(0);
 
         // Verify class is added after scroll handler runs
         expect(mockElement.classList.add).toHaveBeenCalledWith('highlight');
 
         // Fast-forward time by 2 seconds
-        tick(2000);
+        jest.advanceTimersByTime(2000);
 
         // Verify class is removed after 2 seconds
         expect(mockElement.classList.remove).toHaveBeenCalledWith('highlight');
 
         jest.restoreAllMocks();
-      }));
+      });
 
       it('should handle missing element gracefully', () => {
         jest.spyOn(document, 'getElementById').mockReturnValue(null);

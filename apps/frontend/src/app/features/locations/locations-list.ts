@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -143,6 +143,7 @@ export class LocationsListComponent implements OnInit {
   }
 
   private locationsService = inject(LocationsService);
+  private cdr = inject(ChangeDetectorRef);
 
   readonly locationTypeOptions: ReadonlyArray<{
     value: string;
@@ -217,6 +218,7 @@ export class LocationsListComponent implements OnInit {
     console.log('[LocationsList] Loading locations...');
     this.loading = true;
     this.error = null;
+    this.cdr.markForCheck();
 
     this.locationsService.getLocations().subscribe({
       next: (data) => {
@@ -231,6 +233,7 @@ export class LocationsListComponent implements OnInit {
         );
         this.filteredLocations = [...this.locations]; // Initialize filtered list
         this.loading = false;
+        this.cdr.markForCheck();
 
         // CRITICAL: Wait for Angular to remove the 'hidden' class, then force map resize
         setTimeout(() => {
@@ -255,12 +258,14 @@ export class LocationsListComponent implements OnInit {
           console.log('[LocationsList] Adding markers to map...');
           this.addMarkers();
           this.maybeRestoreUserPosition();
+          this.cdr.markForCheck();
         }, 100);
       },
       error: (err) => {
         console.error('[LocationsList] Error loading locations:', err);
         this.error = this.defaultErrorMessage;
         this.loading = false;
+        this.cdr.markForCheck();
       },
     });
   }
@@ -488,12 +493,14 @@ export class LocationsListComponent implements OnInit {
     this.findNearestLocation({ adjustMap });
     this.persistUserPosition(this.userPosition);
     this.restoredUserPosition = true;
+    this.cdr.markForCheck();
   }
 
   private handleLocateError(event: L.ErrorEvent): void {
     console.error('[LocationsList] Locate failed:', event.message);
     this.geolocationError = event.message;
     this.skipNextNearestAdjust = false;
+    this.cdr.markForCheck();
   }
 
   private persistUserPosition(position: { lat: number; lon: number }): void {
@@ -564,6 +571,7 @@ export class LocationsListComponent implements OnInit {
       this.preloadedUserPositionFromStorage = false;
       this.addUserMarker({ animate: false });
       this.findNearestLocation({ adjustMap: false });
+      this.cdr.markForCheck();
       return;
     }
 
@@ -576,6 +584,7 @@ export class LocationsListComponent implements OnInit {
     this.restoredUserPosition = true;
     this.addUserMarker({ animate: false });
     this.findNearestLocation({ adjustMap: false });
+    this.cdr.markForCheck();
   }
 
   private addMarkers(): void {
@@ -903,6 +912,7 @@ export class LocationsListComponent implements OnInit {
 
     // Update markers on map
     this.updateMarkers();
+    this.cdr.markForCheck();
   }
 
   /**

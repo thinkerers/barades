@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,6 +34,7 @@ import { SessionCardComponent } from '../sessions/session-card';
 export class HomePage implements OnInit {
   private router = inject(Router);
   private sessionsService = inject(SessionsService);
+  private cdr = inject(ChangeDetectorRef);
 
   // Form controls pour la recherche
   gameControl = new FormControl('');
@@ -100,11 +101,13 @@ export class HomePage implements OnInit {
         // Prendre les 3 premières sessions comme sessions en vedette
         this.featuredSessions = sessions.slice(0, 3);
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error loading featured sessions:', err);
         this.error = this.defaultErrorMessage;
         this.loading = false;
+        this.cdr.markForCheck();
       },
     });
   }

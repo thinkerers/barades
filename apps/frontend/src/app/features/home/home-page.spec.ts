@@ -1,16 +1,175 @@
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { Component, Directive, Input } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { RouterModule } from '@angular/router';
+import {
+  ActivatedRoute,
+  ActivatedRouteSnapshot,
+  ParamMap,
+  Router,
+} from '@angular/router';
+import { AsyncStateComponent } from '@org/ui';
 import { of } from 'rxjs';
 import { SessionsService } from '../../core/services/sessions.service';
 import { HomePage } from './home-page';
+
+/* eslint-disable @angular-eslint/directive-selector, @angular-eslint/component-selector */
+@Component({
+  selector: 'mat-form-field',
+  standalone: true,
+  template: '<ng-content></ng-content>',
+})
+class MatFormFieldStub {}
+
+@Directive({
+  selector: '[matInput]',
+  standalone: true,
+})
+class MatInputStub {}
+
+@Directive({
+  selector: '[matAutocomplete]',
+  standalone: true,
+})
+class MatAutocompleteTriggerStub {
+  @Input('matAutocomplete') autocomplete: unknown;
+}
+
+@Component({
+  selector: 'mat-autocomplete',
+  standalone: true,
+  exportAs: 'matAutocomplete',
+  template: '<ng-content></ng-content>',
+})
+class MatAutocompleteStub {}
+
+@Component({
+  selector: 'mat-option',
+  standalone: true,
+  template: '<ng-content></ng-content>',
+})
+class MatOptionStub {
+  @Input() value: unknown;
+}
+
+@Component({
+  selector: 'mat-label',
+  standalone: true,
+  template: '<ng-content></ng-content>',
+})
+class MatLabelStub {}
+
+@Directive({
+  selector: '[matPrefix]',
+  standalone: true,
+})
+class MatPrefixStub {}
+
+@Component({
+  selector: 'mat-icon',
+  standalone: true,
+  template: '<ng-content></ng-content>',
+})
+class MatIconStub {}
+
+@Directive({
+  selector: '[mat-raised-button]',
+  standalone: true,
+})
+class MatRaisedButtonStub {}
+
+@Directive({
+  selector: '[mat-stroked-button]',
+  standalone: true,
+})
+class MatStrokedButtonStub {}
+
+@Component({
+  selector: 'lib-async-state',
+  standalone: true,
+  template: `
+    <div
+      class="async-state-stub"
+      [attr.data-status]="status"
+      [attr.data-loading-message]="loadingMessage ?? ''"
+      [attr.data-error-message]="errorMessage ?? ''"
+      [attr.data-empty-message]="emptyMessage ?? ''"
+    >
+      <ng-content></ng-content>
+    </div>
+  `,
+})
+class AsyncStateStubComponent {
+  @Input() status = 'ready';
+  @Input() loadingMessage?: string;
+  @Input() errorMessage?: string;
+  @Input() emptyMessage?: string;
+}
+/* eslint-enable @angular-eslint/directive-selector, @angular-eslint/component-selector */
 
 describe('HomePage', () => {
   let component: HomePage;
   let fixture: ComponentFixture<HomePage>;
   let mockSessionsService: jest.Mocked<SessionsService>;
+  const routerMock = {
+    navigate: jest.fn().mockResolvedValue(true),
+    navigateByUrl: jest.fn().mockResolvedValue(true),
+    createUrlTree: jest.fn(),
+    serializeUrl: jest.fn((url) => (typeof url === 'string' ? url : '/')),
+    events: of(),
+    url: '/',
+  };
+
+  const paramMapStub: ParamMap = {
+    keys: [],
+    get: () => null,
+    getAll: () => [],
+    has: () => false,
+  };
+
+  const activatedRouteSnapshotStub: Partial<ActivatedRouteSnapshot> = {
+    paramMap: paramMapStub,
+    queryParamMap: paramMapStub,
+    url: [],
+    params: {},
+    queryParams: {},
+    fragment: null,
+    data: {},
+    outlet: 'primary',
+    component: null,
+    routeConfig: null,
+    root: undefined as unknown as ActivatedRouteSnapshot,
+    parent: null,
+    firstChild: null,
+    children: [],
+    pathFromRoot: [],
+    title: undefined,
+    toString: () => 'ActivatedRouteSnapshotStub',
+  };
+
+  const activatedRouteStub = {
+    snapshot: activatedRouteSnapshotStub as ActivatedRouteSnapshot,
+    url: of([]),
+    params: of({}),
+    queryParams: of({}),
+    fragment: of(null),
+    data: of({}),
+    outlet: 'primary',
+    component: null,
+    routeConfig: null,
+    root: undefined,
+    parent: null,
+    firstChild: null,
+    children: [],
+    pathFromRoot: [],
+    toString: () => 'ActivatedRouteStub',
+  } as unknown as ActivatedRoute;
 
   const mockSessions = [
     {
@@ -72,15 +231,52 @@ describe('HomePage', () => {
     mockSessionsService = {
       getSessions: jest.fn().mockReturnValue(of(mockSessions)),
     } as unknown as jest.Mocked<SessionsService>;
+    routerMock.navigate.mockClear();
+    routerMock.navigateByUrl.mockClear();
 
-    await TestBed.configureTestingModule({
-      imports: [HomePage, RouterModule.forRoot([]), NoopAnimationsModule],
+    TestBed.configureTestingModule({
+      imports: [HomePage, NoopAnimationsModule],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: SessionsService, useValue: mockSessionsService },
+        { provide: Router, useValue: routerMock },
+        {
+          provide: ActivatedRoute,
+          useValue: activatedRouteStub,
+        },
       ],
-    }).compileComponents();
+    });
+
+    TestBed.overrideComponent(HomePage, {
+      remove: {
+        imports: [
+          MatAutocompleteModule,
+          MatFormFieldModule,
+          MatInputModule,
+          MatIconModule,
+          MatButtonModule,
+          AsyncStateComponent,
+        ],
+      },
+      add: {
+        imports: [
+          MatFormFieldStub,
+          MatInputStub,
+          MatAutocompleteTriggerStub,
+          MatAutocompleteStub,
+          MatOptionStub,
+          MatLabelStub,
+          MatPrefixStub,
+          MatIconStub,
+          MatRaisedButtonStub,
+          MatStrokedButtonStub,
+          AsyncStateStubComponent,
+        ],
+      },
+    });
+
+    await TestBed.compileComponents();
 
     fixture = TestBed.createComponent(HomePage);
     component = fixture.componentInstance;
@@ -131,36 +327,38 @@ describe('HomePage', () => {
     expect(component.featuredSessions[2].title).toBe('Test Session 3');
   });
 
-  it('should filter games based on input', (done) => {
-    component.gameControl.setValue('Dungeons');
+  it('should filter games based on input', () => {
+    const filtered = (
+      component as unknown as {
+        _filterGames(value: string): string[];
+      }
+    )._filterGames('Dungeons');
 
-    component.filteredGames$.subscribe((games) => {
-      expect(games.length).toBeGreaterThan(0);
-      expect(games[0]).toContain('Dungeons');
-      done();
-    });
+    expect(filtered.length).toBeGreaterThan(0);
+    expect(filtered[0]).toContain('Dungeons');
   });
 
-  it('should filter cities based on input', (done) => {
-    component.cityControl.setValue('Brux');
+  it('should filter cities based on input', () => {
+    const filtered = (
+      component as unknown as {
+        _filterCities(value: string): string[];
+      }
+    )._filterCities('Brux');
 
-    component.filteredCities$.subscribe((cities) => {
-      expect(cities.length).toBeGreaterThan(0);
-      expect(cities.some((city) => city.toLowerCase().includes('brux'))).toBe(
-        true
-      );
-      done();
-    });
+    expect(filtered.length).toBeGreaterThan(0);
+    expect(filtered.some((city) => city.toLowerCase().includes('brux'))).toBe(
+      true
+    );
   });
 
   it('should navigate on search', () => {
-    const navigateSpy = jest.spyOn(component['router'], 'navigate');
-    component.gameControl.setValue('D&D');
-    component.cityControl.setValue('Brussels');
+    routerMock.navigate.mockResolvedValue(true);
+    component.gameControl.setValue('D&D', { emitEvent: false });
+    component.cityControl.setValue('Brussels', { emitEvent: false });
 
     component.onSearch();
 
-    expect(navigateSpy).toHaveBeenCalledWith(['/sessions'], {
+    expect(routerMock.navigate).toHaveBeenCalledWith(['/sessions'], {
       queryParams: {
         game: 'D&D',
         location: 'Brussels',
@@ -176,28 +374,60 @@ describe('HomePage', () => {
   });
 
   it('should display loading state while fetching sessions', () => {
-    component.loading = true;
-    component.error = null;
-    component.featuredSessions = [];
-    fixture.detectChanges();
+    // Create a fresh fixture without running ngOnInit
+    const freshFixture = TestBed.createComponent(HomePage);
+    const freshComponent = freshFixture.componentInstance;
+    jest
+      .spyOn(freshComponent, 'loadFeaturedSessions')
+      .mockImplementation(() => {
+        /* intentionally blank for zoneless test */
+      });
 
-    const compiled = fixture.nativeElement as HTMLElement;
-    const spinner = compiled.querySelector('lib-loading-spinner');
-    expect(spinner).toBeTruthy();
-    expect(spinner?.textContent).toContain('Chargement des sessions...');
+    // Set state before first detectChanges
+    freshComponent.loading = true;
+    freshComponent.error = null;
+    freshComponent.featuredSessions = [];
+
+    // Now run change detection
+    freshFixture.detectChanges();
+
+    const compiled = freshFixture.nativeElement as HTMLElement;
+    const asyncState = compiled.querySelector(
+      '.async-state-stub'
+    ) as HTMLElement | null;
+    expect(asyncState).toBeTruthy();
+    expect(asyncState?.getAttribute('data-status')).toBe('loading');
+    expect(asyncState?.getAttribute('data-loading-message')).toContain(
+      'Chargement des sessions...'
+    );
   });
 
   it('should display error state when session loading fails', () => {
-    component.loading = false;
-    component.error = 'Test error message';
-    component.featuredSessions = [];
-    fixture.detectChanges();
+    // Create a fresh fixture without running ngOnInit
+    const freshFixture = TestBed.createComponent(HomePage);
+    const freshComponent = freshFixture.componentInstance;
+    jest
+      .spyOn(freshComponent, 'loadFeaturedSessions')
+      .mockImplementation(() => {
+        /* intentionally blank for zoneless test */
+      });
 
-    const compiled = fixture.nativeElement as HTMLElement;
-    const errorMessage = compiled.querySelector(
-      'lib-error-message .error-text'
+    // Set state before first detectChanges
+    freshComponent.loading = false;
+    freshComponent.error = 'Test error message';
+    freshComponent.featuredSessions = [];
+
+    // Now run change detection
+    freshFixture.detectChanges();
+
+    const compiled = freshFixture.nativeElement as HTMLElement;
+    const asyncState = compiled.querySelector(
+      '.async-state-stub'
+    ) as HTMLElement | null;
+    expect(asyncState).toBeTruthy();
+    expect(asyncState?.getAttribute('data-status')).toBe('error');
+    expect(asyncState?.getAttribute('data-error-message')).toContain(
+      'Test error message'
     );
-    expect(errorMessage).toBeTruthy();
-    expect(errorMessage?.textContent).toContain('Test error message');
   });
 });

@@ -1,5 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Input, OnInit } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  inject,
+  Input,
+  OnInit,
+} from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
@@ -21,6 +27,7 @@ export class SessionCardComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private notifications = inject(NotificationService);
+  private cdr = inject(ChangeDetectorRef);
 
   loading = false;
   error: string | null = null;
@@ -94,10 +101,12 @@ export class SessionCardComponent implements OnInit {
         this.isRegistered = reservations.some(
           (r) => r.sessionId === this.session.id
         );
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error checking registration status:', err);
         this.isRegistered = false;
+        this.cdr.markForCheck();
       },
     });
   }
@@ -138,6 +147,7 @@ export class SessionCardComponent implements OnInit {
           this.notifications.success(
             'Réservation confirmée ! Vous avez reçu un email de confirmation.'
           );
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Erreur lors de la réservation:', err);
@@ -146,6 +156,7 @@ export class SessionCardComponent implements OnInit {
           this.notifications.error(
             this.error || 'Erreur lors de la réservation.'
           );
+          this.cdr.markForCheck();
         },
       });
   }
