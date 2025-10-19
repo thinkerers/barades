@@ -147,31 +147,25 @@
         aria-label="Liste des lieux"
         [class.locations-list--collapsed]="isDetailsCollapsed"
       >
-        <button
-          type="button"
-          class="locations-list__toggle"
-          (click)="toggleDetailsCollapse()"
-          [attr.aria-expanded]="!isDetailsCollapsed"
-          aria-controls="locations-details"
-        >
-          <mat-icon aria-hidden="true">
-            {{ isDetailsCollapsed ? 'unfold_more' : 'unfold_less' }}
-          </mat-icon>
-          <span
-            >{{ isDetailsCollapsed ? 'Afficher la liste' : 'Masquer la liste'
-            }}</span
-          >
-        </button>
-
         <div id="locations-details">
-          <div class="locations-list__status-pill">
+          <button
+            type="button"
+            class="locations-list__status-pill"
+            (click)="toggleDetailsCollapse()"
+            [attr.aria-expanded]="!isDetailsCollapsed"
+            aria-controls="locations-details"
+            [title]="
+              isDetailsCollapsed
+                ? 'Afficher la liste des lieux'
+                : 'Masquer la liste des lieux'
+            "
+          >
             <mat-icon aria-hidden="true">
               {{ isDetailsCollapsed ? 'map' : 'assistant_navigation' }}
             </mat-icon>
             @if (isDetailsCollapsed) {
             <span class="locations-list__status-pill-text">Liste masquée</span>
-            }
-            @if (selectedLocation) {
+            } @if (selectedLocation) {
             <span
               class="locations-list__status-pill-count"
               [class.locations-list__status-pill-count--with-separator]="isDetailsCollapsed"
@@ -187,7 +181,7 @@
               locations.length }})
             </span>
             }
-          </div>
+          </button>
 
           @if (!isDetailsCollapsed) {
           <h2>Liste des lieux</h2>

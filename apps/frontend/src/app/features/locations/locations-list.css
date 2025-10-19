@@ -105,42 +105,7 @@
   font-size: clamp(1.75rem, 3vw, 2.4rem);
   font-weight: 700;
   letter-spacing: -0.01em;
-  color: #f8fafc;
-}
 
-.locations-filters-card__title-text p {
-  margin: 0.35rem 0 0;
-  font-size: clamp(0.95rem, 1.7vw, 1.1rem);
-  color: rgba(226, 232, 240, 0.85);
-}
-
-.locations-filters-card__badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 2.25rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 9999px;
-  background: var(--color-primary, #6366f1);
-  color: #0f172a;
-  font-size: 0.85rem;
-  font-weight: 600;
-  box-shadow: 0 8px 18px rgba(99, 102, 241, 0.4);
-}
-
-.locations-filters-card__reset {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  background: rgba(15, 23, 42, 0.35);
-  color: rgba(226, 232, 240, 0.9);
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
   align-self: flex-start;
   margin-left: auto;
 }
@@ -378,6 +343,8 @@
 
 .locations-list__status-pill {
   display: inline-flex;
+.locations-list__status-pill {
+  display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0.35rem;
@@ -389,11 +356,27 @@
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  align-self: flex-end;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease, color 0.2s ease;
 }
 
 .locations-list__status-pill mat-icon {
   font-size: 1.2rem;
   color: rgba(129, 140, 248, 0.85);
+}
+
+.locations-list__status-pill:hover {
+  background: rgba(99, 102, 241, 0.25);
+  border-color: rgba(129, 140, 248, 0.65);
+  color: #f8fafc;
+  box-shadow: 0 12px 28px rgba(88, 101, 242, 0.25);
+}
+
+.locations-list__status-pill:focus-visible {
+  outline: 2px solid rgba(129, 140, 248, 0.85);
+  outline-offset: 3px;
 }
 
 .locations-list__status-pill-text {
