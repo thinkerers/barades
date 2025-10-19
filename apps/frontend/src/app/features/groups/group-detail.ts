@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   afterNextRender,
+  ChangeDetectionStrategy,
   Component,
   computed,
   inject,
@@ -72,6 +73,7 @@ type GroupDetail = Omit<Group, 'members'> & {
   ],
   templateUrl: './group-detail.html',
   styleUrl: './group-detail.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GroupDetailComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
