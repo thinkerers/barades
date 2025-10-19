@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  OnDestroy,
   OnInit,
   afterNextRender,
   Injector,
@@ -88,7 +89,7 @@ interface StoredUserPosition {
   styleUrl: './locations-list.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LocationsListComponent implements OnInit {
+export class LocationsListComponent implements OnInit, OnDestroy {
   private static readonly LOCATION_TYPE_LABELS: Record<string, string> = {
     GAME_STORE: 'Boutique de jeux',
     CAFE: 'Café',
@@ -184,13 +185,81 @@ export class LocationsListComponent implements OnInit {
   private readonly geolocationErrorSignal = signal<string | null>(null);
   private readonly isDetailsCollapsedSignal = signal(false);
   private readonly selectedLocationIdSignal = signal<string | null>(null);
+  private readonly pendingAnimationFrames = new Set<number>();
+  private readonly pendingTimeouts = new Set<number>();
 
   readonly loadingMessage = 'Chargement des lieux...';
   readonly defaultErrorMessage =
     'Impossible de charger les lieux. Veuillez réessayer.';
 
   private scheduleAfterNextRender(callback: () => void): void {
-    runInInjectionContext(this.injector, () => afterNextRender(callback));
+    let executed = false;
+    const runOnce = () => {
+      if (executed) {
+        return;
+      }
+      executed = true;
+      callback();
+    };
+
+    runInInjectionContext(this.injector, () =>
+      afterNextRender(() => runInInjectionContext(this.injector, runOnce))
+    );
+
+    if (typeof queueMicrotask === 'function') {
+      queueMicrotask(() => runInInjectionContext(this.injector, runOnce));
+    } else {
+      void Promise.resolve().then(() =>
+        runInInjectionContext(this.injector, runOnce)
+      );
+    }
+
+    this.scheduleAfterDelay(runOnce, 1);
+  }
+
+  private scheduleAfterDelay(callback: () => void, delayMs: number): void {
+    if (delayMs <= 0) {
+      runInInjectionContext(this.injector, callback);
+      return;
+    }
+
+    const invoke = () => runInInjectionContext(this.injector, callback);
+
+    if (typeof requestAnimationFrame !== 'function') {
+      const timeoutId = setTimeout(() => {
+        this.pendingTimeouts.delete(timeoutId);
+        invoke();
+      }, delayMs);
+      this.pendingTimeouts.add(timeoutId);
+      return;
+    }
+
+    const start = performance.now();
+    let frameId = 0;
+
+    const step = (timestamp: number) => {
+      if (frameId !== 0) {
+        this.pendingAnimationFrames.delete(frameId);
+      }
+
+      if (timestamp - start >= delayMs) {
+        invoke();
+        return;
+      }
+
+      frameId = requestAnimationFrame(step);
+      this.pendingAnimationFrames.add(frameId);
+    };
+
+    frameId = requestAnimationFrame(step);
+    this.pendingAnimationFrames.add(frameId);
+  }
+
+  private cancelScheduledFrames(): void {
+    this.pendingAnimationFrames.forEach((id) => cancelAnimationFrame(id));
+    this.pendingAnimationFrames.clear();
+    this.pendingTimeouts.forEach((id) => clearTimeout(id));
+    this.pendingTimeouts.clear();
   }
 
   get locations(): Location[] {
@@ -292,6 +361,50 @@ export class LocationsListComponent implements OnInit {
     });
 
     void this.loadLocations();
+  }
+
+  ngOnDestroy(): void {
+    this.cancelScheduledFrames();
+
+    if (this.locateControl) {
+      if (typeof this.locateControl.stop === 'function') {
+        this.locateControl.stop();
+      }
+      this.locateControl = null;
+    }
+
+    const mapRef = this.map as Partial<L.Map> | null;
+
+    if (this.mapLocationFoundHandler) {
+      if (mapRef && typeof mapRef.off === 'function') {
+        mapRef.off('locationfound', this.mapLocationFoundHandler);
+      }
+      this.mapLocationFoundHandler = undefined;
+    }
+
+    if (this.mapLocationErrorHandler) {
+      if (mapRef && typeof mapRef.off === 'function') {
+        mapRef.off('locationerror', this.mapLocationErrorHandler);
+      }
+      this.mapLocationErrorHandler = undefined;
+    }
+
+    this.userMarker?.remove();
+    this.userMarker = null;
+
+    if (this.map) {
+      if (mapRef && typeof mapRef.off === 'function') {
+        mapRef.off();
+      }
+      if (mapRef && typeof mapRef.remove === 'function') {
+        mapRef.remove();
+      }
+      this.map = null;
+    }
+
+    this.markers.forEach((marker) => marker.remove());
+    this.markers = [];
+    this.markersByLocationId.clear();
   }
 
   private loadLocations(): void {
@@ -412,18 +525,17 @@ export class LocationsListComponent implements OnInit {
       console.log('[LocationsList] Map is ready');
       this.setupLocateControl();
       this.triggerInitialLocate();
-      setTimeout(() => {
-        if (this.map) {
-          console.log('[LocationsList] Calling invalidateSize()');
-          const mapSize = this.map.getSize();
-          console.log('[LocationsList] Map size before invalidate:', mapSize);
-          this.map.invalidateSize(true);
-          const mapSizeAfter = this.map.getSize();
-          console.log(
-            '[LocationsList] Map size after invalidate:',
-            mapSizeAfter
-          );
+      this.scheduleAfterDelay(() => {
+        if (!this.map) {
+          return;
         }
+
+        console.log('[LocationsList] Calling invalidateSize()');
+        const mapSize = this.map.getSize();
+        console.log('[LocationsList] Map size before invalidate:', mapSize);
+        this.map.invalidateSize(true);
+        const mapSizeAfter = this.map.getSize();
+        console.log('[LocationsList] Map size after invalidate:', mapSizeAfter);
       }, 100);
     });
 
@@ -542,12 +654,14 @@ export class LocationsListComponent implements OnInit {
       return;
     }
 
-    this.map.locate({
-      enableHighAccuracy: true,
-      maximumAge: 0,
-      timeout: 10000,
-      setView: false,
-    });
+    if (typeof (this.map as Partial<L.Map>).locate === 'function') {
+      (this.map as L.Map).locate({
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 10000,
+        setView: false,
+      });
+    }
   }
 
   private handleLocateSuccess(event: L.LocationEvent): void {
@@ -1107,16 +1221,32 @@ export class LocationsListComponent implements OnInit {
     // Get the marker for this location
     const marker = this.markersByLocationId.get(locationId);
     if (marker) {
-      // Zoom to marker location
-      this.map.setView([location.lat, location.lon], 15, {
-        animate: true,
-        duration: 0.5,
-      });
+      const mapRef = this.map;
+      if (mapRef) {
+        const openPopup = () => marker.openPopup();
 
-      // Open popup after a short delay to allow zoom animation
-      setTimeout(() => {
-        marker.openPopup();
-      }, 500);
+        const mapWithOnce = mapRef as Partial<Pick<L.Map, 'once' | 'on'>>;
+        if (typeof mapWithOnce.once === 'function') {
+          mapWithOnce.once('moveend', openPopup);
+        } else if (typeof mapRef.on === 'function') {
+          mapRef.on('moveend', openPopup);
+        }
+        mapRef.setView([location.lat, location.lon], 15, {
+          animate: true,
+          duration: 0.5,
+        });
+
+        this.scheduleAfterDelay(() => {
+          const markerWithPopup = marker as Partial<L.Marker>;
+          const isOpen =
+            typeof markerWithPopup.isPopupOpen === 'function'
+              ? markerWithPopup.isPopupOpen()
+              : false;
+          if (!isOpen) {
+            openPopup();
+          }
+        }, 300);
+      }
     }
   }
 
@@ -1126,8 +1256,7 @@ export class LocationsListComponent implements OnInit {
   onMarkerClick(locationId: string): void {
     this.selectedLocationId = locationId;
 
-    // Allow the template to render the selected card before attempting to scroll
-    setTimeout(() => {
+    this.scheduleAfterNextRender(() => {
       const element = document.getElementById(`location-${locationId}`);
       if (!element) {
         return;
@@ -1139,8 +1268,28 @@ export class LocationsListComponent implements OnInit {
       });
 
       element.classList.add('highlight');
-      setTimeout(() => {
-        element.classList.remove('highlight');
+      this.scheduleAfterDelay(() => {
+        let isElementStillConnected = true;
+        const body = typeof document !== 'undefined' ? document.body : null;
+        if (
+          body &&
+          typeof body.contains === 'function' &&
+          typeof (element as { nodeType?: number }).nodeType === 'number'
+        ) {
+          try {
+            isElementStillConnected = body.contains(element as unknown as Node);
+          } catch (error) {
+            console.warn(
+              '[LocationsList] Failed to check element containment',
+              error
+            );
+            isElementStillConnected = true;
+          }
+        }
+
+        if (isElementStillConnected) {
+          element.classList.remove('highlight');
+        }
       }, 2000);
     });
   }
@@ -1223,26 +1372,40 @@ export class LocationsListComponent implements OnInit {
 
     const nearest = locationsWithDistance[0];
 
-    if (adjustMap) {
+    const highlightNearest = () => this.onMarkerClick(nearest.location.id);
+
+    if (adjustMap && this.map) {
       // Create bounds to include both user position and nearest location
       const bounds = L.latLngBounds([
         [userLat, userLon],
         [nearest.location.lat, nearest.location.lon],
       ]);
 
-      // Fit map to show both markers with padding
-      this.map.fitBounds(bounds, {
+      const mapRef = this.map;
+      let handled = false;
+
+      const handleMoveEnd = () => {
+        handled = true;
+        highlightNearest();
+      };
+
+      mapRef.once('moveend', handleMoveEnd);
+
+      mapRef.fitBounds(bounds, {
         padding: [50, 50],
         maxZoom: 15,
         animate: true,
         duration: 1,
       });
-    }
 
-    // Highlight nearest location in list
-    setTimeout(() => {
-      this.onMarkerClick(nearest.location.id);
-    }, 1000);
+      this.scheduleAfterDelay(() => {
+        if (!handled) {
+          highlightNearest();
+        }
+      }, 1000);
+    } else {
+      this.scheduleAfterNextRender(highlightNearest);
+    }
   }
 
   /**
