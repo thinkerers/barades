@@ -5,12 +5,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   inject,
   OnDestroy,
   OnInit,
   signal,
   WritableSignal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ErrorMessageComponent } from '@org/ui';
@@ -81,6 +83,7 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
   private groupsService = inject(GroupsService);
   private pollsService = inject(PollsService);
   private authService = inject(AuthService);
+  private destroyRef = inject(DestroyRef);
 
   readonly group = signal<GroupDetail | null>(null);
   readonly polls = signal<Poll[]>([]);
@@ -547,22 +550,24 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
     this.autoRetryState = {
       baseMessage,
       countdownSeconds,
-      subscription: timer(1000, 1000).subscribe(() => {
-        const remaining = countdownSeconds();
-        if (remaining === null) {
-          return;
-        }
+      subscription: timer(1000, 1000)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe(() => {
+          const remaining = countdownSeconds();
+          if (remaining === null) {
+            return;
+          }
 
-        const nextValue = remaining - 1;
-        if (nextValue <= 0) {
-          this.clearAutoRetry();
-          this.retryLoading();
-          return;
-        }
+          const nextValue = remaining - 1;
+          if (nextValue <= 0) {
+            this.clearAutoRetry();
+            this.retryLoading();
+            return;
+          }
 
-        countdownSeconds.set(nextValue);
-        this.error.set(this.composeErrorMessage(baseMessage, nextValue));
-      }),
+          countdownSeconds.set(nextValue);
+          this.error.set(this.composeErrorMessage(baseMessage, nextValue));
+        }),
     };
 
     this.autoRetrySeconds.set(countdownSeconds());
