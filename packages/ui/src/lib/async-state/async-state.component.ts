@@ -1,4 +1,9 @@
-import { Component, input, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  output,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { EmptyStateComponent } from '../feedback/empty-state/empty-state';
@@ -19,6 +24,7 @@ export type AsyncStateStatus = 'loading' | 'error' | 'empty' | 'ready';
     ErrorMessageComponent,
     EmptyStateComponent,
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AsyncStateComponent {
   readonly status = input<AsyncStateStatus>('ready');

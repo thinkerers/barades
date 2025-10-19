@@ -31,6 +31,7 @@ import { AuthService } from '../../../core/services/auth.service';
   ],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RegisterComponent {
   private readonly fb = inject(FormBuilder);
