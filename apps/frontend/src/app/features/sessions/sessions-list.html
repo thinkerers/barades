@@ -1,13 +1,13 @@
 <div class="sessions-page">
   <header class="sessions-page__header">
-    <h1 class="sessions-page__title">{{ pageTitle }}</h1>
-    <p class="sessions-page__subtitle">{{ pageSubtitle }}</p>
+    <h1 class="sessions-page__title">{{ pageTitle() }}</h1>
+    <p class="sessions-page__subtitle">{{ pageSubtitle() }}</p>
 
-    @if (isScopeFilterActive) {
+    @if (isScopeFilterActive()) {
     <lib-sessions-scope-banner
       #scopeBanner
-      [message]="scopeBannerMessage"
-      [showBackAction]="comingFromDashboard"
+      [message]="scopeBannerMessage()"
+      [showBackAction]="comingFromDashboard()"
       (backAction)="returnToDashboard()"
       (clearAction)="clearScopeFilter()"
     ></lib-sessions-scope-banner>
@@ -15,31 +15,31 @@
   </header>
 
   <lib-async-state
-    [status]="sessionsState"
+    [status]="sessionsState()"
     [loadingMessage]="'Chargement des sessions...'"
-    [errorMessage]="error ?? defaultErrorMessage"
+    [errorMessage]="error() ?? defaultErrorMessage"
     (retry)="loadSessions()"
   >
     <lib-sessions-filters-card
-      [activeFiltersCount]="getActiveFiltersCount()"
-      [searchTerm]="searchTerm"
+      [activeFiltersCount]="activeFiltersCount()"
+      [searchTerm]="searchTerm()"
       (searchTermChange)="onSearchTermChange($event)"
-      [selectedHost]="selectedHost"
-      [filteredHostOptions]="filteredHostOptions"
-      [isScopeFilterActive]="isScopeFilterActive"
+      [selectedHost]="selectedHost()"
+      [filteredHostOptions]="filteredHostOptions()"
+      [isScopeFilterActive]="isScopeFilterActive()"
       (hostFilterChange)="onHostFilterChange($event)"
       (hostFilterFocus)="onHostFilterFocus()"
       (clearHostFilter)="clearHostFilter()"
       (hostOptionSelected)="onHostOptionSelected($event)"
-      [sessionType]="sessionType"
+      [sessionType]="sessionType()"
       (sessionTypeChange)="onSessionTypeChange($event)"
-      [selectedGameSystem]="selectedGameSystem"
+      [selectedGameSystem]="selectedGameSystem()"
       (gameFilterChange)="onGameFilterChange($event)"
-      [gameSystems]="gameSystems"
+      [gameSystems]="gameSystems()"
       [maxGameSuggestions]="maxGameSuggestions"
       [minGameSuggestionLength]="minGameSuggestionLength"
       [gameSuggestionThreshold]="gameSuggestionThreshold"
-      [onlyAvailable]="onlyAvailable"
+      [onlyAvailable]="onlyAvailable()"
       (availabilityChange)="onAvailabilityChange($event)"
       (resetFilters)="resetFilters()"
     ></lib-sessions-filters-card>
@@ -47,14 +47,14 @@
     <div class="sessions-list">
       <div class="sessions-list__header">
         <h2>
-          {{ isScopeFilterActive ? 'Mes sessions' : 'Sessions disponibles' }}
+          {{ isScopeFilterActive() ? 'Mes sessions' : 'Sessions disponibles' }}
           <span class="count"
-            >({{ filteredSessions.length }} / {{ sessions.length }})</span
+            >({{ filteredSessions().length }} / {{ sessions().length }})</span
           >
         </h2>
       </div>
 
-      @if (filteredSessions.length === 0) {
+      @if (filteredSessions().length === 0) {
       <lib-empty-state
         message="Aucune session ne correspond à vos critères de recherche."
         actionLabel="Réinitialiser les filtres"
@@ -63,7 +63,7 @@
       }
 
       <div class="sessions-list__cards">
-        @for (session of filteredSessions; track session) {
+        @for (session of filteredSessions(); track session) {
         <app-session-card [session]="session"></app-session-card>
         }
       </div>

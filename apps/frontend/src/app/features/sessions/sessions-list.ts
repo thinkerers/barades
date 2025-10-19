@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import {
-  ChangeDetectorRef,
   Component,
   DestroyRef,
   OnInit,
   ViewChild,
+  computed,
   inject,
+  signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -41,36 +42,79 @@ export class SessionsListPage implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly authService = inject(AuthService);
-  private readonly cdr = inject(ChangeDetectorRef);
 
   @ViewChild('scopeBanner')
   scopeBanner?: SessionsScopeBanner;
 
-  sessions: Session[] = [];
-  filteredSessions: Session[] = [];
-  loading = true;
-  error: string | null = null;
+  readonly sessions = signal<Session[]>([]);
+  readonly filteredSessions = signal<Session[]>([]);
+  readonly loading = signal<boolean>(true);
+  readonly error = signal<string | null>(null);
   readonly defaultErrorMessage =
     'Impossible de charger les sessions. Vérifiez que le backend est démarré.';
   readonly gameSuggestionThreshold = 0.55;
   readonly maxGameSuggestions = 5;
   readonly minGameSuggestionLength = 3;
 
-  filterMode: 'all' | 'my-hosted' = 'all';
-  comingFromDashboard = false;
+  readonly filterMode = signal<'all' | 'my-hosted'>('all');
+  readonly comingFromDashboard = signal<boolean>(false);
   private readonly hostFilterValue =
     this.authService.getCurrentUser()?.username ?? null;
-  hostOptions: string[] = [];
-  filteredHostOptions: string[] = [];
+  readonly hostOptions = signal<string[]>([]);
+  readonly filteredHostOptions = signal<string[]>([]);
 
   // Filter properties
-  searchTerm = '';
-  sessionType: 'all' | 'online' | 'onsite' = 'all';
-  selectedGameSystem = '';
-  onlyAvailable = false;
-  selectedHost = '';
+  readonly searchTerm = signal('');
+  readonly sessionType = signal<'all' | 'online' | 'onsite'>('all');
+  readonly selectedGameSystem = signal('');
+  readonly onlyAvailable = signal(false);
+  readonly selectedHost = signal('');
 
-  gameSystems: string[] = [];
+  readonly gameSystems = signal<string[]>([]);
+
+  readonly sessionsState = computed<AsyncStateStatus>(() => {
+    if (this.loading()) {
+      return 'loading';
+    }
+
+    if (this.error()) {
+      return 'error';
+    }
+
+    return 'ready';
+  });
+
+  readonly isScopeFilterActive = computed(
+    () => this.filterMode() === 'my-hosted'
+  );
+
+  readonly pageTitle = computed(() =>
+    this.isScopeFilterActive() ? 'Mes sessions créées' : 'Sessions de jeu'
+  );
+
+  readonly pageSubtitle = computed(() =>
+    this.isScopeFilterActive()
+      ? 'Retrouvez rapidement les parties que vous organisez.'
+      : 'Découvrez les parties organisées près de chez vous ou en ligne'
+  );
+
+  readonly scopeBannerMessage = computed(() =>
+    this.isScopeFilterActive()
+      ? 'Vous consultez uniquement les sessions que vous organisez.'
+      : ''
+  );
+
+  readonly activeFiltersCount = computed(() => {
+    let count = 0;
+
+    if (this.searchTerm().trim()) count++;
+    if (this.sessionType() !== 'all') count++;
+    if (this.selectedGameSystem()) count++;
+    if (this.onlyAvailable()) count++;
+    if (this.selectedHost().trim()) count++;
+
+    return count;
+  });
 
   ngOnInit(): void {
     this.route.queryParamMap
@@ -80,92 +124,79 @@ export class SessionsListPage implements OnInit {
         const fromParam = params.get('from');
         const nextMode = filterParam === 'my-hosted' ? 'my-hosted' : 'all';
         const shouldReload =
-          this.filterMode !== nextMode || this.sessions.length === 0;
+          this.filterMode() !== nextMode || this.sessions().length === 0;
 
-        this.filterMode = nextMode;
-        this.comingFromDashboard = fromParam === 'dashboard';
+        this.filterMode.set(nextMode);
+        this.comingFromDashboard.set(fromParam === 'dashboard');
 
         if (shouldReload) {
           this.loadSessions();
-        } else {
-          this.cdr.markForCheck();
         }
       });
   }
 
   loadSessions(): void {
-    this.loading = true;
-    this.error = null;
-    this.cdr.markForCheck();
+    this.loading.set(true);
+    this.error.set(null);
 
     const source$ =
-      this.filterMode === 'my-hosted'
+      this.filterMode() === 'my-hosted'
         ? this.sessionsService.getSessionsHostedByMe()
         : this.sessionsService.getSessions();
 
-    source$.subscribe({
+    source$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (sessions) => {
-        this.sessions = sessions;
-        this.filteredSessions = [...sessions];
-        this.gameSystems = [...new Set(sessions.map((s) => s.game))].sort();
-        this.hostOptions = this.buildHostOptions(sessions);
+        this.sessions.set(sessions);
+        this.filteredSessions.set([...sessions]);
+        this.gameSystems.set([...new Set(sessions.map((s) => s.game))].sort());
+        this.hostOptions.set(this.buildHostOptions(sessions));
 
-        if (this.isScopeFilterActive && this.hostFilterValue) {
-          this.selectedHost = this.hostFilterValue;
-        } else if (!this.isScopeFilterActive) {
+        if (this.isScopeFilterActive() && this.hostFilterValue) {
+          this.selectedHost.set(this.hostFilterValue);
+        } else if (!this.isScopeFilterActive()) {
           this.ensureHostSelectionIsValid();
         }
 
-        this.filteredHostOptions = this.filterHostSuggestions(
-          this.selectedHost
+        this.filteredHostOptions.set(
+          this.filterHostSuggestions(this.selectedHost())
         );
 
-        this.loading = false;
+        this.loading.set(false);
 
         // Apply filters if any are already set
         this.applyFilters();
 
         // Move focus to banner for accessibility when coming from dashboard
-        if (this.isScopeFilterActive && this.comingFromDashboard) {
+        if (this.isScopeFilterActive() && this.comingFromDashboard()) {
           setTimeout(() => {
             this.scopeBanner?.focus();
           }, 100);
         }
-
-        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error loading sessions:', err);
-        this.error = this.defaultErrorMessage;
-        this.loading = false;
-        this.cdr.markForCheck();
+        this.error.set(this.defaultErrorMessage);
+        this.loading.set(false);
       },
     });
-  }
-
-  get sessionsState(): AsyncStateStatus {
-    if (this.loading) {
-      return 'loading';
-    }
-
-    if (this.error) {
-      return 'error';
-    }
-
-    return 'ready';
   }
 
   /**
    * Apply all filters to the sessions list
    */
   applyFilters(): void {
-    const resolvedGameFilter = this.resolveGameFilter(this.selectedGameSystem);
+    const resolvedGameFilter = this.resolveGameFilter(
+      this.selectedGameSystem()
+    );
+    const onlyAvailable = this.onlyAvailable();
+    const sessionType = this.sessionType();
+    const searchTerm = this.searchTerm().trim();
+    const selectedHost = this.selectedHost().trim();
 
-    this.filteredSessions = this.sessions.filter((session) => {
+    const filtered = this.sessions().filter((session) => {
       // Search filter (title, game, description)
-      const trimmedSearch = this.searchTerm.trim();
-      if (trimmedSearch) {
-        const term = trimmedSearch.toLowerCase();
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
         const matchesSearch =
           session.title.toLowerCase().includes(term) ||
           session.game.toLowerCase().includes(term) ||
@@ -176,10 +207,10 @@ export class SessionsListPage implements OnInit {
       }
 
       // Session type filter (online/onsite/all)
-      if (this.sessionType === 'online' && !session.online) {
+      if (sessionType === 'online' && !session.online) {
         return false;
       }
-      if (this.sessionType === 'onsite' && session.online) {
+      if (sessionType === 'onsite' && session.online) {
         return false;
       }
 
@@ -189,54 +220,48 @@ export class SessionsListPage implements OnInit {
       }
 
       // Availability filter (only sessions with available spots)
-      if (this.onlyAvailable && session.playersCurrent >= session.playersMax) {
+      if (onlyAvailable && session.playersCurrent >= session.playersMax) {
         return false;
       }
 
       // Host filter (optional combobox)
-      const trimmedHost = this.selectedHost.trim();
-      if (trimmedHost) {
+      if (selectedHost) {
         const hostName = session.host?.username ?? '';
         if (!hostName) {
           return false;
         }
 
-        if (!hostName.toLowerCase().includes(trimmedHost.toLowerCase())) {
+        if (!hostName.toLowerCase().includes(selectedHost.toLowerCase())) {
           return false;
         }
       }
 
       return true;
     });
-
-    this.cdr.markForCheck();
+    this.filteredSessions.set(filtered);
   }
 
   onSearchTermChange(term: string): void {
-    this.searchTerm = term ?? '';
+    this.searchTerm.set(term ?? '');
     this.applyFilters();
   }
 
   onHostFilterFocus(): void {
-    this.onHostFilterChange(this.selectedHost);
+    this.onHostFilterChange(this.selectedHost());
   }
 
   onAvailabilityChange(onlyAvailable: boolean): void {
-    this.onlyAvailable = !!onlyAvailable;
+    this.onlyAvailable.set(!!onlyAvailable);
     this.applyFilters();
   }
 
-  get isScopeFilterActive(): boolean {
-    return this.filterMode === 'my-hosted';
-  }
-
   clearScopeFilter(): void {
-    if (!this.isScopeFilterActive) {
+    if (!this.isScopeFilterActive()) {
       return;
     }
 
-    this.selectedHost = '';
-    this.filteredHostOptions = [...this.hostOptions];
+    this.selectedHost.set('');
+    this.filteredHostOptions.set([...this.hostOptions()]);
 
     this.router.navigate([], {
       relativeTo: this.route,
@@ -249,36 +274,18 @@ export class SessionsListPage implements OnInit {
     this.router.navigate(['/dashboard']);
   }
 
-  get pageTitle(): string {
-    return this.isScopeFilterActive ? 'Mes sessions créées' : 'Sessions de jeu';
-  }
-
-  get pageSubtitle(): string {
-    if (this.isScopeFilterActive) {
-      return 'Retrouvez rapidement les parties que vous organisez.';
-    }
-
-    return 'Découvrez les parties organisées près de chez vous ou en ligne';
-  }
-
-  get scopeBannerMessage(): string {
-    return this.isScopeFilterActive
-      ? 'Vous consultez uniquement les sessions que vous organisez.'
-      : '';
-  }
-
   /**
    * Reset all filters to default values
    */
   resetFilters(): void {
-    this.searchTerm = '';
-    this.sessionType = 'all';
-    this.selectedGameSystem = '';
-    this.onlyAvailable = false;
-    this.selectedHost = '';
-    this.filteredHostOptions = [...this.hostOptions];
+    this.searchTerm.set('');
+    this.sessionType.set('all');
+    this.selectedGameSystem.set('');
+    this.onlyAvailable.set(false);
+    this.selectedHost.set('');
+    this.filteredHostOptions.set([...this.hostOptions()]);
 
-    if (this.isScopeFilterActive) {
+    if (this.isScopeFilterActive()) {
       this.clearScopeFilter();
       return;
     }
@@ -290,30 +297,17 @@ export class SessionsListPage implements OnInit {
    * Handle session type change from radio group
    */
   onSessionTypeChange(value: string): void {
-    this.sessionType = value as 'all' | 'online' | 'onsite';
+    this.sessionType.set(value as 'all' | 'online' | 'onsite');
     this.applyFilters();
   }
 
-  /**
-   * Get the count of active filters
-   */
-  getActiveFiltersCount(): number {
-    let count = 0;
-
-    if (this.searchTerm.trim()) count++;
-    if (this.sessionType !== 'all') count++;
-    if (this.selectedGameSystem) count++;
-    if (this.onlyAvailable) count++;
-    if (this.selectedHost.trim()) count++;
-
-    return count;
-  }
-
   onHostFilterChange(value: string | null): void {
-    this.selectedHost = value ?? '';
-    this.filteredHostOptions = this.filterHostSuggestions(this.selectedHost);
+    this.selectedHost.set(value ?? '');
+    this.filteredHostOptions.set(
+      this.filterHostSuggestions(this.selectedHost())
+    );
 
-    if (!this.selectedHost.trim() && this.isScopeFilterActive) {
+    if (!this.selectedHost().trim() && this.isScopeFilterActive()) {
       this.clearScopeFilter();
       return;
     }
@@ -322,28 +316,30 @@ export class SessionsListPage implements OnInit {
   }
 
   onHostOptionSelected(value: string): void {
-    this.selectedHost = value ?? '';
-    this.filteredHostOptions = this.filterHostSuggestions(this.selectedHost);
+    this.selectedHost.set(value ?? '');
+    this.filteredHostOptions.set(
+      this.filterHostSuggestions(this.selectedHost())
+    );
     this.applyFilters();
   }
 
   clearHostFilter(): void {
-    if (this.isScopeFilterActive) {
+    if (this.isScopeFilterActive()) {
       this.clearScopeFilter();
       return;
     }
 
-    if (!this.selectedHost.trim()) {
+    if (!this.selectedHost().trim()) {
       return;
     }
 
-    this.selectedHost = '';
-    this.filteredHostOptions = [...this.hostOptions];
+    this.selectedHost.set('');
+    this.filteredHostOptions.set([...this.hostOptions()]);
     this.applyFilters();
   }
 
   onGameFilterChange(value: string | null): void {
-    this.selectedGameSystem = value ?? '';
+    this.selectedGameSystem.set(value ?? '');
     this.applyFilters();
   }
 
@@ -366,29 +362,32 @@ export class SessionsListPage implements OnInit {
   }
 
   private ensureHostSelectionIsValid(): void {
-    if (!this.selectedHost.trim()) {
-      this.filteredHostOptions = [...this.hostOptions];
+    const selectedHost = this.selectedHost().trim();
+    if (!selectedHost) {
+      this.filteredHostOptions.set([...this.hostOptions()]);
       return;
     }
 
-    const current = this.selectedHost.trim().toLowerCase();
-    const match = this.hostOptions.some(
+    const current = selectedHost.toLowerCase();
+    const match = this.hostOptions().some(
       (host) => host.toLowerCase() === current
     );
 
     if (!match) {
-      this.selectedHost = '';
-      this.filteredHostOptions = [...this.hostOptions];
+      this.selectedHost.set('');
+      this.filteredHostOptions.set([...this.hostOptions()]);
     }
   }
 
   private filterHostSuggestions(query: string): string[] {
     const term = query.trim().toLowerCase();
     if (!term) {
-      return [...this.hostOptions];
+      return [...this.hostOptions()];
     }
 
-    return this.hostOptions.filter((host) => host.toLowerCase().includes(term));
+    return this.hostOptions().filter((host) =>
+      host.toLowerCase().includes(term)
+    );
   }
 
   private resolveGameFilter(input: string): string | null {
@@ -397,7 +396,8 @@ export class SessionsListPage implements OnInit {
       return null;
     }
 
-    const exactMatch = this.gameSystems.find(
+    const gameSystems = this.gameSystems();
+    const exactMatch = gameSystems.find(
       (game) => game.toLowerCase() === trimmed.toLowerCase()
     );
 
@@ -407,7 +407,7 @@ export class SessionsListPage implements OnInit {
 
     const [bestMatch] = findClosestMatches(
       trimmed,
-      this.gameSystems,
+      gameSystems,
       this.gameSuggestionThreshold,
       1
     );
