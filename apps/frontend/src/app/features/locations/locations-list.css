@@ -395,6 +395,17 @@
   color: rgba(129, 140, 248, 0.85);
 }
 
+.locations-list__collapsed-hint-count {
+  font-weight: 600;
+  color: rgba(224, 231, 255, 0.9);
+}
+
+.locations-list__collapsed-hint-count::before {
+  content: '\2022';
+  margin: 0 0.35rem;
+  color: rgba(148, 163, 184, 0.7);
+}
+
 .locations-list h2 {
   margin: 0;
   font-size: 1.4rem;

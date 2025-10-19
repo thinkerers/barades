@@ -250,6 +250,11 @@
           <div class="locations-list__collapsed-hint">
             <mat-icon aria-hidden="true">map</mat-icon>
             <span>Liste masquée</span>
+            @if (selectedLocation) {
+            <span class="locations-list__collapsed-hint-count"
+              >Lieu sélectionné (1 / {{ filteredLocations.length }})</span
+            >
+            }
           </div>
           }
         </div>
