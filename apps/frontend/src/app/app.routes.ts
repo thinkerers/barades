@@ -4,12 +4,17 @@ import { AppLayout } from './core/layouts/app-layout';
 import { AboutPage } from './features/about/about-page';
 import { LoginComponent } from './features/auth/login/login.component';
 import { RegisterComponent } from './features/auth/register/register.component';
+import { CareersPage } from './features/careers/careers-page';
+import { CharterPage } from './features/charter/charter-page';
 import { ContactPage } from './features/contact/contact-page';
 import { DashboardPage } from './features/dashboard/dashboard-page';
+import { ForumPage } from './features/forum/forum-page';
 import { GroupDetailComponent } from './features/groups/group-detail';
 import { GroupsListComponent } from './features/groups/groups-list';
+import { HelpPage } from './features/help/help-page';
 import { HomePage } from './features/home/home-page';
 import { LocationsListComponent } from './features/locations/locations-list';
+import { PartnerPage } from './features/partner/partner-page';
 import { ProfilePage } from './features/profile/profile-page';
 import { SessionCreateComponent } from './features/sessions/session-create';
 import { SessionDetailComponent } from './features/sessions/session-detail';
@@ -67,6 +72,14 @@ export const appRoutes: Route[] = [
         component: GroupDetailComponent,
       },
       {
+        path: 'forum',
+        component: ForumPage,
+      },
+      {
+        path: 'charter',
+        component: CharterPage,
+      },
+      {
         path: 'profile',
         component: ProfilePage,
         canActivate: [authGuard],
@@ -85,8 +98,20 @@ export const appRoutes: Route[] = [
         component: AboutPage,
       },
       {
+        path: 'careers',
+        component: CareersPage,
+      },
+      {
         path: 'contact',
         component: ContactPage,
+      },
+      {
+        path: 'help',
+        component: HelpPage,
+      },
+      {
+        path: 'partner',
+        component: PartnerPage,
       },
     ],
   },
