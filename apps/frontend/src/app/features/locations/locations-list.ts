@@ -14,6 +14,13 @@ import {
 
 type AmenityFilterKey = 'wifi' | 'tables' | 'food' | 'drinks' | 'parking';
 
+interface AmenityConfig {
+  key: AmenityFilterKey;
+  label: string;
+  icon: string;
+  amenityName: string;
+}
+
 type LeafletLocateControl = L.Control & {
   start(): void;
   stop(): void;
@@ -66,7 +73,87 @@ interface StoredUserPosition {
   styleUrl: './locations-list.css',
 })
 export class LocationsListComponent implements OnInit {
+  private static readonly LOCATION_TYPE_LABELS: Record<string, string> = {
+    GAME_STORE: 'Boutique de jeux',
+    CAFE: 'Café',
+    BAR: 'Bar',
+    COMMUNITY_CENTER: 'Centre communautaire',
+    PRIVATE: 'Privé',
+    OTHER: 'Autre',
+  };
+
+  private static readonly FILTERABLE_LOCATION_TYPES = [
+    'GAME_STORE',
+    'CAFE',
+    'BAR',
+    'COMMUNITY_CENTER',
+    'OTHER',
+  ] as const;
+
+  private static readonly AMENITY_CONFIG = [
+    {
+      key: 'wifi',
+      label: 'WiFi',
+      icon: 'wifi',
+      amenityName: 'WiFi',
+    },
+    {
+      key: 'tables',
+      label: 'Tables de jeu',
+      icon: 'table_restaurant',
+      amenityName: 'Gaming Tables',
+    },
+    {
+      key: 'food',
+      label: 'Nourriture',
+      icon: 'restaurant',
+      amenityName: 'Food',
+    },
+    {
+      key: 'drinks',
+      label: 'Boissons',
+      icon: 'local_cafe',
+      amenityName: 'Drinks',
+    },
+    {
+      key: 'parking',
+      label: 'Parking',
+      icon: 'local_parking',
+      amenityName: 'Parking',
+    },
+  ] as const satisfies ReadonlyArray<AmenityConfig>;
+
+  private static readonly AMENITY_NAME_LOOKUP =
+    LocationsListComponent.AMENITY_CONFIG.reduce(
+      (lookup, { key, amenityName }) => {
+        lookup[key] = amenityName;
+        return lookup;
+      },
+      {} as Record<AmenityFilterKey, string>
+    );
+
+  private static createAmenityFilterState(): Record<AmenityFilterKey, boolean> {
+    return LocationsListComponent.AMENITY_CONFIG.reduce((state, { key }) => {
+      state[key] = false;
+      return state;
+    }, {} as Record<AmenityFilterKey, boolean>);
+  }
+
   private locationsService = inject(LocationsService);
+
+  readonly locationTypeOptions: ReadonlyArray<{
+    value: string;
+    label: string;
+  }> = [
+    { value: '', label: 'Tous les types' },
+    ...LocationsListComponent.FILTERABLE_LOCATION_TYPES.map((value) => ({
+      value,
+      label: LocationsListComponent.LOCATION_TYPE_LABELS[value],
+    })),
+  ];
+
+  readonly amenityFilters: ReadonlyArray<AmenityConfig> =
+    LocationsListComponent.AMENITY_CONFIG;
 
   locations: Location[] = [];
   filteredLocations: Location[] = [];
@@ -79,13 +166,8 @@ export class LocationsListComponent implements OnInit {
   // Filter properties
   searchTerm = '';
   selectedType = '';
-  filters: Record<AmenityFilterKey, boolean> = {
-    wifi: false,
-    tables: false,
-    food: false,
-    drinks: false,
-    parking: false,
-  };
+  filters: Record<AmenityFilterKey, boolean> =
+    LocationsListComponent.createAmenityFilterState();
 
   private map: L.Map | null = null;
   private markers: L.Marker[] = [];
@@ -732,15 +814,7 @@ export class LocationsListComponent implements OnInit {
   }
 
   getLocationTypeLabel(type: string): string {
-    const labels: Record<string, string> = {
-      GAME_STORE: 'Boutique de jeux',
-      CAFE: 'Café',
-      BAR: 'Bar',
-      COMMUNITY_CENTER: 'Centre communautaire',
-      PRIVATE: 'Privé',
-      OTHER: 'Autre',
-    };
-    return labels[type] || type;
+    return LocationsListComponent.LOCATION_TYPE_LABELS[type] || type;
   }
 
   retry(): void {
@@ -787,9 +861,9 @@ export class LocationsListComponent implements OnInit {
       }
 
       // Amenities filters
-      const selectedAmenities = Object.entries(this.filters)
-        .filter(([, checked]) => checked)
-        .map(([amenity]) => this.getAmenityName(amenity));
+      const selectedAmenities = this.amenityFilters
+        .filter(({ key }) => this.filters[key])
+        .map(({ amenityName }) => amenityName);
 
       if (selectedAmenities.length > 0) {
         const hasAllAmenities = selectedAmenities.every((amenity) =>
@@ -829,13 +903,7 @@ export class LocationsListComponent implements OnInit {
   resetFilters(): void {
     this.searchTerm = '';
     this.selectedType = '';
-    this.filters = {
-      wifi: false,
-      tables: false,
-      food: false,
-      drinks: false,
-      parking: false,
-    };
+    this.filters = LocationsListComponent.createAmenityFilterState();
     this.applyFilters();
   }
 
@@ -879,14 +947,11 @@ export class LocationsListComponent implements OnInit {
    * Map filter key to amenity name (as stored in database)
    */
   getAmenityName(filterKey: string): string {
-    const amenityMap: Record<string, string> = {
-      wifi: 'WiFi',
-      tables: 'Gaming Tables',
-      food: 'Food',
-      drinks: 'Drinks',
-      parking: 'Parking',
-    };
-    return amenityMap[filterKey] || filterKey;
+    return (
+      LocationsListComponent.AMENITY_NAME_LOOKUP[
+        filterKey as AmenityFilterKey
+      ] || filterKey
+    );
   }
 
   /**

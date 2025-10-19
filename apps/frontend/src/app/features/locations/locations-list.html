@@ -46,7 +46,10 @@
         </header>
 
         <div class="locations-filters-card__grid">
-          <mat-form-field appearance="outline" class="locations-filters-card__field locations-filters-card__field--search">
+          <mat-form-field
+            appearance="outline"
+            class="locations-filters-card__field locations-filters-card__field--search"
+          >
             <mat-label>Recherche</mat-label>
             <mat-icon matPrefix aria-hidden="true">search</mat-icon>
             <input
@@ -68,12 +71,11 @@
               [(ngModel)]="selectedType"
               (selectionChange)="applyFilters()"
             >
-              <mat-option value="">Tous les types</mat-option>
-              <mat-option value="GAME_STORE">Boutique de jeux</mat-option>
-              <mat-option value="CAFE">Café</mat-option>
-              <mat-option value="BAR">Bar</mat-option>
-              <mat-option value="COMMUNITY_CENTER">Centre communautaire</mat-option>
-              <mat-option value="OTHER">Autre</mat-option>
+              @for (option of locationTypeOptions; track option.value) {
+              <mat-option [value]="option.value">
+                {{ option.label }}
+              </mat-option>
+              }
             </mat-select>
           </mat-form-field>
         </div>
@@ -81,51 +83,17 @@
         <div class="locations-filters-card__amenities">
           <span class="field-label">Équipements</span>
           <div class="amenities-checkboxes">
+            @for (amenity of amenityFilters; track amenity.key) {
             <button
               type="button"
               class="amenity-toggle"
-              [class.amenity-toggle--active]="filters.wifi"
-              (click)="toggleAmenity('wifi')"
+              [class.amenity-toggle--active]="filters[amenity.key]"
+              (click)="toggleAmenity(amenity.key)"
             >
-              <mat-icon aria-hidden="true">wifi</mat-icon>
-              <span>WiFi</span>
+              <mat-icon aria-hidden="true">{{ amenity.icon }}</mat-icon>
+              <span>{{ amenity.label }}</span>
             </button>
-            <button
-              type="button"
-              class="amenity-toggle"
-              [class.amenity-toggle--active]="filters.tables"
-              (click)="toggleAmenity('tables')"
-            >
-              <mat-icon aria-hidden="true">table_restaurant</mat-icon>
-              <span>Tables de jeu</span>
-            </button>
-            <button
-              type="button"
-              class="amenity-toggle"
-              [class.amenity-toggle--active]="filters.food"
-              (click)="toggleAmenity('food')"
-            >
-              <mat-icon aria-hidden="true">restaurant</mat-icon>
-              <span>Nourriture</span>
-            </button>
-            <button
-              type="button"
-              class="amenity-toggle"
-              [class.amenity-toggle--active]="filters.drinks"
-              (click)="toggleAmenity('drinks')"
-            >
-              <mat-icon aria-hidden="true">local_cafe</mat-icon>
-              <span>Boissons</span>
-            </button>
-            <button
-              type="button"
-              class="amenity-toggle"
-              [class.amenity-toggle--active]="filters.parking"
-              (click)="toggleAmenity('parking')"
-            >
-              <mat-icon aria-hidden="true">local_parking</mat-icon>
-              <span>Parking</span>
-            </button>
+            }
           </div>
         </div>
       </section>

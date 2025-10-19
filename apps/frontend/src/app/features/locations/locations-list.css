@@ -157,9 +157,12 @@
     border-color: rgba(99, 102, 241, 0.45) !important;
   }
 
-  .locations-filters-card__field--search.mat-focused .mdc-notched-outline__leading,
-  .locations-filters-card__field--search.mat-focused .mdc-notched-outline__notch,
-  .locations-filters-card__field--search.mat-focused .mdc-notched-outline__trailing {
+  .locations-filters-card__field--search.mat-focused
+    .mdc-notched-outline__leading,
+  .locations-filters-card__field--search.mat-focused
+    .mdc-notched-outline__notch,
+  .locations-filters-card__field--search.mat-focused
+    .mdc-notched-outline__trailing {
     border-color: rgba(99, 102, 241, 0.8) !important;
   }
 
