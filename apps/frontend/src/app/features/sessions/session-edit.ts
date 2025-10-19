@@ -1,5 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
@@ -10,7 +18,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
 import { findClosestMatches } from '@org/ui';
 import { finalize } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Session, SessionsService } from '../../core/services/sessions.service';
@@ -21,6 +28,7 @@ import { Session, SessionsService } from '../../core/services/sessions.service';
   imports: [CommonModule, ReactiveFormsModule, MatIconModule],
   templateUrl: './session-edit.html',
   styleUrls: ['./session-create.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SessionEditComponent implements OnInit {
   private readonly fb = inject(FormBuilder);

@@ -1,5 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
@@ -8,10 +16,9 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { GameSystemInputComponent } from '@org/ui';
+import { finalize } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { SessionsService } from '../../core/services/sessions.service';
-import { finalize } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-session-create',
@@ -19,12 +26,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   imports: [CommonModule, ReactiveFormsModule, GameSystemInputComponent],
   templateUrl: './session-create.html',
   styleUrls: ['./session-create.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SessionCreateComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly sessionsService = inject(SessionsService);
   private readonly authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
 
   sessionForm!: FormGroup;
   readonly loading = signal(false);
@@ -82,7 +91,7 @@ export class SessionCreateComponent implements OnInit {
   loadExistingGames(): void {
     this.sessionsService
       .getSessions()
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (sessions) => {
           // Extraire les noms de jeux uniques et les trier
@@ -128,7 +137,7 @@ export class SessionCreateComponent implements OnInit {
     this.sessionsService
       .createSession(sessionData)
       .pipe(
-        takeUntilDestroyed(),
+        takeUntilDestroyed(this.destroyRef),
         finalize(() => this.loading.set(false))
       )
       .subscribe({
