@@ -17,3 +17,5 @@ export * from './lib/inputs/search-input/search-input';
 
 // Utility exports
 export * from './lib/utils/levenshtein';
+
+export * from './lib/sessions-scope-banner';

@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import {
   Component,
   DestroyRef,
-  ElementRef,
   OnInit,
   ViewChild,
   inject,
@@ -22,6 +21,7 @@ import {
   AsyncStateStatus,
   EmptyStateComponent,
   GameSystemInputComponent,
+  SessionsScopeBanner,
   findClosestMatches,
 } from '@org/ui';
 import { AuthService } from '../../core/services/auth.service';
@@ -44,6 +44,7 @@ import { SessionCardComponent } from './session-card';
     EmptyStateComponent,
     AsyncStateComponent,
     GameSystemInputComponent,
+    SessionsScopeBanner,
   ],
   selector: 'app-sessions-list',
   templateUrl: './sessions-list.html',
@@ -56,8 +57,8 @@ export class SessionsListPage implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly authService = inject(AuthService);
 
-  @ViewChild('scopeBanner', { read: ElementRef })
-  scopeBanner?: ElementRef<HTMLElement>;
+  @ViewChild('scopeBanner')
+  scopeBanner?: SessionsScopeBanner;
 
   sessions: Session[] = [];
   filteredSessions: Session[] = [];
@@ -138,7 +139,7 @@ export class SessionsListPage implements OnInit {
         // Move focus to banner for accessibility when coming from dashboard
         if (this.isScopeFilterActive && this.comingFromDashboard) {
           setTimeout(() => {
-            this.scopeBanner?.nativeElement?.focus();
+            this.scopeBanner?.focus();
           }, 100);
         }
       },

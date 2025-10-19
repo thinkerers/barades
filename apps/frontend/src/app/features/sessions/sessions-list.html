@@ -4,35 +4,13 @@
     <p class="sessions-page__subtitle">{{ pageSubtitle }}</p>
 
     @if (isScopeFilterActive) {
-    <div
+    <lib-sessions-scope-banner
       #scopeBanner
-      class="sessions-page__scope-banner"
-      role="status"
-      tabindex="-1"
-      aria-live="polite"
-    >
-      <mat-icon aria-hidden="true">person</mat-icon>
-      <span>{{ scopeBannerMessage }}</span>
-      <div class="sessions-page__scope-actions">
-        @if (comingFromDashboard) {
-        <button
-          type="button"
-          class="sessions-page__scope-action sessions-page__scope-action--secondary"
-          (click)="returnToDashboard()"
-        >
-          <mat-icon aria-hidden="true">arrow_back</mat-icon>
-          Retour au dashboard
-        </button>
-        }
-        <button
-          type="button"
-          class="sessions-page__scope-action"
-          (click)="clearScopeFilter()"
-        >
-          Voir toutes les sessions
-        </button>
-      </div>
-    </div>
+      [message]="scopeBannerMessage"
+      [showBackAction]="comingFromDashboard"
+      (backAction)="returnToDashboard()"
+      (clearAction)="clearScopeFilter()"
+    ></lib-sessions-scope-banner>
     }
   </header>
 

@@ -1,0 +1,39 @@
+<div
+  #banner
+  class="scope-banner"
+  role="status"
+  tabindex="-1"
+  aria-live="polite"
+>
+  <mat-icon *ngIf="leadingIcon" class="scope-banner__icon" aria-hidden="true">
+    {{ leadingIcon }}
+  </mat-icon>
+
+  <span class="scope-banner__message">{{ message }}</span>
+
+  <div class="scope-banner__actions" role="group">
+    <button
+      *ngIf="showBackAction"
+      type="button"
+      class="scope-banner__action scope-banner__action--secondary"
+      (click)="onBackAction()"
+    >
+      <mat-icon *ngIf="backActionIcon" aria-hidden="true">
+        {{ backActionIcon }}
+      </mat-icon>
+      {{ backActionLabel }}
+    </button>
+
+    <button
+      type="button"
+      class="scope-banner__action"
+      (click)="clearAction.emit()"
+      [disabled]="disableClearAction"
+    >
+      <mat-icon *ngIf="clearActionIcon" aria-hidden="true">
+        {{ clearActionIcon }}
+      </mat-icon>
+      {{ clearActionLabel }}
+    </button>
+  </div>
+</div>
