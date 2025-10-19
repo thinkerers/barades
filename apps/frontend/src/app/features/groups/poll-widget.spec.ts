@@ -79,83 +79,87 @@ describe('PollWidgetComponent', () => {
 
   describe('Poll creation form', () => {
     it('should toggle create form visibility', () => {
-      expect(component.showCreateForm).toBe(false);
+      expect(component.showCreateForm()).toBe(false);
 
       component.toggleCreateForm();
-      expect(component.showCreateForm).toBe(true);
+      expect(component.showCreateForm()).toBe(true);
 
       component.toggleCreateForm();
-      expect(component.showCreateForm).toBe(false);
+      expect(component.showCreateForm()).toBe(false);
     });
 
     it('should reset form when toggling off', () => {
-      component.pollTitle = 'Test title';
-      component.selectedDates = ['2025-10-25'];
-      component.showCreateForm = true;
+      component.pollTitle.set('Test title');
+      component.selectedDates.set(['2025-10-25']);
+      component.showCreateForm.set(true);
 
       component.toggleCreateForm();
 
-      expect(component.pollTitle).toBe('');
-      expect(component.selectedDates).toEqual([]);
-      expect(component.showCreateForm).toBe(false);
+      expect(component.pollTitle()).toBe('');
+      expect(component.selectedDates()).toEqual([]);
+      expect(component.showCreateForm()).toBe(false);
     });
 
     it('should add a date to selected dates', () => {
-      component.newDateInput = '2025-10-25';
+      component.newDateInput.set('2025-10-25');
       component.addDate();
 
-      expect(component.selectedDates).toContain('2025-10-25');
-      expect(component.newDateInput).toBe('');
+      expect(component.selectedDates()).toContain('2025-10-25');
+      expect(component.newDateInput()).toBe('');
     });
 
     it('should not add duplicate dates', () => {
-      component.selectedDates = ['2025-10-25'];
-      component.newDateInput = '2025-10-25';
+      component.selectedDates.set(['2025-10-25']);
+      component.newDateInput.set('2025-10-25');
       component.addDate();
 
-      expect(component.selectedDates).toEqual(['2025-10-25']);
+      expect(component.selectedDates()).toEqual(['2025-10-25']);
     });
 
     it('should not add empty date', () => {
-      component.newDateInput = '';
+      component.newDateInput.set('');
       component.addDate();
 
-      expect(component.selectedDates).toEqual([]);
+      expect(component.selectedDates()).toEqual([]);
     });
 
     it('should remove a date from selected dates', () => {
-      component.selectedDates = ['2025-10-25', '2025-10-26'];
+      component.selectedDates.set(['2025-10-25', '2025-10-26']);
       component.removeDate('2025-10-25');
 
-      expect(component.selectedDates).toEqual(['2025-10-26']);
+      expect(component.selectedDates()).toEqual(['2025-10-26']);
     });
   });
 
   describe('Poll creation', () => {
     it('should show error when title is missing', async () => {
-      component.pollTitle = '';
-      component.selectedDates = ['2025-10-25', '2025-10-26'];
+      component.pollTitle.set('');
+      component.selectedDates.set(['2025-10-25', '2025-10-26']);
 
       await component.createPoll();
 
-      expect(component.error).toBe('Le titre et au moins 2 dates sont requis');
+      expect(component.error()).toBe(
+        'Le titre et au moins 2 dates sont requis'
+      );
       expect(mockPollsService.createPoll).not.toHaveBeenCalled();
     });
 
     it('should show error when less than 2 dates', async () => {
-      component.pollTitle = 'Test Poll';
-      component.selectedDates = ['2025-10-25'];
+      component.pollTitle.set('Test Poll');
+      component.selectedDates.set(['2025-10-25']);
 
       await component.createPoll();
 
-      expect(component.error).toBe('Le titre et au moins 2 dates sont requis');
+      expect(component.error()).toBe(
+        'Le titre et au moins 2 dates sont requis'
+      );
       expect(mockPollsService.createPoll).not.toHaveBeenCalled();
     });
 
     it('should create poll successfully', async () => {
-      component.pollTitle = 'Test Poll';
-      component.selectedDates = ['2025-10-25', '2025-10-26'];
-      component.showCreateForm = true;
+      component.pollTitle.set('Test Poll');
+      component.selectedDates.set(['2025-10-25', '2025-10-26']);
+      component.showCreateForm.set(true);
 
       mockPollsService.createPoll.mockReturnValue(of(mockPoll));
 
@@ -170,15 +174,15 @@ describe('PollWidgetComponent', () => {
       });
 
       expect(emitSpy).toHaveBeenCalledWith(mockPoll);
-      expect(component.creating).toBe(false);
-      expect(component.showCreateForm).toBe(false);
-      expect(component.pollTitle).toBe('');
-      expect(component.selectedDates).toEqual([]);
+      expect(component.creating()).toBe(false);
+      expect(component.showCreateForm()).toBe(false);
+      expect(component.pollTitle()).toBe('');
+      expect(component.selectedDates()).toEqual([]);
     });
 
     it('should handle 403 error (not a member)', async () => {
-      component.pollTitle = 'Test Poll';
-      component.selectedDates = ['2025-10-25', '2025-10-26'];
+      component.pollTitle.set('Test Poll');
+      component.selectedDates.set(['2025-10-25', '2025-10-26']);
 
       mockPollsService.createPoll.mockReturnValue(
         throwError(() => new HttpErrorResponse({ status: 403 }))
@@ -186,15 +190,15 @@ describe('PollWidgetComponent', () => {
 
       await component.createPoll();
 
-      expect(component.error).toBe(
+      expect(component.error()).toBe(
         'Vous devez être membre du groupe pour créer un sondage'
       );
-      expect(component.creating).toBe(false);
+      expect(component.creating()).toBe(false);
     });
 
     it('should handle 401 error (not authenticated)', async () => {
-      component.pollTitle = 'Test Poll';
-      component.selectedDates = ['2025-10-25', '2025-10-26'];
+      component.pollTitle.set('Test Poll');
+      component.selectedDates.set(['2025-10-25', '2025-10-26']);
 
       mockPollsService.createPoll.mockReturnValue(
         throwError(() => new HttpErrorResponse({ status: 401 }))
@@ -202,15 +206,15 @@ describe('PollWidgetComponent', () => {
 
       await component.createPoll();
 
-      expect(component.error).toBe(
+      expect(component.error()).toBe(
         'Vous devez être connecté pour créer un sondage'
       );
-      expect(component.creating).toBe(false);
+      expect(component.creating()).toBe(false);
     });
 
     it('should handle generic error', async () => {
-      component.pollTitle = 'Test Poll';
-      component.selectedDates = ['2025-10-25', '2025-10-26'];
+      component.pollTitle.set('Test Poll');
+      component.selectedDates.set(['2025-10-25', '2025-10-26']);
 
       mockPollsService.createPoll.mockReturnValue(
         throwError(() => new HttpErrorResponse({ status: 500 }))
@@ -218,8 +222,8 @@ describe('PollWidgetComponent', () => {
 
       await component.createPoll();
 
-      expect(component.error).toBe('Erreur lors de la création du sondage');
-      expect(component.creating).toBe(false);
+      expect(component.error()).toBe('Erreur lors de la création du sondage');
+      expect(component.creating()).toBe(false);
     });
   });
 

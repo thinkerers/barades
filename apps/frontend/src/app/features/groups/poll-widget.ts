@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
-  ChangeDetectorRef,
   Component,
   EventEmitter,
   inject,
   Input,
   Output,
+  signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -23,8 +23,6 @@ import { Poll, PollsService } from '../../core/services/polls.service';
 export class PollWidgetComponent {
   private pollsService = inject(PollsService);
   private notifications = inject(NotificationService);
-  private cdr = inject(ChangeDetectorRef);
-
   @Input() poll: Poll | null = null;
   @Input() groupId = '';
   @Input() currentUserId: string | null = null;
@@ -33,72 +31,77 @@ export class PollWidgetComponent {
   @Output() voted = new EventEmitter<void>();
 
   // Create poll mode
-  showCreateForm = false;
-  pollTitle = '';
-  selectedDates: string[] = [];
-  newDateInput = '';
-  creating = false;
-  error: string | null = null;
+  readonly showCreateForm = signal(false);
+  readonly pollTitle = signal('');
+  readonly selectedDates = signal<string[]>([]);
+  readonly newDateInput = signal('');
+  readonly creating = signal(false);
+  readonly error = signal<string | null>(null);
 
   toggleCreateForm(): void {
-    this.showCreateForm = !this.showCreateForm;
-    if (!this.showCreateForm) {
+    const nextVisible = !this.showCreateForm();
+    this.showCreateForm.set(nextVisible);
+    if (!nextVisible) {
       this.resetForm();
     }
-    this.cdr.markForCheck();
   }
 
   addDate(): void {
-    if (this.newDateInput && !this.selectedDates.includes(this.newDateInput)) {
-      this.selectedDates.push(this.newDateInput);
-      this.newDateInput = '';
-      this.cdr.markForCheck();
-    }
-  }
-
-  removeDate(date: string): void {
-    this.selectedDates = this.selectedDates.filter((d) => d !== date);
-    this.cdr.markForCheck();
-  }
-
-  async createPoll(): Promise<void> {
-    if (!this.pollTitle || this.selectedDates.length < 2) {
-      this.error = 'Le titre et au moins 2 dates sont requis';
-      this.cdr.markForCheck();
+    const pendingDate = this.newDateInput().trim();
+    if (!pendingDate) {
       return;
     }
 
-    this.creating = true;
-    this.error = null;
-    this.cdr.markForCheck();
+    if (!this.selectedDates().includes(pendingDate)) {
+      this.selectedDates.update((dates) => [...dates, pendingDate]);
+    }
+    this.newDateInput.set('');
+  }
+
+  removeDate(date: string): void {
+    this.selectedDates.update((dates) => dates.filter((d) => d !== date));
+  }
+
+  async createPoll(): Promise<void> {
+    const title = this.pollTitle().trim();
+    const dates = this.selectedDates();
+
+    if (!title || dates.length < 2) {
+      this.error.set('Le titre et au moins 2 dates sont requis');
+      return;
+    }
+
+    this.creating.set(true);
+    this.error.set(null);
 
     try {
       const poll = await firstValueFrom(
         this.pollsService.createPoll({
-          title: this.pollTitle,
-          dates: this.selectedDates,
+          title,
+          dates,
           groupId: this.groupId,
         })
       );
       this.pollCreated.emit(poll);
       this.resetForm();
-      this.showCreateForm = false;
+      this.showCreateForm.set(false);
     } catch (error) {
       console.error('Error creating poll:', error);
       if (error instanceof HttpErrorResponse) {
         if (error.status === 403) {
-          this.error = 'Vous devez être membre du groupe pour créer un sondage';
+          this.error.set(
+            'Vous devez être membre du groupe pour créer un sondage'
+          );
         } else if (error.status === 401) {
-          this.error = 'Vous devez être connecté pour créer un sondage';
+          this.error.set('Vous devez être connecté pour créer un sondage');
         } else {
-          this.error = 'Erreur lors de la création du sondage';
+          this.error.set('Erreur lors de la création du sondage');
         }
       } else {
-        this.error = 'Erreur lors de la création du sondage';
+        this.error.set('Erreur lors de la création du sondage');
       }
     } finally {
-      this.creating = false;
-      this.cdr.markForCheck();
+      this.creating.set(false);
     }
   }
 
@@ -128,8 +131,6 @@ export class PollWidgetComponent {
       } else {
         this.notifications.error('Erreur lors du vote.');
       }
-    } finally {
-      this.cdr.markForCheck();
     }
   }
 
@@ -158,8 +159,6 @@ export class PollWidgetComponent {
       } else {
         this.notifications.error('Erreur lors de la suppression du vote.');
       }
-    } finally {
-      this.cdr.markForCheck();
     }
   }
 
@@ -195,9 +194,9 @@ export class PollWidgetComponent {
   }
 
   private resetForm(): void {
-    this.pollTitle = '';
-    this.selectedDates = [];
-    this.newDateInput = '';
-    this.error = null;
+    this.pollTitle.set('');
+    this.selectedDates.set([]);
+    this.newDateInput.set('');
+    this.error.set(null);
   }
 }
