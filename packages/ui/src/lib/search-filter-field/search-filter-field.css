@@ -1,0 +1,7 @@
+:host {
+  display: block;
+}
+
+.search-filter-field__form-field {
+  width: 100%;
+}

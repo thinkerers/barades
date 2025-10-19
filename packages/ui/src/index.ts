@@ -14,6 +14,7 @@ export * from './lib/group-card/group-card.component';
 export * from './lib/inputs/game-system-input/game-system-input.component';
 export * from './lib/inputs/radio-group/radio-group';
 export * from './lib/inputs/search-input/search-input';
+export * from './lib/search-filter-field/search-filter-field';
 
 // Utility exports
 export * from './lib/utils/levenshtein';

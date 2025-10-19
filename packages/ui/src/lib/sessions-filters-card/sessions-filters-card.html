@@ -20,18 +20,11 @@
   </header>
 
   <div class="filters-card__grid">
-    <mat-form-field appearance="outline" class="filters-card__field">
-      <mat-label>Recherche</mat-label>
-      <mat-icon matPrefix aria-hidden="true">search</mat-icon>
-      <input
-        matInput
-        id="search"
-        placeholder="Nom, jeu, description..."
-        [ngModel]="searchTerm"
-        (ngModelChange)="searchTermChange.emit($event)"
-        autocomplete="off"
-      />
-    </mat-form-field>
+    <lib-search-filter-field
+      class="filters-card__field"
+      [searchTerm]="searchTerm"
+      (searchTermChange)="searchTermChange.emit($event)"
+    ></lib-search-filter-field>
 
     <mat-form-field
       appearance="outline"

@@ -14,6 +14,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { GameSystemInputComponent } from '../inputs/game-system-input/game-system-input.component';
+import { SearchFilterField } from '../search-filter-field/search-filter-field';
 
 type SessionsFilterMode = 'all' | 'online' | 'onsite';
 
@@ -30,6 +31,7 @@ type SessionsFilterMode = 'all' | 'online' | 'onsite';
     MatIconModule,
     MatInputModule,
     GameSystemInputComponent,
+    SearchFilterField,
   ],
   templateUrl: './sessions-filters-card.html',
   styleUrl: './sessions-filters-card.css',
