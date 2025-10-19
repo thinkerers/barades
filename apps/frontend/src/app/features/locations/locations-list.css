@@ -376,10 +376,11 @@
   overflow: hidden;
 }
 
-.locations-list__collapsed-hint {
+.locations-list__status-pill {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.35rem;
   padding: 0.35rem 0.75rem;
   border-radius: 9999px;
   background: rgba(15, 23, 42, 0.6);
@@ -390,17 +391,23 @@
   letter-spacing: 0.05em;
 }
 
-.locations-list__collapsed-hint mat-icon {
+.locations-list__status-pill mat-icon {
   font-size: 1.2rem;
   color: rgba(129, 140, 248, 0.85);
 }
 
-.locations-list__collapsed-hint-count {
+.locations-list__status-pill-text {
   font-weight: 600;
-  color: rgba(224, 231, 255, 0.9);
 }
 
-.locations-list__collapsed-hint-count::before {
+.locations-list__status-pill-count {
+  font-weight: 600;
+  color: rgba(224, 231, 255, 0.9);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.locations-list__status-pill-count--with-separator::before {
   content: '\2022';
   margin: 0 0.35rem;
   color: rgba(148, 163, 184, 0.7);

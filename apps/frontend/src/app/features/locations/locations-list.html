@@ -164,13 +164,33 @@
         </button>
 
         <div id="locations-details">
+          <div class="locations-list__status-pill">
+            <mat-icon aria-hidden="true">
+              {{ isDetailsCollapsed ? 'map' : 'assistant_navigation' }}
+            </mat-icon>
+            @if (isDetailsCollapsed) {
+            <span class="locations-list__status-pill-text">Liste masquée</span>
+            }
+            @if (selectedLocation) {
+            <span
+              class="locations-list__status-pill-count"
+              [class.locations-list__status-pill-count--with-separator]="isDetailsCollapsed"
+            >
+              Lieu sélectionné (1 / {{ filteredLocations.length }})
+            </span>
+            } @else {
+            <span
+              class="locations-list__status-pill-count"
+              [class.locations-list__status-pill-count--with-separator]="isDetailsCollapsed"
+            >
+              Liste des lieux ({{ filteredLocations.length }} / {{
+              locations.length }})
+            </span>
+            }
+          </div>
+
           @if (!isDetailsCollapsed) {
-          <h2>
-            @if (selectedLocation) { Lieu sélectionné
-            <span class="count">(1 / {{ filteredLocations.length }})</span>
-            } @else { Liste des lieux ({{ filteredLocations.length }} / {{
-            locations.length }}) }
-          </h2>
+          <h2>Liste des lieux</h2>
 
           <div class="location-cards">
             @if (selectedLocation; as location) {
@@ -244,16 +264,6 @@
                 </p>
               </div>
             </div>
-            }
-          </div>
-          } @else {
-          <div class="locations-list__collapsed-hint">
-            <mat-icon aria-hidden="true">map</mat-icon>
-            <span>Liste masquée</span>
-            @if (selectedLocation) {
-            <span class="locations-list__collapsed-hint-count"
-              >Lieu sélectionné (1 / {{ filteredLocations.length }})</span
-            >
             }
           </div>
           }
