@@ -46,45 +46,36 @@
         </header>
 
         <div class="locations-filters-card__grid">
-          <div
-            class="locations-filters-card__field locations-filters-card__field--search"
-          >
-            <label class="field-label" for="search">Recherche</label>
-            <div class="field-control field-control--icon">
-              <mat-icon aria-hidden="true">search</mat-icon>
-              <input
-                type="text"
-                id="search"
-                [(ngModel)]="searchTerm"
-                (input)="applyFilters()"
-                placeholder="Nom, adresse, ville..."
-                autocomplete="off"
-              />
-            </div>
-          </div>
+          <mat-form-field appearance="outline" class="locations-filters-card__field locations-filters-card__field--search">
+            <mat-label>Recherche</mat-label>
+            <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+            <input
+              matInput
+              id="search"
+              placeholder="Nom, adresse, ville..."
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="applyFilters()"
+              autocomplete="off"
+            />
+          </mat-form-field>
 
-          <div
+          <mat-form-field
+            appearance="outline"
             class="locations-filters-card__field locations-filters-card__field--type"
           >
-            <label class="field-label" for="type-filter">Type de lieu</label>
-            <div
-              class="field-control field-control--icon field-control--select"
+            <mat-label>Type de lieu</mat-label>
+            <mat-select
+              [(ngModel)]="selectedType"
+              (selectionChange)="applyFilters()"
             >
-              <mat-icon aria-hidden="true">layers</mat-icon>
-              <select
-                id="type-filter"
-                [(ngModel)]="selectedType"
-                (change)="applyFilters()"
-              >
-                <option value="">Tous les types</option>
-                <option value="GAME_STORE">Boutique de jeux</option>
-                <option value="CAFE">Café</option>
-                <option value="BAR">Bar</option>
-                <option value="COMMUNITY_CENTER">Centre communautaire</option>
-                <option value="OTHER">Autre</option>
-              </select>
-            </div>
-          </div>
+              <mat-option value="">Tous les types</mat-option>
+              <mat-option value="GAME_STORE">Boutique de jeux</mat-option>
+              <mat-option value="CAFE">Café</mat-option>
+              <mat-option value="BAR">Bar</mat-option>
+              <mat-option value="COMMUNITY_CENTER">Centre communautaire</mat-option>
+              <mat-option value="OTHER">Autre</mat-option>
+            </mat-select>
+          </mat-form-field>
         </div>
 
         <div class="locations-filters-card__amenities">
