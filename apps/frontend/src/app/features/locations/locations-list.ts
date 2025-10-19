@@ -3,10 +3,50 @@ import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { AsyncStateComponent, AsyncStateStatus } from '@org/ui';
 import * as L from 'leaflet';
+import 'leaflet.locatecontrol';
 import {
   Location,
   LocationsService,
 } from '../../core/services/locations.service';
+
+type AmenityFilterKey = 'wifi' | 'tables' | 'food' | 'drinks' | 'parking';
+
+type LeafletLocateControl = L.Control & {
+  start(): void;
+  stop(): void;
+  on(
+    type: 'locationfound',
+    fn: (event: L.LocationEvent) => void
+  ): LeafletLocateControl;
+  on(
+    type: 'locationerror',
+    fn: (event: L.ErrorEvent) => void
+  ): LeafletLocateControl;
+};
+
+interface LeafletLocateOptions extends L.ControlOptions {
+  flyTo?: boolean;
+  keepCurrentZoomLevel?: boolean;
+  drawCircle?: boolean;
+  drawMarker?: boolean;
+  showCompass?: boolean;
+  strings?: {
+    title?: string;
+    popup?: string;
+    outsideMapBoundsMsg?: string;
+  };
+  locateOptions?: PositionOptions & { maxZoom?: number };
+}
+
+type LeafletControlWithLocate = typeof L.control & {
+  locate?: (options?: LeafletLocateOptions) => LeafletLocateControl;
+};
+
+interface StoredUserPosition {
+  lat: number;
+  lon: number;
+  timestamp: number;
+}
 
 @Component({
   selector: 'app-locations-list',
@@ -29,7 +69,7 @@ export class LocationsListComponent implements OnInit {
   // Filter properties
   searchTerm = '';
   selectedType = '';
-  filters = {
+  filters: Record<AmenityFilterKey, boolean> = {
     wifi: false,
     tables: false,
     food: false,
@@ -43,11 +83,27 @@ export class LocationsListComponent implements OnInit {
   selectedLocationId: string | null = null;
   userPosition: { lat: number; lon: number } | null = null;
   private userMarker: L.Marker | null = null;
-  geolocating = false;
+  private locateControl: LeafletLocateControl | null = null;
+  private mapLocationFoundHandler?: (event: L.LocationEvent) => void;
+  private mapLocationErrorHandler?: (event: L.ErrorEvent) => void;
+  private preloadedUserPositionFromStorage = false;
+  private restoredUserPosition = false;
+  private initialLocateRequested = false;
+  private skipNextNearestAdjust = false;
+  private readonly userLocationStorageKey = 'barades.locations.userPosition';
   geolocationError: string | null = null;
+  isDetailsCollapsed = false;
 
   ngOnInit(): void {
     console.log('[LocationsList] Component initialized');
+    const storedPosition = this.readStoredUserPosition();
+    if (storedPosition) {
+      this.userPosition = {
+        lat: storedPosition.lat,
+        lon: storedPosition.lon,
+      };
+      this.preloadedUserPositionFromStorage = true;
+    }
     // Initialize map immediately since container is always in DOM
     setTimeout(() => {
       console.log('[LocationsList] Attempting to initialize map...');
@@ -98,6 +154,7 @@ export class LocationsListComponent implements OnInit {
 
           console.log('[LocationsList] Adding markers to map...');
           this.addMarkers();
+          this.maybeRestoreUserPosition();
         }, 100);
       },
       error: (err) => {
@@ -129,8 +186,17 @@ export class LocationsListComponent implements OnInit {
     // Avoid reinitializing if map already exists
     if (this.map) {
       console.log('[LocationsList] Map already exists, removing old instance');
+      if (this.mapLocationFoundHandler) {
+        this.map.off('locationfound', this.mapLocationFoundHandler);
+        this.mapLocationFoundHandler = undefined;
+      }
+      if (this.mapLocationErrorHandler) {
+        this.map.off('locationerror', this.mapLocationErrorHandler);
+        this.mapLocationErrorHandler = undefined;
+      }
       this.map.remove();
       this.map = null;
+      this.locateControl = null;
     }
 
     // Set default icon path for Leaflet
@@ -138,10 +204,15 @@ export class LocationsListComponent implements OnInit {
 
     console.log('[LocationsList] Creating Leaflet map...');
 
-    // Center on Brussels - create map with specific options
+    const initialCenter: [number, number] = this.userPosition
+      ? [this.userPosition.lat, this.userPosition.lon]
+      : [50.8503, 4.3517];
+    const initialZoom = this.userPosition ? 15 : 7;
+
+    // Center on Brussels or stored user position - create map with specific options
     this.map = L.map('map', {
-      center: [50.8503, 4.3517],
-      zoom: 13,
+      center: initialCenter,
+      zoom: initialZoom,
       preferCanvas: false,
       attributionControl: true,
     });
@@ -163,6 +234,8 @@ export class LocationsListComponent implements OnInit {
     // Critical: Force map to recognize its container size
     this.map.whenReady(() => {
       console.log('[LocationsList] Map is ready');
+      this.setupLocateControl();
+      this.triggerInitialLocate();
       setTimeout(() => {
         if (this.map) {
           console.log('[LocationsList] Calling invalidateSize()');
@@ -186,6 +259,223 @@ export class LocationsListComponent implements OnInit {
     tileLayer.on('tileerror', (error) => {
       console.error('[LocationsList] Tile loading error:', error);
     });
+  }
+
+  private setupLocateControl(): void {
+    if (!this.map) return;
+
+    if (this.locateControl) {
+      this.locateControl.stop();
+      this.locateControl = null;
+    }
+
+    if (this.mapLocationFoundHandler) {
+      this.map.off('locationfound', this.mapLocationFoundHandler);
+      this.mapLocationFoundHandler = undefined;
+    }
+
+    if (this.mapLocationErrorHandler) {
+      this.map.off('locationerror', this.mapLocationErrorHandler);
+      this.mapLocationErrorHandler = undefined;
+    }
+
+    const controlFactory = L.control as LeafletControlWithLocate;
+    const locate = controlFactory.locate;
+
+    if (!locate) {
+      console.warn('[LocationsList] Locate control plugin not available');
+      return;
+    }
+    try {
+      this.locateControl = locate({
+        position: 'topleft',
+        flyTo: true,
+        showCompass: true,
+        drawCircle: false,
+        drawMarker: false,
+        strings: {
+          title: 'Trouver ma position',
+          popup: 'Vous êtes ici (±{distance} {unit})',
+          outsideMapBoundsMsg: 'Vous êtes hors des limites de la carte',
+        },
+        locateOptions: {
+          enableHighAccuracy: true,
+          maximumAge: 0,
+          timeout: 10000,
+        },
+      }).addTo(this.map);
+
+      this.mapLocationFoundHandler = (event: L.LocationEvent) => {
+        this.handleLocateSuccess(event);
+      };
+
+      this.mapLocationErrorHandler = (event: L.ErrorEvent) => {
+        this.handleLocateError(event);
+      };
+
+      this.map.on('locationfound', this.mapLocationFoundHandler);
+      this.map.on('locationerror', this.mapLocationErrorHandler);
+
+      const container = this.locateControl.getContainer();
+      if (container) {
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.disableScrollPropagation(container);
+      }
+
+      this.triggerInitialLocate();
+    } catch (error) {
+      console.error('[LocationsList] Failed to setup locate control:', error);
+      this.locateControl = null;
+      if (this.mapLocationFoundHandler) {
+        this.map.off('locationfound', this.mapLocationFoundHandler);
+        this.mapLocationFoundHandler = undefined;
+      }
+      if (this.mapLocationErrorHandler) {
+        this.map.off('locationerror', this.mapLocationErrorHandler);
+        this.mapLocationErrorHandler = undefined;
+      }
+    }
+  }
+
+  private triggerInitialLocate(): void {
+    if (this.initialLocateRequested) {
+      return;
+    }
+
+    this.initialLocateRequested = true;
+    this.skipNextNearestAdjust = true;
+
+    if (this.locateControl) {
+      try {
+        this.locateControl.start();
+        return;
+      } catch (error) {
+        console.warn(
+          '[LocationsList] Locate control start failed, falling back to map.locate()',
+          error
+        );
+      }
+    }
+
+    if (!this.map) {
+      return;
+    }
+
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      console.warn('[LocationsList] Geolocation API not available');
+      return;
+    }
+
+    this.map.locate({
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 10000,
+      setView: false,
+    });
+  }
+
+  private handleLocateSuccess(event: L.LocationEvent): void {
+    this.geolocationError = null;
+    this.userPosition = {
+      lat: event.latlng.lat,
+      lon: event.latlng.lng,
+    };
+
+    const animateUserMarker = !this.skipNextNearestAdjust;
+    this.addUserMarker({ animate: animateUserMarker });
+    const adjustMap = !this.skipNextNearestAdjust;
+    this.skipNextNearestAdjust = false;
+    this.findNearestLocation({ adjustMap });
+    this.persistUserPosition(this.userPosition);
+    this.restoredUserPosition = true;
+  }
+
+  private handleLocateError(event: L.ErrorEvent): void {
+    console.error('[LocationsList] Locate failed:', event.message);
+    this.geolocationError = event.message;
+    this.skipNextNearestAdjust = false;
+  }
+
+  private persistUserPosition(position: { lat: number; lon: number }): void {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return;
+    }
+
+    const payload: StoredUserPosition = {
+      lat: position.lat,
+      lon: position.lon,
+      timestamp: Date.now(),
+    };
+
+    try {
+      window.localStorage.setItem(
+        this.userLocationStorageKey,
+        JSON.stringify(payload)
+      );
+    } catch (error) {
+      console.warn('[LocationsList] Failed to persist user position', error);
+    }
+  }
+
+  private readStoredUserPosition(): StoredUserPosition | null {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return null;
+    }
+
+    const raw = window.localStorage.getItem(this.userLocationStorageKey);
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as Partial<StoredUserPosition>;
+      if (
+        typeof parsed !== 'object' ||
+        parsed === null ||
+        typeof parsed.lat !== 'number' ||
+        typeof parsed.lon !== 'number'
+      ) {
+        return null;
+      }
+
+      return {
+        lat: parsed.lat,
+        lon: parsed.lon,
+        timestamp:
+          typeof parsed.timestamp === 'number' ? parsed.timestamp : Date.now(),
+      };
+    } catch (error) {
+      console.warn('[LocationsList] Failed to read stored position', error);
+      return null;
+    }
+  }
+
+  private maybeRestoreUserPosition(): void {
+    if (this.restoredUserPosition) {
+      return;
+    }
+
+    if (!this.map) {
+      return;
+    }
+
+    if (this.preloadedUserPositionFromStorage && this.userPosition) {
+      this.restoredUserPosition = true;
+      this.preloadedUserPositionFromStorage = false;
+      this.addUserMarker({ animate: false });
+      this.findNearestLocation({ adjustMap: false });
+      return;
+    }
+
+    const stored = this.readStoredUserPosition();
+    if (!stored) {
+      return;
+    }
+
+    this.userPosition = { lat: stored.lat, lon: stored.lon };
+    this.restoredUserPosition = true;
+    this.addUserMarker({ animate: false });
+    this.findNearestLocation({ adjustMap: false });
   }
 
   private addMarkers(): void {
@@ -276,6 +566,16 @@ export class LocationsListComponent implements OnInit {
     return `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-${color}.png`;
   }
 
+  private renderMaterialIcon(name: string, extraClass = ''): string {
+    const classes = ['material-icons'];
+    if (extraClass) {
+      classes.push(extraClass);
+    }
+    return `<span class="${classes.join(
+      ' '
+    )}" aria-hidden="true">${name}</span>`;
+  }
+
   private createPopupContent(location: Location): string {
     // Amenities with icons
     const amenitiesHtml =
@@ -292,25 +592,18 @@ export class LocationsListComponent implements OnInit {
     const capacityHtml = location.capacity
       ? `
         <div class="popup-row">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-          </svg>
-          <span>${location.capacity} personnes</span>
+          ${this.renderMaterialIcon('groups', 'popup-icon')}
+          <span>Capacité: ${location.capacity} personnes</span>
         </div>
       `
       : '';
 
     const websiteHtml = location.website
       ? `
-        <a href="${location.website}" target="_blank" rel="noopener" class="popup-link">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="2" y1="12" x2="22" y2="12"></line>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-          </svg>
+        <a href="${
+          location.website
+        }" target="_blank" rel="noopener" class="popup-link">
+          ${this.renderMaterialIcon('public', 'popup-icon')}
           <span>Site web</span>
         </a>
       `
@@ -323,10 +616,7 @@ export class LocationsListComponent implements OnInit {
     const addressHtml = location.address
       ? `
         <div class="popup-row">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
+          ${this.renderMaterialIcon('place', 'popup-icon')}
           <span>${location.address}, ${location.city}</span>
         </div>
       `
@@ -342,9 +632,7 @@ export class LocationsListComponent implements OnInit {
         </div>
 
         <div class="popup-rating">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="2">
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-          </svg>
+          ${this.renderMaterialIcon('star', 'popup-rating__icon')}
           <span>${location.rating.toFixed(1)}/5</span>
         </div>
 
@@ -358,63 +646,48 @@ export class LocationsListComponent implements OnInit {
   }
 
   private getAmenityIcon(amenity: string): string {
-    const iconMap: Record<string, string> = {
-      WiFi: `
-        <div class="amenity-icon" title="WiFi">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
-            <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
-            <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
-            <line x1="12" y1="20" x2="12.01" y2="20"></line>
-          </svg>
-          <span>WiFi</span>
-        </div>
-      `,
-      Tables: `
-        <div class="amenity-icon" title="Tables de jeu">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M2 2h20v20H2z"></path>
-            <path d="M6 6h12v12H6z"></path>
-          </svg>
-          <span>Tables</span>
-        </div>
-      `,
-      Food: `
-        <div class="amenity-icon" title="Restauration">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-            <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-            <line x1="6" y1="1" x2="6" y2="4"></line>
-            <line x1="10" y1="1" x2="10" y2="4"></line>
-            <line x1="14" y1="1" x2="14" y2="4"></line>
-          </svg>
-          <span>Food</span>
-        </div>
-      `,
-      Drinks: `
-        <div class="amenity-icon" title="Boissons">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 2H6v20h12V2z"></path>
-            <path d="M6 7h12"></path>
-          </svg>
-          <span>Drinks</span>
-        </div>
-      `,
-      Parking: `
-        <div class="amenity-icon" title="Parking">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-            <path d="M9 17V7h4a3 3 0 0 1 0 6H9"></path>
-          </svg>
-          <span>Parking</span>
-        </div>
-      `,
+    const iconMap: Record<string, { icon: string; label: string }> = {
+      WiFi: { icon: 'wifi', label: 'WiFi' },
+      Tables: { icon: 'table_restaurant', label: 'Tables' },
+      Food: { icon: 'restaurant', label: 'Restauration' },
+      Drinks: { icon: 'local_cafe', label: 'Boissons' },
+      Parking: { icon: 'local_parking', label: 'Parking' },
     };
 
-    return (
-      iconMap[amenity] ||
-      `<div class="amenity-icon"><span>${amenity}</span></div>`
-    );
+    const match = iconMap[amenity];
+    if (!match) {
+      return `<div class="amenity-icon"><span>${amenity}</span></div>`;
+    }
+
+    return `
+      <div class="amenity-icon" title="${match.label}">
+        ${this.renderMaterialIcon(match.icon, 'amenity-icon__glyph')}
+        <span>${match.label}</span>
+      </div>
+    `;
+  }
+
+  getAmenityIconName(amenity: string): string {
+    const normalized = amenity.toLowerCase();
+    const iconMatchers: Array<{ keywords: string[]; icon: string }> = [
+      { keywords: ['wifi'], icon: 'wifi' },
+      { keywords: ['table'], icon: 'table_restaurant' },
+      { keywords: ['food', 'resto', 'restaurant'], icon: 'restaurant' },
+      { keywords: ['drink', 'bar', 'café', 'coffee'], icon: 'local_cafe' },
+      { keywords: ['parking'], icon: 'local_parking' },
+      { keywords: ['board', 'game'], icon: 'casino' },
+      { keywords: ['library'], icon: 'local_library' },
+      { keywords: ['shop', 'store'], icon: 'storefront' },
+      { keywords: ['tournament'], icon: 'emoji_events' },
+    ];
+
+    for (const matcher of iconMatchers) {
+      if (matcher.keywords.some((keyword) => normalized.includes(keyword))) {
+        return matcher.icon;
+      }
+    }
+
+    return 'check_circle';
   }
 
   private formatOpeningHours(hours: Record<string, string>): string {
@@ -527,6 +800,15 @@ export class LocationsListComponent implements OnInit {
       this.locations.length
     );
 
+    if (
+      this.selectedLocationId &&
+      !this.filteredLocations.some(
+        (location) => location.id === this.selectedLocationId
+      )
+    ) {
+      this.selectedLocationId = null;
+    }
+
     // Update markers on map
     this.updateMarkers();
   }
@@ -545,6 +827,27 @@ export class LocationsListComponent implements OnInit {
       parking: false,
     };
     this.applyFilters();
+  }
+
+  toggleAmenity(filterKey: AmenityFilterKey): void {
+    this.filters[filterKey] = !this.filters[filterKey];
+    this.applyFilters();
+  }
+
+  toggleDetailsCollapse(): void {
+    this.isDetailsCollapsed = !this.isDetailsCollapsed;
+  }
+
+  get selectedLocation(): Location | null {
+    if (!this.selectedLocationId) {
+      return null;
+    }
+
+    return (
+      this.filteredLocations.find(
+        (location) => location.id === this.selectedLocationId
+      ) || null
+    );
   }
 
   /**
@@ -658,75 +961,33 @@ export class LocationsListComponent implements OnInit {
   onMarkerClick(locationId: string): void {
     this.selectedLocationId = locationId;
 
-    // Scroll to the location card
-    const element = document.getElementById(`location-${locationId}`);
-    if (element) {
+    // Allow the template to render the selected card before attempting to scroll
+    setTimeout(() => {
+      const element = document.getElementById(`location-${locationId}`);
+      if (!element) {
+        return;
+      }
+
       element.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
       });
 
-      // Add temporary highlight animation
       element.classList.add('highlight');
       setTimeout(() => {
         element.classList.remove('highlight');
       }, 2000);
-    }
-  }
-
-  /**
-   * Get user's current position using geolocation API
-   */
-  getUserLocation(): void {
-    if (!navigator.geolocation) {
-      this.geolocationError =
-        "La géolocalisation n'est pas supportée par votre navigateur";
-      return;
-    }
-
-    this.geolocating = true;
-    this.geolocationError = null;
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        this.userPosition = {
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
-        };
-
-        this.addUserMarker();
-        this.findNearestLocation();
-        this.geolocating = false;
-      },
-      (error) => {
-        this.geolocating = false;
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            this.geolocationError = 'Permission de géolocalisation refusée';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            this.geolocationError = 'Position non disponible';
-            break;
-          case error.TIMEOUT:
-            this.geolocationError = 'Délai de géolocalisation dépassé';
-            break;
-          default:
-            this.geolocationError = 'Erreur de géolocalisation inconnue';
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0,
-      }
-    );
+    });
   }
 
   /**
    * Add a marker for user's position
    */
-  private addUserMarker(): void {
+  private addUserMarker(options: { animate?: boolean } = {}): void {
     if (!this.userPosition || !this.map) return;
+
+    const { animate = true } = options;
+    const targetZoom = animate ? 13 : this.map.getZoom();
 
     // Remove existing user marker if any
     if (this.userMarker) {
@@ -754,16 +1015,23 @@ export class LocationsListComponent implements OnInit {
       .openPopup();
 
     // Center map on user position
-    this.map.setView([this.userPosition.lat, this.userPosition.lon], 13, {
-      animate: true,
-      duration: 1,
-    });
+    this.map.setView(
+      [this.userPosition.lat, this.userPosition.lon],
+      targetZoom,
+      {
+        animate,
+        duration: animate ? 1 : 0,
+        noMoveStart: !animate,
+      }
+    );
   }
 
   /**
    * Find and zoom to nearest location
    */
-  private findNearestLocation(): void {
+  private findNearestLocation(options: { adjustMap?: boolean } = {}): void {
+    const { adjustMap = true } = options;
+
     if (!this.userPosition || !this.map || this.filteredLocations.length === 0)
       return;
 
@@ -790,19 +1058,21 @@ export class LocationsListComponent implements OnInit {
 
     const nearest = locationsWithDistance[0];
 
-    // Create bounds to include both user position and nearest location
-    const bounds = L.latLngBounds([
-      [userLat, userLon],
-      [nearest.location.lat, nearest.location.lon],
-    ]);
+    if (adjustMap) {
+      // Create bounds to include both user position and nearest location
+      const bounds = L.latLngBounds([
+        [userLat, userLon],
+        [nearest.location.lat, nearest.location.lon],
+      ]);
 
-    // Fit map to show both markers with padding
-    this.map.fitBounds(bounds, {
-      padding: [50, 50],
-      maxZoom: 15,
-      animate: true,
-      duration: 1,
-    });
+      // Fit map to show both markers with padding
+      this.map.fitBounds(bounds, {
+        padding: [50, 50],
+        maxZoom: 15,
+        animate: true,
+        duration: 1,
+      });
+    }
 
     // Highlight nearest location in list
     setTimeout(() => {

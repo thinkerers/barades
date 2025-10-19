@@ -1,9 +1,4 @@
 <div class="locations-container">
-  <header class="locations-header">
-    <h1>Lieux de jeu</h1>
-    <p>Découvrez les lieux où se déroulent les sessions</p>
-  </header>
-
   <lib-async-state
     [status]="locationsState"
     [loadingMessage]="loadingMessage"
@@ -11,229 +6,278 @@
     (retry)="retry()"
   ></lib-async-state>
 
-  <!-- Map and List - Always rendered but hidden during loading -->
-  <div class="content-wrapper" [class.hidden]="locationsState !== 'ready'">
-    <!-- Filters Panel -->
-    <div class="filters-panel">
-      <h3><mat-icon>search</mat-icon> Filtres</h3>
-
-      <!-- Search Bar -->
-      <div class="filter-group">
-        <label for="search">Recherche</label>
-        <input
-          type="text"
-          id="search"
-          [(ngModel)]="searchTerm"
-          (input)="applyFilters()"
-          placeholder="Nom, adresse, ville..."
-          class="search-input"
-        />
-      </div>
-
-      <!-- Location Type Filter -->
-      <div class="filter-group">
-        <label for="type-filter">Type de lieu</label>
-        <select
-          id="type-filter"
-          [(ngModel)]="selectedType"
-          (change)="applyFilters()"
-          class="type-select"
-        >
-          <option value="">Tous les types</option>
-          <option value="GAME_STORE">Boutique de jeux</option>
-          <option value="CAFE">Café</option>
-          <option value="BAR">Bar</option>
-          <option value="COMMUNITY_CENTER">Centre communautaire</option>
-          <option value="OTHER">Autre</option>
-        </select>
-      </div>
-
-      <!-- Amenities Filter -->
-      <div class="filter-group">
-        <div class="filter-label">Équipements</div>
-        <div class="amenities-checkboxes">
-          <label class="checkbox-label">
-            <input
-              type="checkbox"
-              [(ngModel)]="filters.wifi"
-              (change)="applyFilters()"
-            />
-            <span><mat-icon>wifi</mat-icon> WiFi</span>
-          </label>
-          <label class="checkbox-label">
-            <input
-              type="checkbox"
-              [(ngModel)]="filters.tables"
-              (change)="applyFilters()"
-            />
-            <span><mat-icon>table_restaurant</mat-icon> Tables de jeu</span>
-          </label>
-          <label class="checkbox-label">
-            <input
-              type="checkbox"
-              [(ngModel)]="filters.food"
-              (change)="applyFilters()"
-            />
-            <span><mat-icon>restaurant</mat-icon> Nourriture</span>
-          </label>
-          <label class="checkbox-label">
-            <input
-              type="checkbox"
-              [(ngModel)]="filters.drinks"
-              (change)="applyFilters()"
-            />
-            <span><mat-icon>local_cafe</mat-icon> Boissons</span>
-          </label>
-          <label class="checkbox-label">
-            <input
-              type="checkbox"
-              [(ngModel)]="filters.parking"
-              (change)="applyFilters()"
-            />
-            <span><mat-icon>local_parking</mat-icon> Parking</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- Reset Filters Button -->
-
-      <!-- Reset Filters Button -->
-      <button (click)="resetFilters()" class="reset-button">
-        <mat-icon>refresh</mat-icon> Réinitialiser les filtres
-      </button>
-    </div>
-
-    <!-- Map Container -->
-    <div class="map-container">
-      <button
-        type="button"
-        class="geolocation-button"
-        (click)="getUserLocation()"
-        [disabled]="geolocating"
-        [title]="geolocationError || 'Trouver ma position'"
+  <div class="map-stage" [class.hidden]="locationsState !== 'ready'">
+    <div
+      id="map"
+      class="map-stage__map"
+      aria-label="Carte des lieux de jeu"
+    ></div>
+    <div class="map-stage__overlay map-stage__overlay--header">
+      <section
+        class="locations-filters-card"
+        role="region"
+        aria-label="Filtres de recherche des lieux"
       >
-        @if (!geolocating) {
-        <mat-icon>my_location</mat-icon>
-        } @if (geolocating) {
-        <span class="spinner"></span>
-        }
-        <span>{{ geolocating ? 'Localisation...' : 'Ma position' }}</span>
-      </button>
-    </div>
-
-    <!-- Map Container -->
-    <div class="map-container">
-      <button
-        type="button"
-        class="geolocation-button"
-        (click)="getUserLocation()"
-        [disabled]="geolocating"
-        [title]="geolocationError || 'Trouver ma position'"
-      >
-        @if (!geolocating) {
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <circle cx="12" cy="12" r="10"></circle>
-          <circle cx="12" cy="12" r="3"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-        } @if (geolocating) {
-        <span class="spinner"></span>
-        }
-        <span>{{ geolocating ? 'Localisation...' : 'Ma position' }}</span>
-      </button>
-
-      @if (geolocationError) {
-      <div class="geolocation-error">{{ geolocationError }}</div>
-      }
-
-      <div id="map" class="map"></div>
-    </div>
-
-    <!-- Locations List -->
-    <div class="locations-list">
-      <h2>
-        Liste des lieux ({{ filteredLocations.length }} / {{ locations.length
-        }})
-      </h2>
-
-      <div class="location-cards">
-        @for (location of filteredLocations; track location) {
-        <div
-          [id]="'location-' + location.id"
-          class="location-card"
-          [class.selected]="selectedLocationId === location.id"
-          (click)="onLocationClick(location.id)"
-          role="button"
-          tabindex="0"
-          (keydown.enter)="onLocationClick(location.id)"
-          (keydown.space)="onLocationClick(location.id)"
-        >
-          <div class="location-header">
-            <h3>{{ location.name }}</h3>
-            <span class="location-type"
-              >{{ getLocationTypeLabel(location.type) }}</span
+        <header class="locations-filters-card__header">
+          <div class="locations-filters-card__title">
+            <mat-icon aria-hidden="true">filter_alt</mat-icon>
+            <div class="locations-filters-card__title-text">
+              <h1>Lieux de jeu</h1>
+              <p>Trouvez l'endroit idéal pour vos sessions</p>
+            </div>
+            @if (getActiveFiltersCount() > 0) {
+            <span
+              class="locations-filters-card__badge"
+              aria-label="Nombre de filtres actifs"
             >
-          </div>
-          <div class="location-info">
-            @if (location.address) {
-            <div class="info-row">
-              <mat-icon aria-label="Adresse">place</mat-icon>
-              <span>{{ location.address }}, {{ location.city }}</span>
-            </div>
-            } @if (location.city && !location.address) {
-            <div class="info-row">
-              <mat-icon aria-label="Ville">place</mat-icon>
-              <span>{{ location.city }}</span>
-            </div>
-            }
-            <div class="info-row">
-              <mat-icon aria-label="Note">star</mat-icon>
-              <span>{{ location.rating.toFixed(1) }}/5</span>
-            </div>
-            @if (location.capacity) {
-            <div class="info-row">
-              <mat-icon aria-label="Capacité">groups</mat-icon>
-              <span>Capacité: {{ location.capacity }} personnes</span>
-            </div>
+              {{ getActiveFiltersCount() }}
+            </span>
             }
           </div>
-          @if (location.amenities.length > 0) {
-          <div class="amenities">
-            @for (amenity of location.amenities; track amenity) {
-            <span class="amenity-tag">{{ amenity }}</span>
+          <button
+            type="button"
+            class="locations-filters-card__reset"
+            (click)="resetFilters()"
+            [disabled]="getActiveFiltersCount() === 0"
+          >
+            <mat-icon aria-hidden="true">refresh</mat-icon>
+            Réinitialiser
+          </button>
+        </header>
+
+        <div class="locations-filters-card__grid">
+          <div
+            class="locations-filters-card__field locations-filters-card__field--search"
+          >
+            <label class="field-label" for="search">Recherche</label>
+            <div class="field-control field-control--icon">
+              <mat-icon aria-hidden="true">search</mat-icon>
+              <input
+                type="text"
+                id="search"
+                [(ngModel)]="searchTerm"
+                (input)="applyFilters()"
+                placeholder="Nom, adresse, ville..."
+                autocomplete="off"
+              />
+            </div>
+          </div>
+
+          <div
+            class="locations-filters-card__field locations-filters-card__field--type"
+          >
+            <label class="field-label" for="type-filter">Type de lieu</label>
+            <div
+              class="field-control field-control--icon field-control--select"
+            >
+              <mat-icon aria-hidden="true">layers</mat-icon>
+              <select
+                id="type-filter"
+                [(ngModel)]="selectedType"
+                (change)="applyFilters()"
+              >
+                <option value="">Tous les types</option>
+                <option value="GAME_STORE">Boutique de jeux</option>
+                <option value="CAFE">Café</option>
+                <option value="BAR">Bar</option>
+                <option value="COMMUNITY_CENTER">Centre communautaire</option>
+                <option value="OTHER">Autre</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="locations-filters-card__amenities">
+          <span class="field-label">Équipements</span>
+          <div class="amenities-checkboxes">
+            <button
+              type="button"
+              class="amenity-toggle"
+              [class.amenity-toggle--active]="filters.wifi"
+              (click)="toggleAmenity('wifi')"
+            >
+              <mat-icon aria-hidden="true">wifi</mat-icon>
+              <span>WiFi</span>
+            </button>
+            <button
+              type="button"
+              class="amenity-toggle"
+              [class.amenity-toggle--active]="filters.tables"
+              (click)="toggleAmenity('tables')"
+            >
+              <mat-icon aria-hidden="true">table_restaurant</mat-icon>
+              <span>Tables de jeu</span>
+            </button>
+            <button
+              type="button"
+              class="amenity-toggle"
+              [class.amenity-toggle--active]="filters.food"
+              (click)="toggleAmenity('food')"
+            >
+              <mat-icon aria-hidden="true">restaurant</mat-icon>
+              <span>Nourriture</span>
+            </button>
+            <button
+              type="button"
+              class="amenity-toggle"
+              [class.amenity-toggle--active]="filters.drinks"
+              (click)="toggleAmenity('drinks')"
+            >
+              <mat-icon aria-hidden="true">local_cafe</mat-icon>
+              <span>Boissons</span>
+            </button>
+            <button
+              type="button"
+              class="amenity-toggle"
+              [class.amenity-toggle--active]="filters.parking"
+              (click)="toggleAmenity('parking')"
+            >
+              <mat-icon aria-hidden="true">local_parking</mat-icon>
+              <span>Parking</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="map-stage__overlay map-stage__overlay--list">
+      <div
+        class="locations-list"
+        role="region"
+        aria-label="Liste des lieux"
+        [class.locations-list--collapsed]="isDetailsCollapsed"
+      >
+        <button
+          type="button"
+          class="locations-list__status-pill"
+          (click)="toggleDetailsCollapse()"
+          [attr.aria-expanded]="!isDetailsCollapsed"
+          aria-controls="locations-details"
+          [title]="
+            isDetailsCollapsed
+              ? 'Afficher la liste des lieux'
+              : 'Masquer la liste des lieux'
+          "
+        >
+          <mat-icon aria-hidden="true">
+            {{ isDetailsCollapsed ? 'map' : 'assistant_navigation' }}
+          </mat-icon>
+          @if (isDetailsCollapsed) {
+          <span class="locations-list__status-pill-text">Liste masquée</span>
+          } @if (selectedLocation) {
+          <span
+            class="locations-list__status-pill-count"
+            [class.locations-list__status-pill-count--with-separator]="isDetailsCollapsed"
+          >
+            Lieu sélectionné (1 / {{ filteredLocations.length }})
+          </span>
+          } @else {
+          <span
+            class="locations-list__status-pill-count"
+            [class.locations-list__status-pill-count--with-separator]="isDetailsCollapsed"
+          >
+            Liste des lieux ({{ filteredLocations.length }} / {{
+            locations.length }})
+          </span>
+          }
+        </button>
+
+        <div id="locations-details">
+          @if (!isDetailsCollapsed) {
+          <h2 class="locations-details__heading">Détails du lieu</h2>
+
+          <div class="locations-details__content">
+            @if (selectedLocation; as location) {
+            <article
+              [id]="'location-' + location.id"
+              class="locations-details__selected-card"
+            >
+              <header class="locations-details__selected-header">
+                <div class="locations-details__selected-title">
+                  <mat-icon aria-hidden="true">push_pin</mat-icon>
+                  <div class="locations-details__selected-meta">
+                    <h3>{{ location.name }}</h3>
+                    <span class="locations-details__type"
+                      >{{ getLocationTypeLabel(location.type) }}</span
+                    >
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="locations-details__close"
+                  (click)="selectedLocationId = null"
+                  aria-label="Effacer le lieu sélectionné"
+                >
+                  <mat-icon aria-hidden="true">close</mat-icon>
+                </button>
+              </header>
+
+              <section class="locations-details__selected-body">
+                <ul class="locations-details__info-list">
+                  @if (location.address || location.city) {
+                  <li class="locations-details__info-row">
+                    <mat-icon aria-hidden="true">location_on</mat-icon>
+                    <span>
+                      {{ location.address ? (location.address + ', ' +
+                      location.city) : location.city }}
+                    </span>
+                  </li>
+                  }
+                  <li class="locations-details__info-row">
+                    <mat-icon aria-hidden="true">star</mat-icon>
+                    <span>{{ location.rating.toFixed(1) }}/5</span>
+                  </li>
+                  @if (location.capacity) {
+                  <li class="locations-details__info-row">
+                    <mat-icon aria-hidden="true">groups</mat-icon>
+                    <span>Capacité: {{ location.capacity }} personnes</span>
+                  </li>
+                  }
+                </ul>
+
+                @if (location.amenities.length > 0) {
+                <div class="locations-details__amenities">
+                  @for (amenity of location.amenities; track amenity) {
+                  <span class="locations-details__amenity">
+                    <mat-icon aria-hidden="true">
+                      {{ getAmenityIconName(amenity) }}
+                    </mat-icon>
+                    <span>{{ amenity }}</span>
+                  </span>
+                  }
+                </div>
+                }
+
+                <div class="locations-details__actions">
+                  @if (location.website) {
+                  <a
+                    [href]="location.website"
+                    target="_blank"
+                    rel="noopener"
+                    class="locations-details__action-link"
+                  >
+                    <mat-icon aria-hidden="true">language</mat-icon>
+                    Site web
+                  </a>
+                  }
+                </div>
+              </section>
+            </article>
+            } @else {
+            <div class="locations-details__placeholder">
+              <mat-icon aria-hidden="true">touch_app</mat-icon>
+              <div>
+                <h3>Sélectionnez un lieu sur la carte</h3>
+                <p>
+                  Cliquez sur un indicateur ou sur une entrée de la carte pour
+                  afficher ses informations détaillées ici.
+                </p>
+              </div>
+            </div>
             }
           </div>
           }
-          <div class="location-actions">
-            @if (location.website) {
-            <a
-              [href]="location.website"
-              target="_blank"
-              rel="noopener"
-              class="website-button"
-            >
-              <mat-icon aria-label="Site web">public</mat-icon>
-              Site web
-            </a>
-            }
-          </div>
         </div>
-        }
       </div>
     </div>
   </div>
