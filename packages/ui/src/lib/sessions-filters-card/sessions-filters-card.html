@@ -1,0 +1,139 @@
+<section class="filters-card mat-elevation-z8">
+  <header class="filters-card__header">
+    <div class="filters-card__title">
+      <mat-icon aria-hidden="true">filter_alt</mat-icon>
+      <h3>Filtres</h3>
+      @if (hasActiveFilters) {
+      <span class="filters-card__badge">{{ activeFiltersCount }}</span>
+      }
+    </div>
+    <button
+      mat-button
+      type="button"
+      class="filters-card__reset"
+      (click)="resetFilters.emit()"
+      [disabled]="!hasActiveFilters"
+    >
+      <mat-icon aria-hidden="true">refresh</mat-icon>
+      Réinitialiser
+    </button>
+  </header>
+
+  <div class="filters-card__grid">
+    <mat-form-field appearance="outline" class="filters-card__field">
+      <mat-label>Recherche</mat-label>
+      <mat-icon matPrefix aria-hidden="true">search</mat-icon>
+      <input
+        matInput
+        id="search"
+        placeholder="Nom, jeu, description..."
+        [ngModel]="searchTerm"
+        (ngModelChange)="searchTermChange.emit($event)"
+        autocomplete="off"
+      />
+    </mat-form-field>
+
+    <mat-form-field
+      appearance="outline"
+      class="filters-card__field filters-card__field--host"
+    >
+      <mat-label>Hôte</mat-label>
+      <mat-icon matPrefix aria-hidden="true">person_search</mat-icon>
+      <input
+        matInput
+        id="host-filter"
+        placeholder="Rechercher un hôte..."
+        [ngModel]="selectedHost"
+        (ngModelChange)="hostFilterChange.emit($event)"
+        (focus)="hostFilterFocus.emit()"
+        [matAutocomplete]="hostAuto"
+        autocomplete="off"
+      />
+      <button
+        mat-icon-button
+        matSuffix
+        type="button"
+        (click)="clearHostFilter.emit()"
+        [disabled]="!hasHostFilterValue && !isScopeFilterActive"
+        aria-label="Effacer le filtre hôte"
+      >
+        <mat-icon aria-hidden="true">close</mat-icon>
+      </button>
+      <mat-autocomplete
+        #hostAuto="matAutocomplete"
+        (optionSelected)="hostOptionSelected.emit($event.option.value)"
+      >
+        @for (host of filteredHostOptions; track host) {
+        <mat-option [value]="host">{{ host }}</mat-option>
+        } @if (!filteredHostOptions.length && hasHostFilterValue) {
+        <mat-option disabled>Aucun hôte trouvé</mat-option>
+        }
+      </mat-autocomplete>
+      @if (isScopeFilterActive) {
+      <mat-hint align="start" class="filters-card__hint"
+        >Filtre appliqué depuis le dashboard</mat-hint
+      >
+      }
+    </mat-form-field>
+
+    <div class="filters-card__field filters-card__field--session-type">
+      <span class="filters-card__label">Type de session</span>
+      <div
+        class="filters-card__toggles"
+        role="group"
+        aria-label="Filtrer par type de session"
+      >
+        <button
+          type="button"
+          class="filter-toggle"
+          [class.filter-toggle--active]="sessionType === 'all'"
+          (click)="sessionTypeChange.emit('all')"
+        >
+          <mat-icon aria-hidden="true">dashboard</mat-icon>
+          <span>Toutes</span>
+        </button>
+        <button
+          type="button"
+          class="filter-toggle"
+          [class.filter-toggle--active]="sessionType === 'online'"
+          (click)="sessionTypeChange.emit('online')"
+        >
+          <mat-icon aria-hidden="true">computer</mat-icon>
+          <span>En ligne</span>
+        </button>
+        <button
+          type="button"
+          class="filter-toggle"
+          [class.filter-toggle--active]="sessionType === 'onsite'"
+          (click)="sessionTypeChange.emit('onsite')"
+        >
+          <mat-icon aria-hidden="true">groups</mat-icon>
+          <span>Sur table</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="filters-card__field filters-card__field--game">
+      <lib-game-system-input
+        [ngModel]="selectedGameSystem"
+        (ngModelChange)="gameFilterChange.emit($event)"
+        [gameSystems]="gameSystems"
+        [maxSuggestions]="maxGameSuggestions"
+        [minSuggestionLength]="minGameSuggestionLength"
+        [suggestionThreshold]="gameSuggestionThreshold"
+        [clearButtonAriaLabel]="'Effacer le filtre système de jeu'"
+      ></lib-game-system-input>
+    </div>
+  </div>
+
+  <div class="filters-card__availability">
+    <div class="filters-card__availability-card">
+      <mat-checkbox
+        [ngModel]="onlyAvailable"
+        (ngModelChange)="availabilityChange.emit($event)"
+      >
+        Uniquement les sessions avec places disponibles
+      </mat-checkbox>
+    </div>
+  </div>
+</section>

@@ -7,20 +7,12 @@ import {
   inject,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormsModule } from '@angular/forms';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   AsyncStateComponent,
   AsyncStateStatus,
   EmptyStateComponent,
-  GameSystemInputComponent,
+  SessionsFiltersCard,
   SessionsScopeBanner,
   findClosestMatches,
 } from '@org/ui';
@@ -32,19 +24,11 @@ import { SessionCardComponent } from './session-card';
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
-    MatAutocompleteModule,
-    MatButtonModule,
-    MatCheckboxModule,
-    MatFormFieldModule,
-    MatIconModule,
-    MatInputModule,
-    MatSelectModule,
     SessionCardComponent,
     EmptyStateComponent,
     AsyncStateComponent,
-    GameSystemInputComponent,
     SessionsScopeBanner,
+    SessionsFiltersCard,
   ],
   selector: 'app-sessions-list',
   templateUrl: './sessions-list.html',
@@ -218,6 +202,20 @@ export class SessionsListPage implements OnInit {
     });
   }
 
+  onSearchTermChange(term: string): void {
+    this.searchTerm = term ?? '';
+    this.applyFilters();
+  }
+
+  onHostFilterFocus(): void {
+    this.onHostFilterChange(this.selectedHost);
+  }
+
+  onAvailabilityChange(onlyAvailable: boolean): void {
+    this.onlyAvailable = !!onlyAvailable;
+    this.applyFilters();
+  }
+
   get isScopeFilterActive(): boolean {
     return this.filterMode === 'my-hosted';
   }
@@ -301,7 +299,7 @@ export class SessionsListPage implements OnInit {
     return count;
   }
 
-  onHostFilterChange(value: string): void {
+  onHostFilterChange(value: string | null): void {
     this.selectedHost = value ?? '';
     this.filteredHostOptions = this.filterHostSuggestions(this.selectedHost);
 
@@ -334,7 +332,7 @@ export class SessionsListPage implements OnInit {
     this.applyFilters();
   }
 
-  onGameFilterChange(value: string): void {
+  onGameFilterChange(value: string | null): void {
     this.selectedGameSystem = value ?? '';
     this.applyFilters();
   }
