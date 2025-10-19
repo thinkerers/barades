@@ -1,4 +1,11 @@
-import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import {
   FormBuilder,
   FormGroup,
@@ -35,20 +42,19 @@ import {
   ],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfilePage implements OnInit {
   private authService = inject(AuthService);
   private usersService = inject(UsersService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
-  private cdr = inject(ChangeDetectorRef);
-
-  user: User | null = null;
-  profileForm: FormGroup;
-  isEditing = false;
-  isLoading = false;
-  errorMessage = '';
-  successMessage = '';
+  private readonly userSignal = signal<User | null>(null);
+  readonly profileForm: FormGroup;
+  private readonly isEditingSignal = signal(false);
+  private readonly isLoadingSignal = signal(false);
+  private readonly errorMessageSignal = signal('');
+  private readonly successMessageSignal = signal('');
 
   skillLevels = [
     { value: 'BEGINNER', label: 'Débutant' },
@@ -75,70 +81,67 @@ export class ProfilePage implements OnInit {
     }
 
     // Load fresh profile data from API
-    this.loadProfile();
+    void this.loadProfile();
   }
 
-  private loadProfile(): void {
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.cdr.markForCheck();
+  private async loadProfile(): Promise<void> {
+    this.isLoadingSignal.set(true);
+    this.errorMessageSignal.set('');
 
-    this.usersService.getMyProfile().subscribe({
-      next: (profile) => {
-        this.isLoading = false;
-        this.user = {
-          id: profile.id,
-          email: profile.email,
-          username: profile.username,
-          firstName: profile.firstName,
-          lastName: profile.lastName,
-          bio: profile.bio,
-          avatar: profile.avatar,
-        };
+    try {
+      const profile = await firstValueFrom(this.usersService.getMyProfile());
+      if (!profile) {
+        throw new Error('Profil introuvable');
+      }
 
-        // Populate form with current user data
-        this.profileForm.patchValue({
-          username: profile.username,
-          email: profile.email,
-          firstName: profile.firstName || '',
-          lastName: profile.lastName || '',
-          bio: profile.bio || '',
-          skillLevel: profile.skillLevel || '',
-        });
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.errorMessage =
-          err.error?.message || 'Erreur lors du chargement du profil';
-        console.error('Profile load error:', err);
-        this.cdr.markForCheck();
-      },
-    });
-  }
+      this.userSignal.set({
+        id: profile.id,
+        email: profile.email,
+        username: profile.username,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        bio: profile.bio,
+        avatar: profile.avatar,
+      });
 
-  toggleEdit(): void {
-    this.isEditing = !this.isEditing;
-
-    if (!this.isEditing) {
-      // Cancel editing - reset form with fresh data
-      this.loadProfile();
-      this.errorMessage = '';
-      this.successMessage = '';
+      this.profileForm.patchValue({
+        username: profile.username,
+        email: profile.email,
+        firstName: profile.firstName || '',
+        lastName: profile.lastName || '',
+        bio: profile.bio || '',
+        skillLevel: profile.skillLevel || '',
+      });
+      this.isLoadingSignal.set(false);
+    } catch (error) {
+      console.error('Profile load error:', error);
+      const message =
+        (error as { error?: { message?: string } })?.error?.message ||
+        'Erreur lors du chargement du profil';
+      this.errorMessageSignal.set(message);
+      this.isLoadingSignal.set(false);
     }
-    this.cdr.markForCheck();
   }
 
-  onSubmit(): void {
+  async toggleEdit(): Promise<void> {
+    const nextState = !this.isEditingSignal();
+    this.isEditingSignal.set(nextState);
+
+    if (!nextState) {
+      this.errorMessageSignal.set('');
+      this.successMessageSignal.set('');
+      await this.loadProfile();
+    }
+  }
+
+  async onSubmit(): Promise<void> {
     if (this.profileForm.invalid) {
-      this.cdr.markForCheck();
       return;
     }
 
-    this.isLoading = true;
-    this.errorMessage = '';
-    this.successMessage = '';
-    this.cdr.markForCheck();
+    this.isLoadingSignal.set(true);
+    this.errorMessageSignal.set('');
+    this.successMessageSignal.set('');
 
     const dto: UpdateProfileDto = {
       firstName: this.profileForm.value.firstName || undefined,
@@ -147,40 +150,39 @@ export class ProfilePage implements OnInit {
       skillLevel: this.profileForm.value.skillLevel || undefined,
     };
 
-    this.usersService.updateMyProfile(dto).subscribe({
-      next: (updatedUser) => {
-        this.isLoading = false;
-        this.successMessage = 'Profil mis à jour avec succès !';
-        this.isEditing = false;
+    try {
+      const updatedUser = await firstValueFrom(
+        this.usersService.updateMyProfile(dto)
+      );
 
-        // Update local user data
-        this.user = {
-          id: updatedUser.id,
-          email: updatedUser.email,
-          username: updatedUser.username,
-          firstName: updatedUser.firstName,
-          lastName: updatedUser.lastName,
-          bio: updatedUser.bio,
-          avatar: updatedUser.avatar,
-        };
+      this.isLoadingSignal.set(false);
+      this.successMessageSignal.set('Profil mis à jour avec succès !');
+      this.isEditingSignal.set(false);
 
-        // Update form with new data
-        this.profileForm.patchValue({
-          firstName: updatedUser.firstName || '',
-          lastName: updatedUser.lastName || '',
-          bio: updatedUser.bio || '',
-          skillLevel: updatedUser.skillLevel || '',
-        });
-        this.cdr.markForCheck();
-      },
-      error: (err) => {
-        this.isLoading = false;
-        this.errorMessage =
-          err.error?.message || 'Erreur lors de la mise à jour du profil';
-        console.error('Profile update error:', err);
-        this.cdr.markForCheck();
-      },
-    });
+      this.userSignal.set({
+        id: updatedUser.id,
+        email: updatedUser.email,
+        username: updatedUser.username,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        bio: updatedUser.bio,
+        avatar: updatedUser.avatar,
+      });
+
+      this.profileForm.patchValue({
+        firstName: updatedUser.firstName || '',
+        lastName: updatedUser.lastName || '',
+        bio: updatedUser.bio || '',
+        skillLevel: updatedUser.skillLevel || '',
+      });
+    } catch (error) {
+      console.error('Profile update error:', error);
+      const message =
+        (error as { error?: { message?: string } })?.error?.message ||
+        'Erreur lors de la mise à jour du profil';
+      this.errorMessageSignal.set(message);
+      this.isLoadingSignal.set(false);
+    }
   }
 
   logout(): void {
@@ -188,12 +190,34 @@ export class ProfilePage implements OnInit {
   }
 
   getInitials(): string {
-    if (!this.user) return '?';
+    const user = this.userSignal();
+    if (!user) {
+      return '?';
+    }
 
-    const firstInitial =
-      this.user.firstName?.charAt(0) || this.user.username.charAt(0);
-    const lastInitial = this.user.lastName?.charAt(0) || '';
+    const firstInitial = user.firstName?.charAt(0) || user.username.charAt(0);
+    const lastInitial = user.lastName?.charAt(0) || '';
 
     return (firstInitial + lastInitial).toUpperCase();
+  }
+
+  get user(): User | null {
+    return this.userSignal();
+  }
+
+  get isEditing(): boolean {
+    return this.isEditingSignal();
+  }
+
+  get isLoading(): boolean {
+    return this.isLoadingSignal();
+  }
+
+  get errorMessage(): string {
+    return this.errorMessageSignal();
+  }
+
+  get successMessage(): string {
+    return this.successMessageSignal();
   }
 }
