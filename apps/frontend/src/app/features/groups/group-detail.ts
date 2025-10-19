@@ -3,6 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import {
   afterNextRender,
   Component,
+  computed,
   inject,
   OnDestroy,
   OnInit,
@@ -91,6 +92,21 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
   readonly joinError = signal<string | null>(null);
   readonly leaveInProgress = signal<boolean>(false);
   readonly leaveError = signal<string | null>(null);
+  readonly memberCount = computed(() => {
+    const group = this.group();
+    return group?.members?.length ?? group?._count?.members ?? 0;
+  });
+  readonly isFull = computed(() => {
+    const group = this.group();
+    if (!group?.maxMembers) {
+      return false;
+    }
+    return this.memberCount() >= group.maxMembers;
+  });
+  readonly canJoin = computed(() => {
+    const group = this.group();
+    return !this.isMember() && group?.isRecruiting === true && !this.isFull();
+  });
 
   currentUserId: string | null = null;
   readonly defaultErrorMessage =
@@ -252,22 +268,6 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
       SANDBOX: 'blue',
     };
     return colors[playstyle] || 'gray';
-  }
-
-  getMemberCount(): number {
-    const group = this.group();
-    return group?.members?.length || group?._count?.members || 0;
-  }
-
-  isFull(): boolean {
-    const group = this.group();
-    if (!group?.maxMembers) return false;
-    return this.getMemberCount() >= group.maxMembers;
-  }
-
-  canJoin(): boolean {
-    const group = this.group();
-    return !this.isMember() && group?.isRecruiting === true && !this.isFull();
   }
 
   private handlePendingAutoJoin(): void {

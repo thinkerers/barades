@@ -387,12 +387,12 @@ describe('GroupDetailComponent', () => {
     });
 
     it('should get member count from members array', () => {
-      expect(component.getMemberCount()).toBe(2);
+      expect(component.memberCount()).toBe(2);
     });
 
     it('should get member count from _count when members is not available', () => {
       component.group.set({ ...mockGroup, members: undefined });
-      expect(component.getMemberCount()).toBe(5);
+      expect(component.memberCount()).toBe(5);
     });
 
     it('should return 0 when no member data available', () => {
@@ -401,7 +401,7 @@ describe('GroupDetailComponent', () => {
         members: undefined,
         _count: undefined,
       });
-      expect(component.getMemberCount()).toBe(0);
+      expect(component.memberCount()).toBe(0);
     });
 
     it('should detect when group is full', () => {

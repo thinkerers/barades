@@ -2,7 +2,7 @@
   class="group-card"
   [class]="'group-card--' + getPlaystyleColor(group.playstyle)"
   [attr.data-testid]="'group-card-' + group.id"
-  >
+>
   <div
     class="group-card__tag"
     [ngClass]="'tag--' + getPlaystyleColor(group.playstyle)"
@@ -16,40 +16,39 @@
       <span
         class="group-card__playstyle"
         [ngClass]="'playstyle--' + getPlaystyleColor(group.playstyle)"
-        >
+      >
         {{ getPlaystyleLabel(group.playstyle) }}
       </span>
       @if (!group.isPublic) {
-        <span class="group-card__visibility">
-          <mat-icon class="icon" fontIcon="lock" aria-hidden="true"></mat-icon>
-          <span>Privé</span>
-        </span>
+      <span class="group-card__visibility">
+        <mat-icon class="icon" fontIcon="lock" aria-hidden="true"></mat-icon>
+        <span>Privé</span>
+      </span>
       }
     </div>
   </header>
 
-  <div class="group-card__status" [ngClass]="getStatusClass()">
-    <span>{{ getStatusLabel() }}</span>
+  <div class="group-card__status" [ngClass]="statusClass()">
+    <span>{{ statusLabel() }}</span>
   </div>
 
   <p class="group-card__description">{{ group.description }}</p>
 
   <div class="group-card__metadata">
     @if (group.creator) {
-      <div class="group-card__meta-item">
-        <mat-icon class="icon" fontIcon="person" aria-hidden="true"></mat-icon>
-        <span class="creator">{{ group.creator.username }}</span>
-      </div>
+    <div class="group-card__meta-item">
+      <mat-icon class="icon" fontIcon="person" aria-hidden="true"></mat-icon>
+      <span class="creator">{{ group.creator.username }}</span>
+    </div>
     }
 
     <div class="group-card__meta-item">
       <mat-icon class="icon" fontIcon="group" aria-hidden="true"></mat-icon>
       <span>
-        {{ getMemberCount() }}
+        {{ memberCount() }}
         @if (group.maxMembers !== null) {
-          <span> / {{ group.maxMembers }}</span>
-        }
-        membre(s)
+        <span> / {{ group.maxMembers }}</span>
+        } membre(s)
       </span>
     </div>
   </div>
@@ -60,19 +59,19 @@
       class="btn btn--primary"
       [disabled]="primaryActionDisabled"
       (click)="onPrimaryAction()"
-      >
+    >
       {{ primaryActionLabel }}
     </button>
 
-    @if (shouldShowSecondaryAction) {
-      <button
-        type="button"
-        class="btn btn--secondary"
-        [disabled]="isSecondaryActionDisabled"
-        (click)="onSecondaryAction()"
-        >
-        {{ secondaryActionLoading ? 'Rejoindre...' : secondaryActionLabel }}
-      </button>
+    @if (shouldShowSecondaryAction()) {
+    <button
+      type="button"
+      class="btn btn--secondary"
+      [disabled]="isSecondaryActionDisabled()"
+      (click)="onSecondaryAction()"
+    >
+      {{ secondaryActionLoading ? 'Rejoindre...' : secondaryActionLabel }}
+    </button>
     }
   </div>
 </article>
