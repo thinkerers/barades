@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -27,6 +27,7 @@ export class SessionEditComponent implements OnInit {
   private readonly sessionsService = inject(SessionsService);
   private readonly authService = inject(AuthService);
   private readonly notifications = inject(NotificationService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   sessionForm!: FormGroup;
   loading = true;
@@ -91,6 +92,7 @@ export class SessionEditComponent implements OnInit {
     if (!this.sessionId) {
       this.error = 'ID de session invalide';
       this.loading = false;
+      this.cdr.markForCheck();
       return;
     }
 
@@ -114,6 +116,7 @@ export class SessionEditComponent implements OnInit {
         if (!currentUser || session.hostId !== currentUser.id) {
           this.error = "Vous n'êtes pas autorisé à modifier cette session";
           this.loading = false;
+          this.cdr.markForCheck();
           return;
         }
 
@@ -131,12 +134,14 @@ export class SessionEditComponent implements OnInit {
         });
 
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Erreur lors du chargement de la session:', err);
         this.error =
           "Impossible de charger la session. Elle n'existe peut-être pas.";
         this.loading = false;
+        this.cdr.markForCheck();
       },
     });
   }
@@ -145,9 +150,11 @@ export class SessionEditComponent implements OnInit {
     this.sessionsService.getSessions().subscribe({
       next: (sessions) => {
         this.existingGames = [...new Set(sessions.map((s) => s.game))].sort();
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Erreur lors du chargement des jeux:', err);
+        this.cdr.markForCheck();
       },
     });
   }
@@ -182,16 +189,19 @@ export class SessionEditComponent implements OnInit {
           control.markAsTouched();
         }
       });
+      this.cdr.markForCheck();
       return;
     }
 
     if (!this.sessionId) {
       this.error = 'ID de session invalide';
+      this.cdr.markForCheck();
       return;
     }
 
     this.saving = true;
     this.error = null;
+    this.cdr.markForCheck();
 
     const formValue = this.sessionForm.value;
     const sessionData = {
@@ -204,6 +214,7 @@ export class SessionEditComponent implements OnInit {
         this.saving = false;
         this.notifications.success('Session modifiée avec succès.');
         this.router.navigate(['/sessions', updatedSession.id]);
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Erreur lors de la modification:', err);
@@ -211,6 +222,7 @@ export class SessionEditComponent implements OnInit {
           err.error?.message ||
           'Une erreur est survenue lors de la modification de la session';
         this.saving = false;
+        this.cdr.markForCheck();
       },
     });
   }

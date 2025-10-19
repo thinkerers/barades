@@ -1,5 +1,4 @@
-
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -17,8 +16,8 @@ import { Router } from '@angular/router';
 import { User } from '../../core/models/auth.model';
 import { AuthService } from '../../core/services/auth.service';
 import {
-  UsersService,
   UpdateProfileDto,
+  UsersService,
 } from '../../core/services/users.service';
 
 @Component({
@@ -32,8 +31,8 @@ import {
     MatButtonModule,
     MatSelectModule,
     MatProgressSpinnerModule,
-    MatIconModule
-],
+    MatIconModule,
+  ],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.css',
 })
@@ -42,6 +41,7 @@ export class ProfilePage implements OnInit {
   private usersService = inject(UsersService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   user: User | null = null;
   profileForm: FormGroup;
@@ -81,6 +81,7 @@ export class ProfilePage implements OnInit {
   private loadProfile(): void {
     this.isLoading = true;
     this.errorMessage = '';
+    this.cdr.markForCheck();
 
     this.usersService.getMyProfile().subscribe({
       next: (profile) => {
@@ -104,12 +105,14 @@ export class ProfilePage implements OnInit {
           bio: profile.bio || '',
           skillLevel: profile.skillLevel || '',
         });
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.isLoading = false;
         this.errorMessage =
           err.error?.message || 'Erreur lors du chargement du profil';
         console.error('Profile load error:', err);
+        this.cdr.markForCheck();
       },
     });
   }
@@ -123,16 +126,19 @@ export class ProfilePage implements OnInit {
       this.errorMessage = '';
       this.successMessage = '';
     }
+    this.cdr.markForCheck();
   }
 
   onSubmit(): void {
     if (this.profileForm.invalid) {
+      this.cdr.markForCheck();
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
+    this.cdr.markForCheck();
 
     const dto: UpdateProfileDto = {
       firstName: this.profileForm.value.firstName || undefined,
@@ -165,12 +171,14 @@ export class ProfilePage implements OnInit {
           bio: updatedUser.bio || '',
           skillLevel: updatedUser.skillLevel || '',
         });
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.isLoading = false;
         this.errorMessage =
           err.error?.message || 'Erreur lors de la mise à jour du profil';
         console.error('Profile update error:', err);
+        this.cdr.markForCheck();
       },
     });
   }

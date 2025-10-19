@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  inject,
+  Input,
+  Output,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '../../core/services/notification.service';
 import { Poll, PollsService } from '../../core/services/polls.service';
@@ -14,6 +21,7 @@ import { Poll, PollsService } from '../../core/services/polls.service';
 export class PollWidgetComponent {
   private pollsService = inject(PollsService);
   private notifications = inject(NotificationService);
+  private cdr = inject(ChangeDetectorRef);
 
   @Input() poll: Poll | null = null;
   @Input() groupId = '';
@@ -35,27 +43,32 @@ export class PollWidgetComponent {
     if (!this.showCreateForm) {
       this.resetForm();
     }
+    this.cdr.markForCheck();
   }
 
   addDate(): void {
     if (this.newDateInput && !this.selectedDates.includes(this.newDateInput)) {
       this.selectedDates.push(this.newDateInput);
       this.newDateInput = '';
+      this.cdr.markForCheck();
     }
   }
 
   removeDate(date: string): void {
     this.selectedDates = this.selectedDates.filter((d) => d !== date);
+    this.cdr.markForCheck();
   }
 
   createPoll(): void {
     if (!this.pollTitle || this.selectedDates.length < 2) {
       this.error = 'Le titre et au moins 2 dates sont requis';
+      this.cdr.markForCheck();
       return;
     }
 
     this.creating = true;
     this.error = null;
+    this.cdr.markForCheck();
 
     this.pollsService
       .createPoll({
@@ -69,6 +82,7 @@ export class PollWidgetComponent {
           this.resetForm();
           this.showCreateForm = false;
           this.creating = false;
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Error creating poll:', err);
@@ -81,6 +95,7 @@ export class PollWidgetComponent {
             this.error = 'Erreur lors de la création du sondage';
           }
           this.creating = false;
+          this.cdr.markForCheck();
         },
       });
   }
@@ -96,6 +111,7 @@ export class PollWidgetComponent {
       .subscribe({
         next: () => {
           this.voted.emit();
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Error voting:', err);
@@ -108,6 +124,7 @@ export class PollWidgetComponent {
           } else {
             this.notifications.error('Erreur lors du vote.');
           }
+          this.cdr.markForCheck();
         },
       });
   }
@@ -118,6 +135,7 @@ export class PollWidgetComponent {
     this.pollsService.removeVote(this.poll.id, this.currentUserId).subscribe({
       next: () => {
         this.voted.emit();
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error removing vote:', err);
@@ -132,6 +150,7 @@ export class PollWidgetComponent {
         } else {
           this.notifications.error('Erreur lors de la suppression du vote.');
         }
+        this.cdr.markForCheck();
       },
     });
   }

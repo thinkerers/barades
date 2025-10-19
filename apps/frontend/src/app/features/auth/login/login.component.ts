@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 
 import {
   FormBuilder,
@@ -34,6 +34,7 @@ export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
 
   loginForm: FormGroup;
   isLoading = false;
@@ -48,16 +49,20 @@ export class LoginComponent {
 
   onSubmit(): void {
     if (this.loginForm.invalid) {
+      this.cdr.markForCheck();
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = '';
+    this.cdr.markForCheck();
 
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
         // Redirect to return URL or home
         const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+        this.isLoading = false;
+        this.cdr.markForCheck();
         this.router.navigateByUrl(returnUrl);
       },
       error: (error) => {
@@ -65,6 +70,7 @@ export class LoginComponent {
         this.errorMessage =
           error.error?.message ||
           'Identifiants incorrects. Veuillez réessayer.';
+        this.cdr.markForCheck();
       },
     });
   }

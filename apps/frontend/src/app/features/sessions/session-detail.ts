@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AsyncStateComponent, AsyncStateStatus } from '@org/ui';
@@ -22,6 +22,7 @@ export class SessionDetailComponent implements OnInit {
   private readonly reservationsService = inject(ReservationsService);
   private readonly authService = inject(AuthService);
   private readonly notifications = inject(NotificationService);
+  private readonly cdr = inject(ChangeDetectorRef);
   private sessionId: string | null = null;
 
   session: Session | null = null;
@@ -44,6 +45,7 @@ export class SessionDetailComponent implements OnInit {
     } else {
       this.error = 'ID de session invalide';
       this.loading = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -51,17 +53,20 @@ export class SessionDetailComponent implements OnInit {
     this.sessionId = id;
     this.loading = true;
     this.error = null;
+    this.cdr.markForCheck();
 
     this.sessionsService.getSession(id).subscribe({
       next: (session) => {
         this.session = session;
         this.loading = false;
         this.checkIfRegistered();
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error loading session:', err);
         this.error = this.defaultErrorMessage;
         this.loading = false;
+        this.cdr.markForCheck();
       },
     });
   }
@@ -93,6 +98,7 @@ export class SessionDetailComponent implements OnInit {
     if (!currentUser || !this.session) {
       this.isRegistered = false;
       this.currentReservationId = null;
+      this.cdr.markForCheck();
       return;
     }
 
@@ -103,11 +109,13 @@ export class SessionDetailComponent implements OnInit {
         );
         this.isRegistered = !!activeReservation;
         this.currentReservationId = activeReservation?.id ?? null;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error checking registration:', err);
         this.isRegistered = false;
         this.currentReservationId = null;
+        this.cdr.markForCheck();
       },
     });
   }
@@ -133,6 +141,7 @@ export class SessionDetailComponent implements OnInit {
     }
 
     this.reserving = true;
+    this.cdr.markForCheck();
     this.reservationsService
       .createReservation(this.session.id, currentUser.id)
       .subscribe({
@@ -167,6 +176,7 @@ export class SessionDetailComponent implements OnInit {
           this.notifications.success(
             'Réservation confirmée ! Vous avez reçu un email de confirmation.'
           );
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Error creating reservation:', err);
@@ -174,6 +184,7 @@ export class SessionDetailComponent implements OnInit {
           this.notifications.error(
             err.error?.message || 'Erreur lors de la réservation.'
           );
+          this.cdr.markForCheck();
         },
       });
   }
@@ -185,6 +196,7 @@ export class SessionDetailComponent implements OnInit {
 
     const reservationId = this.currentReservationId;
     this.cancelling = true;
+    this.cdr.markForCheck();
 
     this.reservationsService.cancelReservation(reservationId).subscribe({
       next: () => {
@@ -203,6 +215,7 @@ export class SessionDetailComponent implements OnInit {
         }
         this.cancelling = false;
         this.notifications.info('Désinscription confirmée.');
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error cancelling reservation:', err);
@@ -210,6 +223,7 @@ export class SessionDetailComponent implements OnInit {
         this.notifications.error(
           err.error?.message || 'Erreur lors de la désinscription.'
         );
+        this.cdr.markForCheck();
       },
     });
   }
@@ -296,6 +310,7 @@ export class SessionDetailComponent implements OnInit {
         this.router.navigate(['/sessions'], {
           queryParams: { filter: 'my-hosted' },
         });
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error deleting session:', err);
@@ -303,6 +318,7 @@ export class SessionDetailComponent implements OnInit {
         this.notifications.error(
           err?.error?.message ?? 'Erreur lors de la suppression de la session.'
         );
+        this.cdr.markForCheck();
       },
     });
   }

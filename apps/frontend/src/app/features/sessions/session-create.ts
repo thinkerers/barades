@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -23,6 +23,7 @@ export class SessionCreateComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly sessionsService = inject(SessionsService);
   private readonly authService = inject(AuthService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   sessionForm!: FormGroup;
   loading = false;
@@ -82,10 +83,12 @@ export class SessionCreateComponent implements OnInit {
       next: (sessions) => {
         // Extraire les noms de jeux uniques et les trier
         this.existingGames = [...new Set(sessions.map((s) => s.game))].sort();
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Erreur lors du chargement des jeux:', err);
         // Continuer même si le chargement échoue
+        this.cdr.markForCheck();
       },
     });
   }
@@ -98,16 +101,19 @@ export class SessionCreateComponent implements OnInit {
           control.markAsTouched();
         }
       });
+      this.cdr.markForCheck();
       return;
     }
 
     this.loading = true;
     this.error = null;
+    this.cdr.markForCheck();
 
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
       this.error = 'Vous devez être connecté pour créer une session';
       this.loading = false;
+      this.cdr.markForCheck();
       return;
     }
 
@@ -122,12 +128,15 @@ export class SessionCreateComponent implements OnInit {
       next: (session) => {
         console.log('Session créée:', session);
         this.router.navigate(['/sessions']);
+        this.loading = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Erreur création session:', err);
         this.error =
           err.error?.message || 'Erreur lors de la création de la session';
         this.loading = false;
+        this.cdr.markForCheck();
       },
     });
   }
