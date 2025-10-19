@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { HostFilterField } from '../host-filter-field/host-filter-field';
 import { SearchFilterField } from '../search-filter-field/search-filter-field';
+import { SessionTypeToggleGroup } from '../session-type-toggle-group';
 import { SessionsFiltersCard } from './sessions-filters-card';
 
 describe('SessionsFiltersCard', () => {
@@ -40,5 +41,16 @@ describe('SessionsFiltersCard', () => {
     hostField.componentInstance.handleInputChange('Alice');
 
     expect(emitSpy).toHaveBeenCalledWith('Alice');
+  });
+
+  it('should forward session type selections', () => {
+    const emitSpy = jest.spyOn(component.sessionTypeChange, 'emit');
+    const toggleGroup = fixture.debugElement.query(
+      By.directive(SessionTypeToggleGroup)
+    );
+
+    toggleGroup.componentInstance.selectType('online');
+
+    expect(emitSpy).toHaveBeenCalledWith('online');
   });
 });

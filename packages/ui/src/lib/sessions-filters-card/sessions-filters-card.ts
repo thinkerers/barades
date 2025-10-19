@@ -13,8 +13,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { HostFilterField } from '../host-filter-field/host-filter-field';
 import { GameSystemInputComponent } from '../inputs/game-system-input/game-system-input.component';
 import { SearchFilterField } from '../search-filter-field/search-filter-field';
-
-type SessionsFilterMode = 'all' | 'online' | 'onsite';
+import type { SessionTypeFilter } from '../session-type-toggle-group';
+import { SessionTypeToggleGroup } from '../session-type-toggle-group';
 
 @Component({
   selector: 'lib-sessions-filters-card',
@@ -28,6 +28,7 @@ type SessionsFilterMode = 'all' | 'online' | 'onsite';
     HostFilterField,
     GameSystemInputComponent,
     SearchFilterField,
+    SessionTypeToggleGroup,
   ],
   templateUrl: './sessions-filters-card.html',
   styleUrl: './sessions-filters-card.css',
@@ -40,7 +41,7 @@ export class SessionsFiltersCard {
   @Input() selectedHost = '';
   @Input() filteredHostOptions: string[] = [];
   @Input() isScopeFilterActive = false;
-  @Input() sessionType: SessionsFilterMode = 'all';
+  @Input() sessionType: SessionTypeFilter = 'all';
   @Input() selectedGameSystem = '';
   @Input() gameSystems: string[] = [];
   @Input() maxGameSuggestions = 5;
@@ -54,7 +55,7 @@ export class SessionsFiltersCard {
   @Output() hostFilterFocus = new EventEmitter<void>();
   @Output() clearHostFilter = new EventEmitter<void>();
   @Output() hostOptionSelected = new EventEmitter<string>();
-  @Output() sessionTypeChange = new EventEmitter<SessionsFilterMode>();
+  @Output() sessionTypeChange = new EventEmitter<SessionTypeFilter>();
   @Output() gameFilterChange = new EventEmitter<string>();
   @Output() availabilityChange = new EventEmitter<boolean>();
 

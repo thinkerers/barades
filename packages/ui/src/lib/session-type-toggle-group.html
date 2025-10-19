@@ -1,0 +1,22 @@
+<div class="session-type-toggle-group">
+  <span class="session-type-toggle-group__label">Type de session</span>
+  <div
+    class="session-type-toggle-group__toggles"
+    role="group"
+    aria-label="Filtrer par type de session"
+  >
+    @for (option of sessionTypeOptions; track option.value) {
+    <button
+      type="button"
+      class="session-type-toggle-group__toggle"
+      [class.session-type-toggle-group__toggle--active]="isActive(option.value)"
+      (click)="selectType(option.value)"
+      [attr.data-session-type]="option.value"
+      [attr.aria-pressed]="isActive(option.value)"
+    >
+      <mat-icon aria-hidden="true">{{ option.icon }}</mat-icon>
+      <span>{{ option.label }}</span>
+    </button>
+    }
+  </div>
+</div>

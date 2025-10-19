@@ -37,42 +37,11 @@
       (hostOptionSelected)="hostOptionSelected.emit($event)"
     ></lib-host-filter-field>
 
-    <div class="filters-card__field filters-card__field--session-type">
-      <span class="filters-card__label">Type de session</span>
-      <div
-        class="filters-card__toggles"
-        role="group"
-        aria-label="Filtrer par type de session"
-      >
-        <button
-          type="button"
-          class="filter-toggle"
-          [class.filter-toggle--active]="sessionType === 'all'"
-          (click)="sessionTypeChange.emit('all')"
-        >
-          <mat-icon aria-hidden="true">dashboard</mat-icon>
-          <span>Toutes</span>
-        </button>
-        <button
-          type="button"
-          class="filter-toggle"
-          [class.filter-toggle--active]="sessionType === 'online'"
-          (click)="sessionTypeChange.emit('online')"
-        >
-          <mat-icon aria-hidden="true">computer</mat-icon>
-          <span>En ligne</span>
-        </button>
-        <button
-          type="button"
-          class="filter-toggle"
-          [class.filter-toggle--active]="sessionType === 'onsite'"
-          (click)="sessionTypeChange.emit('onsite')"
-        >
-          <mat-icon aria-hidden="true">groups</mat-icon>
-          <span>Sur table</span>
-        </button>
-      </div>
-    </div>
+    <lib-session-type-toggle-group
+      class="filters-card__field"
+      [sessionType]="sessionType"
+      (sessionTypeChange)="sessionTypeChange.emit($event)"
+    ></lib-session-type-toggle-group>
 
     <div class="filters-card__field filters-card__field--game">
       <lib-game-system-input
