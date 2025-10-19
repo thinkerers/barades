@@ -1,9 +1,14 @@
 <div class="app-layout">
   <app-top-bar class="app-layout__top-bar"></app-top-bar>
   <div class="app-layout__body">
-    <main class="app-layout__content">
+    <main
+      class="app-layout__content"
+      [class.app-layout__content--flush]="isLocationsRoute"
+    >
       <router-outlet></router-outlet>
     </main>
   </div>
+  @if (showFooter) {
   <app-footer class="app-layout__footer"></app-footer>
+  }
 </div>

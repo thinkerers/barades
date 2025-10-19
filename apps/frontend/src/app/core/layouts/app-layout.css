@@ -24,6 +24,10 @@
   width: 100%;
 }
 
+.app-layout__content--flush {
+  padding: 0;
+}
+
 .app-layout__footer {
   flex: 0 0 auto;
 }
