@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable, shareReplay, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface Location {
@@ -33,9 +33,14 @@ export interface Location {
 export class LocationsService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/locations`;
+  private refreshLocations$ = new BehaviorSubject<void>(undefined);
+  private locations$ = this.refreshLocations$.pipe(
+    switchMap(() => this.http.get<Location[]>(this.apiUrl)),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
 
   getLocations(): Observable<Location[]> {
-    return this.http.get<Location[]>(this.apiUrl);
+    return this.locations$;
   }
 
   getLocation(id: string): Observable<Location> {
@@ -57,5 +62,9 @@ export class LocationsService {
   deleteLocation(id: string): Observable<void> {
     void id;
     throw new Error('Not implemented yet');
+  }
+
+  invalidateLocationsCache(): void {
+    this.refreshLocations$.next();
   }
 }

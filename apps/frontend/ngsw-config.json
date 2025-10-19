@@ -27,13 +27,34 @@
   ],
   "dataGroups": [
     {
-      "name": "api",
-      "urls": ["https://your-backend-url.onrender.com/api/**", "/api/**"],
+      "name": "api-freshness",
+      "urls": [
+        "https://your-backend-url.onrender.com/api/sessions",
+        "https://your-backend-url.onrender.com/api/groups",
+        "https://your-backend-url.onrender.com/api/locations",
+        "/api/sessions",
+        "/api/groups",
+        "/api/locations"
+      ],
       "cacheConfig": {
         "strategy": "freshness",
+        "maxSize": 100,
+        "maxAge": "3d",
+        "timeout": "5s"
+      }
+    },
+    {
+      "name": "api-performance",
+      "urls": [
+        "https://your-backend-url.onrender.com/api/game-systems",
+        "https://your-backend-url.onrender.com/api/cities",
+        "/api/game-systems",
+        "/api/cities"
+      ],
+      "cacheConfig": {
+        "strategy": "performance",
         "maxSize": 50,
-        "maxAge": "12h",
-        "timeout": "10s"
+        "maxAge": "7d"
       }
     }
   ]

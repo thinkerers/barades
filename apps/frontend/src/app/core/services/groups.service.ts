@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable, shareReplay, switchMap, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface Group {
@@ -57,9 +57,14 @@ export interface LeaveGroupResponse {
 export class GroupsService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/groups`;
+  private refreshGroups$ = new BehaviorSubject<void>(undefined);
+  private groups$ = this.refreshGroups$.pipe(
+    switchMap(() => this.http.get<Group[]>(this.apiUrl)),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
 
   getGroups(): Observable<Group[]> {
-    return this.http.get<Group[]>(this.apiUrl);
+    return this.groups$;
   }
 
   getGroup(id: string): Observable<Group> {
@@ -70,14 +75,15 @@ export class GroupsService {
     id: string,
     payload?: { message?: string }
   ): Observable<JoinGroupResponse> {
-    return this.http.post<JoinGroupResponse>(
-      `${this.apiUrl}/${id}/join`,
-      payload ?? {}
-    );
+    return this.http
+      .post<JoinGroupResponse>(`${this.apiUrl}/${id}/join`, payload ?? {})
+      .pipe(tap(() => this.invalidateGroupsCache()));
   }
 
   leaveGroup(id: string): Observable<LeaveGroupResponse> {
-    return this.http.delete<LeaveGroupResponse>(`${this.apiUrl}/${id}/join`);
+    return this.http
+      .delete<LeaveGroupResponse>(`${this.apiUrl}/${id}/join`)
+      .pipe(tap(() => this.invalidateGroupsCache()));
   }
 
   // TODO Day 4: Implement POST/PATCH/DELETE
@@ -105,5 +111,9 @@ export class GroupsService {
     return this.http.get<{ totalCount: number }>(
       `${this.apiUrl}/stats/managed-by-me`
     );
+  }
+
+  invalidateGroupsCache(): void {
+    this.refreshGroups$.next();
   }
 }

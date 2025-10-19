@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable, shareReplay, switchMap, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 // Types (à synchroniser avec le backend Prisma)
@@ -53,12 +53,17 @@ export interface Session {
 export class SessionsService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/sessions`;
+  private readonly refreshSessions$ = new BehaviorSubject<void>(undefined);
+  private readonly sessions$ = this.refreshSessions$.pipe(
+    switchMap(() => this.http.get<Session[]>(this.apiUrl)),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
 
   /**
    * Récupère toutes les sessions avec leurs relations
    */
   getSessions(): Observable<Session[]> {
-    return this.http.get<Session[]>(this.apiUrl);
+    return this.sessions$;
   }
 
   /**
@@ -79,21 +84,27 @@ export class SessionsService {
    * Crée une nouvelle session (à implémenter Jour 4)
    */
   createSession(session: Partial<Session>): Observable<Session> {
-    return this.http.post<Session>(this.apiUrl, session);
+    return this.http
+      .post<Session>(this.apiUrl, session)
+      .pipe(tap(() => this.invalidateSessionsCache()));
   }
 
   /**
    * Met à jour une session existante (à implémenter Jour 4)
    */
   updateSession(id: string, session: Partial<Session>): Observable<Session> {
-    return this.http.patch<Session>(`${this.apiUrl}/${id}`, session);
+    return this.http
+      .patch<Session>(`${this.apiUrl}/${id}`, session)
+      .pipe(tap(() => this.invalidateSessionsCache()));
   }
 
   /**
    * Supprime une session (à implémenter Jour 4)
    */
   deleteSession(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+    return this.http
+      .delete<void>(`${this.apiUrl}/${id}`)
+      .pipe(tap(() => this.invalidateSessionsCache()));
   }
 
   /**
@@ -110,5 +121,9 @@ export class SessionsService {
       recentCount: number;
       period: string;
     }>(`${this.apiUrl}/stats/created-by-me`);
+  }
+
+  invalidateSessionsCache(): void {
+    this.refreshSessions$.next();
   }
 }
