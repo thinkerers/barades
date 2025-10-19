@@ -89,7 +89,7 @@ describe('SessionEditComponent', () => {
   it('should load session on init', () => {
     fixture.detectChanges();
     expect(mockSessionsService.getSession).toHaveBeenCalledWith('1');
-    expect(component.loading).toBe(false);
+    expect(component.loading()).toBe(false);
   });
 
   it('should pre-fill form', () => {
