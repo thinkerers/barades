@@ -52,6 +52,18 @@ describe('GroupDetailComponent', () => {
   const writeGroup = (value: MockGroup | null) =>
     component.group.set(value as MockGroup | null);
   const setIsMember = (value: boolean) => component.isMember.set(value);
+  const flushAsyncOperations = async (): Promise<void> => {
+    await Promise.resolve();
+    await Promise.resolve();
+  };
+  const detectChangesAsync = async (
+    targetFixture: ComponentFixture<GroupDetailComponent> = fixture
+  ): Promise<void> => {
+    targetFixture.detectChanges();
+    await flushAsyncOperations();
+    targetFixture.detectChanges();
+    await flushAsyncOperations();
+  };
   const routerMock = {
     navigate: jest.fn().mockResolvedValue(true),
     navigateByUrl: jest.fn().mockResolvedValue(true),
@@ -245,10 +257,10 @@ describe('GroupDetailComponent', () => {
   });
 
   describe('ngOnInit', () => {
-    it('should load group on init with valid id', () => {
+    it('should load group on init with valid id', async () => {
       getGroupSpy.mockReturnValue(of(mockGroup));
 
-      fixture.detectChanges();
+      await detectChangesAsync();
 
       expect(getGroupSpy).toHaveBeenCalledWith('1');
       expect(component.group()).toEqual(mockGroup);
@@ -256,30 +268,30 @@ describe('GroupDetailComponent', () => {
       expect(getPollsSpy).toHaveBeenCalledWith('1');
     });
 
-    it('should handle error when loading group fails', () => {
+    it('should handle error when loading group fails', async () => {
       getGroupSpy.mockReturnValue(
         throwError(() => new Error('Failed to load'))
       );
 
-      fixture.detectChanges();
+      await detectChangesAsync();
 
       expect(component.error()).toBe(component.defaultErrorMessage);
       expect(component.loading()).toBe(false);
     });
 
-    it('should display specific message for 404 errors', () => {
+    it('should display specific message for 404 errors', async () => {
       getGroupSpy.mockReturnValue(
         throwError(() => new HttpErrorResponse({ status: 404 }))
       );
 
-      fixture.detectChanges();
+      await detectChangesAsync();
 
       expect(component.error()).toBe(
         'Ce groupe est introuvable ou n’existe plus.'
       );
     });
 
-    it('should schedule auto retry for transient server issues', () => {
+    it('should schedule auto retry for transient server issues', async () => {
       jest.useFakeTimers();
 
       getGroupSpy
@@ -289,7 +301,7 @@ describe('GroupDetailComponent', () => {
         .mockReturnValue(of(mockGroup));
 
       try {
-        fixture.detectChanges();
+        await detectChangesAsync();
 
         expect(component.error()).toContain(
           'Nos serveurs sont momentanément indisponibles'
@@ -297,6 +309,8 @@ describe('GroupDetailComponent', () => {
         expect(component.autoRetrySeconds()).toBeGreaterThan(0);
 
         jest.advanceTimersByTime(15000);
+
+        await flushAsyncOperations();
 
         expect(getGroupSpy).toHaveBeenCalledTimes(2);
         expect(component.group()).toEqual(mockGroup);
@@ -309,7 +323,7 @@ describe('GroupDetailComponent', () => {
       }
     });
 
-    it('should detect offline state and show offline message', () => {
+    it('should detect offline state and show offline message', async () => {
       const originalDescriptor = Object.getOwnPropertyDescriptor(
         Navigator.prototype,
         'onLine'
@@ -324,7 +338,7 @@ describe('GroupDetailComponent', () => {
         throwError(() => new HttpErrorResponse({ status: 0 }))
       );
 
-      fixture.detectChanges();
+      await detectChangesAsync();
 
       expect(component.isOffline()).toBe(true);
       expect(component.error()).toBe(
@@ -340,10 +354,10 @@ describe('GroupDetailComponent', () => {
       }
     });
 
-    it('should set error when id is missing', () => {
+    it('should set error when id is missing', async () => {
       routeParamMapGet.mockReturnValueOnce(null);
 
-      component.ngOnInit();
+      await detectChangesAsync();
 
       expect(component.error()).toBe('ID de groupe invalide');
       expect(component.loading()).toBe(false);
@@ -367,9 +381,9 @@ describe('GroupDetailComponent', () => {
   });
 
   describe('Member management', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       getGroupSpy.mockReturnValueOnce(of(mockGroup));
-      fixture.detectChanges();
+      await detectChangesAsync();
     });
 
     it('should get member count from members array', () => {
@@ -415,12 +429,12 @@ describe('GroupDetailComponent', () => {
       lastName: 'Member',
     };
 
-    beforeEach(() => {
+    beforeEach(async () => {
       getGroupSpy.mockReturnValueOnce(of(joinableGroup));
       getCurrentUserIdSpy.mockReturnValue(mockCurrentUser.id);
       getCurrentUserSpy.mockReturnValue(mockCurrentUser);
       isAuthenticatedSpy.mockReturnValue(true);
-      fixture.detectChanges();
+      await detectChangesAsync();
     });
 
     it('should allow joining when recruiting and not full', () => {
@@ -530,7 +544,7 @@ describe('GroupDetailComponent', () => {
 
     let confirmSpy: jest.SpyInstance;
 
-    beforeEach(() => {
+    beforeEach(async () => {
       getCurrentUserIdSpy.mockReturnValue(mockCurrentUser.id);
       getCurrentUserSpy.mockReturnValue({
         id: mockCurrentUser.id,
@@ -559,7 +573,7 @@ describe('GroupDetailComponent', () => {
         })
       );
 
-      fixture.detectChanges();
+      await detectChangesAsync();
 
       confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
     });
@@ -651,9 +665,9 @@ describe('GroupDetailComponent', () => {
   });
 
   describe('Template rendering', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       getGroupSpy.mockReturnValueOnce(of(mockGroup));
-      fixture.detectChanges();
+      await detectChangesAsync();
     });
 
     it('should display group name', () => {
@@ -683,10 +697,9 @@ describe('GroupDetailComponent', () => {
       expect(compiled.textContent).toContain('Test Location');
     });
 
-    it('should show join button when can join', () => {
+    it('should show join button when can join', async () => {
       // Create a fresh fixture without running ngOnInit from beforeEach
       const freshFixture = TestBed.createComponent(GroupDetailComponent);
-      const freshComponent = freshFixture.componentInstance;
 
       // Set up the mock to return a group where user is not a member
       getGroupSpy.mockReturnValueOnce(
@@ -699,8 +712,7 @@ describe('GroupDetailComponent', () => {
       );
 
       // Trigger initialization and change detection
-      freshComponent.ngOnInit();
-      freshFixture.detectChanges();
+      await detectChangesAsync(freshFixture);
 
       const compiled = freshFixture.nativeElement as HTMLElement;
       const joinButton = compiled.querySelector(
@@ -710,7 +722,7 @@ describe('GroupDetailComponent', () => {
       expect(joinButton?.textContent).toContain('Rejoindre');
     });
 
-    it('should show leave button when user is member', () => {
+    it('should show leave button when user is member', async () => {
       writeGroup({
         ...mockGroup,
         members: mockGroup.members,
@@ -718,7 +730,7 @@ describe('GroupDetailComponent', () => {
       setIsMember(true);
 
       // In zoneless mode, we need full change detection
-      fixture.detectChanges();
+      await detectChangesAsync();
 
       const compiled = fixture.nativeElement as HTMLElement;
       const leaveButton = compiled.querySelector(
@@ -728,7 +740,7 @@ describe('GroupDetailComponent', () => {
       expect(leaveButton?.textContent).toContain('Quitter le groupe');
     });
 
-    it('should show loading state', () => {
+    it('should show loading state', async () => {
       // Create a fresh fixture without running ngOnInit
       const freshFixture = TestBed.createComponent(GroupDetailComponent);
       const freshComponent = freshFixture.componentInstance;
@@ -746,14 +758,14 @@ describe('GroupDetailComponent', () => {
       freshComponent.group.set(null);
 
       // Now run change detection
-      freshFixture.detectChanges();
+      await detectChangesAsync(freshFixture);
       loadGroupSpy.mockRestore();
 
       const compiled = freshFixture.nativeElement as HTMLElement;
       expect(compiled.querySelector('.loading-state')).toBeTruthy();
     });
 
-    it('should show error state', () => {
+    it('should show error state', async () => {
       // Create a fresh fixture without running ngOnInit
       const freshFixture = TestBed.createComponent(GroupDetailComponent);
       const freshComponent = freshFixture.componentInstance;
@@ -772,7 +784,7 @@ describe('GroupDetailComponent', () => {
       freshComponent.group.set(null);
 
       // Now run change detection
-      freshFixture.detectChanges();
+      await detectChangesAsync(freshFixture);
       loadGroupSpy.mockRestore();
 
       const compiled = freshFixture.nativeElement as HTMLElement;
@@ -782,37 +794,37 @@ describe('GroupDetailComponent', () => {
   });
 
   describe('Membership detection', () => {
-    it('should detect user is a member when userId matches', () => {
+    it('should detect user is a member when userId matches', async () => {
       jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-1');
       getGroupSpy.mockReturnValueOnce(of(mockGroup));
 
-      component.ngOnInit();
+      await detectChangesAsync();
 
       expect(component.currentUserId).toBe('user-1');
-      expect(component.isMember).toBe(true);
+      expect(component.isMember()).toBe(true);
     });
 
-    it('should detect user is NOT a member when userId does not match', () => {
+    it('should detect user is NOT a member when userId does not match', async () => {
       jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-999');
       getGroupSpy.mockReturnValueOnce(of(nonMemberGroup));
 
-      component.ngOnInit();
+      await detectChangesAsync();
 
       expect(component.currentUserId).toBe('user-999');
-      expect(component.isMember).toBe(false);
+      expect(component.isMember()).toBe(false);
     });
 
-    it('should detect user is NOT a member when not authenticated', () => {
+    it('should detect user is NOT a member when not authenticated', async () => {
       jest.spyOn(authService, 'getCurrentUserId').mockReturnValue(null);
       getGroupSpy.mockReturnValueOnce(of(nonMemberGroup));
 
-      component.ngOnInit();
+      await detectChangesAsync();
 
       expect(component.currentUserId).toBe(null);
-      expect(component.isMember).toBe(false);
+      expect(component.isMember()).toBe(false);
     });
 
-    it('should correctly check membership with nested user structure', () => {
+    it('should correctly check membership with nested user structure', async () => {
       const groupWithMembers = {
         ...mockGroup,
         currentUserIsMember: undefined,
@@ -841,12 +853,12 @@ describe('GroupDetailComponent', () => {
       jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-bob');
       getGroupSpy.mockReturnValueOnce(of(groupWithMembers));
 
-      component.ngOnInit();
+      await detectChangesAsync();
 
-      expect(component.isMember).toBe(true);
+      expect(component.isMember()).toBe(true);
     });
 
-    it('should handle group with no members', () => {
+    it('should handle group with no members', async () => {
       const groupNoMembers = {
         ...mockGroup,
         currentUserIsMember: undefined,
@@ -856,12 +868,12 @@ describe('GroupDetailComponent', () => {
       jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-1');
       getGroupSpy.mockReturnValueOnce(of(groupNoMembers));
 
-      component.ngOnInit();
+      await detectChangesAsync();
 
-      expect(component.isMember).toBe(false);
+      expect(component.isMember()).toBe(false);
     });
 
-    it('should handle group with undefined members', () => {
+    it('should handle group with undefined members', async () => {
       const groupUndefinedMembers = {
         ...mockGroup,
         currentUserIsMember: undefined,
@@ -871,9 +883,9 @@ describe('GroupDetailComponent', () => {
       jest.spyOn(authService, 'getCurrentUserId').mockReturnValue('user-1');
       getGroupSpy.mockReturnValueOnce(of(groupUndefinedMembers));
 
-      component.ngOnInit();
+      await detectChangesAsync();
 
-      expect(component.isMember).toBe(false);
+      expect(component.isMember()).toBe(false);
     });
   });
 });
