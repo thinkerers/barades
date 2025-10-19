@@ -1,0 +1,54 @@
+<section class="forum-page">
+  <header class="forum-header">
+    <div>
+      <h1 class="forum-title">Forum de la communauté</h1>
+      <p class="forum-subtitle">
+        Échangez des conseils, racontez vos exploits et trouvez votre prochaine
+        table.
+      </p>
+    </div>
+    <button type="button" class="forum-primary-action">
+      <mat-icon aria-hidden="true">add_circle</mat-icon>
+      Nouveau sujet
+    </button>
+  </header>
+
+  <section class="forum-categories">
+    @for (category of categories; track category.name) {
+    <article class="forum-category">
+      <header class="category-header">
+        <mat-icon aria-hidden="true" class="category-icon">
+          {{ category.icon }}
+        </mat-icon>
+        <div>
+          <h2 class="category-title">{{ category.name }}</h2>
+          <p class="category-description">{{ category.description }}</p>
+        </div>
+      </header>
+
+      <div class="topics-list" role="list">
+        @for (topic of category.topics; track topic.title) {
+        <div class="topic-item" role="listitem">
+          <div class="topic-main">
+            <h3 class="topic-title">{{ topic.title }}</h3>
+            <p class="topic-meta">
+              Ouvert par <strong>{{ topic.author }}</strong>
+            </p>
+          </div>
+          <div class="topic-stats">
+            <div class="topic-replies">
+              <mat-icon aria-hidden="true">chat_bubble</mat-icon>
+              <span>{{ topic.replies }}</span>
+            </div>
+            <div class="topic-last-activity">
+              <p>Dernier message par <strong>{{ topic.lastAuthor }}</strong></p>
+              <span class="topic-last-time">{{ topic.lastActivity }}</span>
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+    </article>
+    }
+  </section>
+</section>
