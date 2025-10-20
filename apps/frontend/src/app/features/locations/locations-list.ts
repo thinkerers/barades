@@ -55,6 +55,7 @@ type LeafletLocateControl = L.Control & {
 interface LeafletLocateOptions extends L.ControlOptions {
   flyTo?: boolean;
   keepCurrentZoomLevel?: boolean;
+  setView?: boolean | 'once' | 'always' | 'untilPan' | 'untilPanOrZoom';
   drawCircle?: boolean;
   drawMarker?: boolean;
   showCompass?: boolean;
@@ -359,6 +360,7 @@ export class LocationsListComponent implements OnInit, OnDestroy {
   }
 
   private map: L.Map | null = null;
+  private mapInitialized = false;
   private markers: L.Marker[] = [];
   private markersByLocationId: Map<string, L.Marker> = new Map();
   userPosition: { lat: number; lon: number } | null = null;
@@ -437,6 +439,7 @@ export class LocationsListComponent implements OnInit, OnDestroy {
       this.map = null;
     }
 
+    this.mapInitialized = false;
     this.markers.forEach((marker) => marker.remove());
     this.markers = [];
     this.markersByLocationId.clear();
@@ -493,7 +496,7 @@ export class LocationsListComponent implements OnInit, OnDestroy {
   private scheduleMapRefresh(): void {
     this.scheduleAfterNextRender(
       () => {
-        if (!this.map) {
+        if (!this.map && !this.mapInitialized) {
           this.initMap();
         }
 
@@ -528,25 +531,18 @@ export class LocationsListComponent implements OnInit, OnDestroy {
     }
 
     // Avoid reinitializing if map already exists
-    if (this.map) {
-      console.log('[LocationsList] Map already exists, removing old instance');
-      if (this.mapLocationFoundHandler) {
-        this.map.off('locationfound', this.mapLocationFoundHandler);
-        this.mapLocationFoundHandler = undefined;
-      }
-      if (this.mapLocationErrorHandler) {
-        this.map.off('locationerror', this.mapLocationErrorHandler);
-        this.mapLocationErrorHandler = undefined;
-      }
-      this.map.remove();
-      this.map = null;
-      this.locateControl = null;
+    if (this.map || this.mapInitialized) {
+      console.log(
+        '[LocationsList] Map already exists or initialized, skipping reinit'
+      );
+      return;
     }
 
     // Set default icon path for Leaflet
     L.Icon.Default.imagePath = 'assets/leaflet/';
 
     console.log('[LocationsList] Creating Leaflet map...');
+    this.mapInitialized = true;
 
     const initialCenter: [number, number] = this.userPosition
       ? [this.userPosition.lat, this.userPosition.lon]
@@ -632,7 +628,9 @@ export class LocationsListComponent implements OnInit, OnDestroy {
     try {
       this.locateControl = locate({
         position: 'topleft',
-        flyTo: true,
+        flyTo: false,
+        keepCurrentZoomLevel: true,
+        setView: false,
         showCompass: true,
         drawCircle: false,
         drawMarker: false,
@@ -726,13 +724,27 @@ export class LocationsListComponent implements OnInit, OnDestroy {
       lon: event.latlng.lng,
     };
 
+    const hasLocations = this.filteredLocations.length > 0;
     const animateUserMarker = !this.skipNextNearestAdjust;
-    this.addUserMarker({ animate: animateUserMarker });
-    const adjustMap = !this.skipNextNearestAdjust;
+    const adjustMap = !this.skipNextNearestAdjust && hasLocations;
+    const centerOnUser = !adjustMap;
+
+    this.addUserMarker({
+      animate: animateUserMarker,
+      center: centerOnUser,
+    });
     this.skipNextNearestAdjust = false;
     this.findNearestLocation({ adjustMap });
     this.persistUserPosition(this.userPosition);
     this.restoredUserPosition = true;
+
+    if (this.locateControl && typeof this.locateControl.stop === 'function') {
+      try {
+        this.locateControl.stop();
+      } catch (error) {
+        console.warn('[LocationsList] Failed to stop locate control', error);
+      }
+    }
   }
 
   private handleLocateError(event: L.ErrorEvent): void {
@@ -1355,10 +1367,12 @@ export class LocationsListComponent implements OnInit, OnDestroy {
   /**
    * Add a marker for user's position
    */
-  private addUserMarker(options: { animate?: boolean } = {}): void {
+  private addUserMarker(
+    options: { animate?: boolean; center?: boolean } = {}
+  ): void {
     if (!this.userPosition || !this.map) return;
 
-    const { animate = true } = options;
+    const { animate = true, center = true } = options;
     const targetZoom = animate ? 13 : this.map.getZoom();
 
     // Remove existing user marker if any
@@ -1386,16 +1400,18 @@ export class LocationsListComponent implements OnInit, OnDestroy {
       .bindPopup('<strong>📍 Votre position</strong>')
       .openPopup();
 
-    // Center map on user position
-    this.map.setView(
-      [this.userPosition.lat, this.userPosition.lon],
-      targetZoom,
-      {
-        animate,
-        duration: animate ? 1 : 0,
-        noMoveStart: !animate,
-      }
-    );
+    if (center) {
+      // Center map on user position when requested
+      this.map.setView(
+        [this.userPosition.lat, this.userPosition.lon],
+        targetZoom,
+        {
+          animate,
+          duration: animate ? 1 : 0,
+          noMoveStart: !animate,
+        }
+      );
+    }
   }
 
   /**
