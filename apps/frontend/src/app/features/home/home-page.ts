@@ -5,6 +5,7 @@ import {
   computed,
   inject,
   OnInit,
+  PendingTasks,
   signal,
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -42,6 +43,7 @@ import { SessionCardComponent } from '../sessions/session-card';
 export class HomePage implements OnInit {
   private router = inject(Router);
   private sessionsService = inject(SessionsService);
+  private pendingTasks = inject(PendingTasks);
 
   // Form controls pour la recherche
   gameControl = new FormControl('');
@@ -112,18 +114,28 @@ export class HomePage implements OnInit {
   }
 
   async loadFeaturedSessions(): Promise<void> {
-    this.loading.set(true);
     this.error.set(null);
 
-    try {
-      const sessions = await firstValueFrom(this.sessionsService.getSessions());
-      this.featuredSessions.set(sessions.slice(0, 3));
-    } catch (err) {
-      console.error('Error loading featured sessions:', err);
-      this.error.set(this.defaultErrorMessage);
-    } finally {
-      this.loading.set(false);
-    }
+    // Debounced loading spinner - only show if data takes > 100ms
+    const loadingTimeout = setTimeout(() => {
+      this.loading.set(true);
+    }, 100);
+
+    await this.pendingTasks.run(async () => {
+      try {
+        const sessions = await firstValueFrom(
+          this.sessionsService.getSessions()
+        );
+        clearTimeout(loadingTimeout);
+        this.featuredSessions.set(sessions.slice(0, 3));
+      } catch (err) {
+        clearTimeout(loadingTimeout);
+        console.error('Error loading featured sessions:', err);
+        this.error.set(this.defaultErrorMessage);
+      } finally {
+        this.loading.set(false);
+      }
+    });
   }
 
   private _filterGames(value: string): string[] {

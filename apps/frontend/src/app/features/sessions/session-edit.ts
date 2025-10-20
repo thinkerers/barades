@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
+  PendingTasks,
   effect,
   inject,
   signal,
@@ -37,6 +38,7 @@ export class SessionEditComponent implements OnInit {
   private readonly sessionsService = inject(SessionsService);
   private readonly authService = inject(AuthService);
   private readonly notifications = inject(NotificationService);
+  private readonly pendingTasks = inject(PendingTasks);
 
   sessionForm!: FormGroup;
   readonly loading = signal(true);
@@ -126,25 +128,29 @@ export class SessionEditComponent implements OnInit {
     this.error.set(null);
 
     try {
-      const session = await firstValueFrom(this.sessionsService.getSession(id));
-      this.session.set(session);
+      await this.pendingTasks.run(async () => {
+        const session = await firstValueFrom(
+          this.sessionsService.getSession(id)
+        );
+        this.session.set(session);
 
-      const currentUser = this.authService.getCurrentUser();
-      if (!currentUser || session.hostId !== currentUser.id) {
-        this.error.set("Vous n'êtes pas autorisé à modifier cette session");
-        return;
-      }
+        const currentUser = this.authService.getCurrentUser();
+        if (!currentUser || session.hostId !== currentUser.id) {
+          this.error.set("Vous n'êtes pas autorisé à modifier cette session");
+          return;
+        }
 
-      const dateForInput = new Date(session.date).toISOString().slice(0, 16);
-      this.sessionForm.patchValue({
-        game: session.game,
-        title: session.title,
-        description: session.description || '',
-        date: dateForInput,
-        online: session.online,
-        level: session.level,
-        playersMax: session.playersMax,
-        tagColor: session.tagColor || 'BLUE',
+        const dateForInput = new Date(session.date).toISOString().slice(0, 16);
+        this.sessionForm.patchValue({
+          game: session.game,
+          title: session.title,
+          description: session.description || '',
+          date: dateForInput,
+          online: session.online,
+          level: session.level,
+          playersMax: session.playersMax,
+          tagColor: session.tagColor || 'BLUE',
+        });
       });
     } catch (err) {
       console.error('Erreur lors du chargement de la session:', err);
@@ -158,9 +164,13 @@ export class SessionEditComponent implements OnInit {
 
   private async loadExistingGames(): Promise<void> {
     try {
-      const sessions = await firstValueFrom(this.sessionsService.getSessions());
-      const games = [...new Set(sessions.map((s) => s.game))].sort();
-      this.existingGames.set(games);
+      await this.pendingTasks.run(async () => {
+        const sessions = await firstValueFrom(
+          this.sessionsService.getSessions()
+        );
+        const games = [...new Set(sessions.map((s) => s.game))].sort();
+        this.existingGames.set(games);
+      });
     } catch (err) {
       console.error('Erreur lors du chargement des jeux:', err);
     }

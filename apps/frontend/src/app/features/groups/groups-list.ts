@@ -16,7 +16,8 @@ import {
   AsyncStateStatus,
   GroupCardComponent,
 } from '@org/ui';
-import { Subject, Subscription, firstValueFrom, timer } from 'rxjs';
+import { EmptyError, Subject, firstValueFrom, timer } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import {
   Group,
@@ -40,7 +41,8 @@ export class GroupsListComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly pendingTasks = inject(PendingTasks);
   readonly groups = signal<Group[]>([]);
-  readonly loading = signal<boolean>(true);
+  readonly loading = signal<boolean>(false);
+  readonly refreshing = signal<boolean>(false);
   readonly error = signal<string | null>(null);
   readonly isOffline = signal<boolean>(false);
   readonly autoRetrySeconds = signal<number | null>(null);
@@ -100,23 +102,43 @@ export class GroupsListComponent implements OnInit {
   }
 
   private async loadGroups(): Promise<void> {
-    this.loading.set(true);
     this.error.set(null);
     this.pendingErrorBaseMessage = null;
     this.clearAutoRetry();
 
-    try {
-      const data = await firstValueFrom(this.groupsService.getGroups());
-      this.groups.set(data);
-      this.syncJoinedGroups(data);
-      this.loading.set(false);
-      this.error.set(null);
-      this.isOffline.set(false);
-    } catch (err) {
-      console.error('Error loading groups:', err);
-      this.loading.set(false);
-      this.handleLoadError(err);
+    const cachedGroups = this.groupsService.getCachedGroupsSnapshot();
+    const hasCachedData =
+      Array.isArray(cachedGroups) && cachedGroups.length > 0;
+
+    if (hasCachedData && cachedGroups) {
+      this.groups.set(cachedGroups);
+      this.syncJoinedGroups(cachedGroups);
     }
+
+    this.loading.set(!hasCachedData);
+    this.refreshing.set(hasCachedData);
+
+    await this.pendingTasks.run(async () => {
+      try {
+        const data = await firstValueFrom(this.groupsService.getGroups());
+        this.groups.set(data);
+        this.syncJoinedGroups(data);
+        this.error.set(null);
+        this.isOffline.set(false);
+      } catch (err) {
+        console.error('Error loading groups:', err);
+
+        if (!hasCachedData) {
+          this.handleLoadError(err);
+        } else {
+          const httpError = err instanceof HttpErrorResponse ? err : null;
+          this.detectOffline(httpError);
+        }
+      } finally {
+        this.loading.set(false);
+        this.refreshing.set(false);
+      }
+    });
   }
 
   retry(): void {
@@ -358,25 +380,6 @@ export class GroupsListComponent implements OnInit {
     const totalSeconds = Math.ceil(this.autoRetryDelayMs / 1000);
     const cancel$ = new Subject<void>();
     let cancelled = false;
-    let activeTimer: Subscription | null = null;
-    let cancelSubscription: Subscription | null = null;
-    let settled = false;
-
-    const cleanup = () => {
-      if (activeTimer) {
-        activeTimer.unsubscribe();
-        activeTimer = null;
-      }
-
-      if (cancelSubscription) {
-        cancelSubscription.unsubscribe();
-        cancelSubscription = null;
-      }
-
-      if (!cancel$.closed) {
-        cancel$.complete();
-      }
-    };
 
     const cancel = () => {
       if (cancelled) {
@@ -384,60 +387,51 @@ export class GroupsListComponent implements OnInit {
       }
 
       cancelled = true;
-
       if (!cancel$.closed) {
         cancel$.next();
+        cancel$.complete();
       }
-
-      cleanup();
     };
 
     this.autoRetryCancel = cancel;
 
-    const countdownPromise = new Promise<void>((resolve) => {
-      const complete = () => {
-        if (settled) {
-          return;
+    const waitForNextSecond = async (): Promise<boolean> => {
+      try {
+        await firstValueFrom(timer(1000).pipe(takeUntil(cancel$)));
+        return true;
+      } catch (error) {
+        if (error instanceof EmptyError) {
+          return false;
         }
-
-        settled = true;
-        cleanup();
-        resolve();
-      };
-
-      cancelSubscription = cancel$.subscribe(() => {
-        cancelled = true;
-        complete();
-      });
-
-      const scheduleTick = (remaining: number): void => {
-        if (cancelled) {
-          complete();
-          return;
-        }
-
-        this.autoRetrySeconds.set(remaining);
-        this.error.set(this.composeErrorMessage());
-
-        if (remaining <= 1) {
-          complete();
-          return;
-        }
-
-        activeTimer = timer(1000).subscribe(() => {
-          if (activeTimer) {
-            activeTimer.unsubscribe();
-            activeTimer = null;
-          }
-          scheduleTick(remaining - 1);
-        });
-      };
-
-      scheduleTick(totalSeconds);
-    });
+        throw error;
+      }
+    };
 
     void this.pendingTasks.run(async () => {
-      await countdownPromise;
+      try {
+        for (let remaining = totalSeconds; remaining > 0; remaining--) {
+          if (cancelled) {
+            break;
+          }
+
+          this.autoRetrySeconds.set(remaining);
+          this.error.set(this.composeErrorMessage());
+
+          if (remaining <= 1) {
+            break;
+          }
+
+          const tickCompleted = await waitForNextSecond();
+          if (!tickCompleted) {
+            cancelled = true;
+            break;
+          }
+        }
+      } finally {
+        if (!cancel$.closed) {
+          cancel$.complete();
+        }
+      }
 
       if (cancelled) {
         return;

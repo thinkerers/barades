@@ -142,6 +142,9 @@ describe('SessionsListPage', () => {
       updateSession: jest.fn(),
       deleteSession: jest.fn(),
       getSessionsHostedByMe: jest.fn(),
+      invalidateSessionsCache: jest.fn(),
+      getCachedSessionsSnapshot: jest.fn().mockReturnValue(null),
+      getCachedHostedSessionsSnapshot: jest.fn().mockReturnValue(null),
     } as unknown as jest.Mocked<SessionsService>;
 
     await TestBed.configureTestingModule({
@@ -203,10 +206,27 @@ describe('SessionsListPage', () => {
 
     it('should handle loading state', async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
-      expect(component.loading()).toBe(true);
+      // Loading starts as false and only becomes true when no cache is available
+      expect(component.loading()).toBe(false);
       fixture.detectChanges();
       await fixture.whenStable();
       expect(component.loading()).toBe(false);
+    });
+
+    it('should hydrate immediately when cached sessions are available', async () => {
+      mockSessionsService.getCachedSessionsSnapshot.mockReturnValue(
+        mockSessions
+      );
+      mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
+
+      fixture.detectChanges();
+
+      // Cached data is rendered right away without the loading spinner
+      expect(component.sessions()).toEqual(mockSessions);
+      expect(component.loading()).toBe(false);
+
+      await fixture.whenStable();
+      expect(component.refreshing()).toBe(false);
     });
 
     it('should handle error state', async () => {
@@ -218,6 +238,23 @@ describe('SessionsListPage', () => {
       expect(component.error()).toBe(
         'Impossible de charger les sessions. Vérifiez que le backend est démarré.'
       );
+    });
+
+    it('should keep cached data visible when refresh fails', async () => {
+      mockSessionsService.getCachedSessionsSnapshot.mockReturnValue(
+        mockSessions
+      );
+      mockSessionsService.getSessions.mockReturnValue(
+        throwError(() => new Error('Network down'))
+      );
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(component.sessions()).toEqual(mockSessions);
+      expect(component.error()).toBeNull();
+      expect(component.loading()).toBe(false);
+      expect(component.refreshing()).toBe(false);
     });
   });
 

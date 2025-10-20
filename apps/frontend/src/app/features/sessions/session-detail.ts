@@ -3,17 +3,18 @@ import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
+  PendingTasks,
   inject,
   signal,
 } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AsyncStateComponent, AsyncStateStatus } from '@org/ui';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { ReservationsService } from '../../core/services/reservations.service';
 import { Session, SessionsService } from '../../core/services/sessions.service';
-import { firstValueFrom } from 'rxjs';
 
 @Component({
   standalone: true,
@@ -30,6 +31,7 @@ export class SessionDetailComponent implements OnInit {
   private readonly reservationsService = inject(ReservationsService);
   private readonly authService = inject(AuthService);
   private readonly notifications = inject(NotificationService);
+  private readonly pendingTasks = inject(PendingTasks);
   private sessionId: string | null = null;
   private readonly sessionSignal = signal<Session | null>(null);
   private readonly loadingSignal = signal(true);
@@ -87,18 +89,22 @@ export class SessionDetailComponent implements OnInit {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
 
-    try {
-      const session = await firstValueFrom(this.sessionsService.getSession(id));
-      this.sessionSignal.set(session);
-      this.loadingSignal.set(false);
-      await this.checkIfRegistered();
-    } catch (error) {
-      console.error('Error loading session:', error);
-      this.sessionSignal.set(null);
-      this.isRegisteredSignal.set(false);
-      this.errorSignal.set(this.defaultErrorMessage);
-      this.loadingSignal.set(false);
-    }
+    await this.pendingTasks.run(async () => {
+      try {
+        const session = await firstValueFrom(
+          this.sessionsService.getSession(id)
+        );
+        this.sessionSignal.set(session);
+        this.loadingSignal.set(false);
+        await this.checkIfRegistered();
+      } catch (error) {
+        console.error('Error loading session:', error);
+        this.sessionSignal.set(null);
+        this.isRegisteredSignal.set(false);
+        this.errorSignal.set(this.defaultErrorMessage);
+        this.loadingSignal.set(false);
+      }
+    });
   }
 
   get viewState(): AsyncStateStatus {

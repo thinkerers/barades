@@ -54,6 +54,40 @@ describe('GroupsListComponent', () => {
     await Promise.resolve();
   };
 
+  const flushPendingTimersAndMicrotasks = async () => {
+    let iterations = 0;
+    const maxIterations = 100;
+
+    while (iterations < maxIterations) {
+      const beforeCount =
+        typeof jest.getTimerCount === 'function'
+          ? jest.getTimerCount()
+          : undefined;
+
+      if (beforeCount && beforeCount > 0) {
+        jest.runOnlyPendingTimers();
+      }
+
+      await flushMicrotasks();
+
+      const afterCount =
+        typeof jest.getTimerCount === 'function'
+          ? jest.getTimerCount()
+          : undefined;
+
+      if (
+        (beforeCount === 0 || beforeCount === undefined) &&
+        (afterCount === 0 || afterCount === undefined)
+      ) {
+        break;
+      }
+
+      iterations += 1;
+    }
+
+    await flushMicrotasks();
+  };
+
   const detectChangesAsync = async (): Promise<void> => {
     fixture.detectChanges();
     await flushMicrotasks();
@@ -152,10 +186,15 @@ describe('GroupsListComponent', () => {
       );
       expect(component.autoRetrySeconds()).toBeGreaterThan(0);
 
-      jest.advanceTimersByTime(15000);
-      jest.runOnlyPendingTimers();
-      await flushMicrotasks();
-      await flushMicrotasks();
+      let safetyCounter = 0;
+      while (component.autoRetrySeconds() !== null && safetyCounter < 25) {
+        jest.advanceTimersByTime(1000);
+        await flushPendingTimersAndMicrotasks();
+        safetyCounter += 1;
+      }
+
+      await flushPendingTimersAndMicrotasks();
+      await detectChangesAsync();
 
       expect(getGroupsSpy).toHaveBeenCalledTimes(2);
       expect(component.error()).toBeNull();

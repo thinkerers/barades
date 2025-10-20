@@ -58,8 +58,12 @@ export class GroupsService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/groups`;
   private refreshGroups$ = new BehaviorSubject<void>(undefined);
+  private latestGroups: Group[] | null = null;
   private groups$ = this.refreshGroups$.pipe(
     switchMap(() => this.http.get<Group[]>(this.apiUrl)),
+    tap((groups) => {
+      this.latestGroups = groups;
+    }),
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
@@ -115,5 +119,9 @@ export class GroupsService {
 
   invalidateGroupsCache(): void {
     this.refreshGroups$.next();
+  }
+
+  getCachedGroupsSnapshot(): Group[] | null {
+    return this.latestGroups;
   }
 }

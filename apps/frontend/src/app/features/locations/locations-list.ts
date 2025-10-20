@@ -21,7 +21,8 @@ import {
 } from '@org/ui';
 import * as L from 'leaflet';
 import 'leaflet.locatecontrol';
-import { Subject, Subscription, firstValueFrom, timer } from 'rxjs';
+import { EmptyError, Subject, firstValueFrom, timer } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import {
   Location,
   LocationsService,
@@ -54,6 +55,7 @@ type LeafletLocateControl = L.Control & {
 interface LeafletLocateOptions extends L.ControlOptions {
   flyTo?: boolean;
   keepCurrentZoomLevel?: boolean;
+  setView?: boolean | 'once' | 'always' | 'untilPan' | 'untilPanOrZoom';
   drawCircle?: boolean;
   drawMarker?: boolean;
   showCompass?: boolean;
@@ -177,7 +179,8 @@ export class LocationsListComponent implements OnInit, OnDestroy {
 
   private readonly locationsSignal = signal<Location[]>([]);
   private readonly filteredLocationsSignal = signal<Location[]>([]);
-  private readonly loadingSignal = signal(true);
+  private readonly loadingSignal = signal(false);
+  private readonly refreshingSignal = signal(false);
   private readonly errorSignal = signal<string | null>(null);
   private readonly searchTermSignal = signal('');
   private readonly selectedTypeSignal = signal('');
@@ -263,31 +266,24 @@ export class LocationsListComponent implements OnInit, OnDestroy {
       this.pendingDelayCancelers.delete(cancel);
     };
 
-    void this.pendingTasks.run(
-      () =>
-        new Promise<void>((resolve) => {
-          let timerSubscription: Subscription | null = null;
-          let cancelSubscription: Subscription | null = null;
+    void this.pendingTasks.run(async () => {
+      try {
+        try {
+          await firstValueFrom(timer(delay).pipe(takeUntil(cancel$)));
+        } catch (error) {
+          if (error instanceof EmptyError) {
+            return;
+          }
+          throw error;
+        }
 
-          const cleanup = () => {
-            timerSubscription?.unsubscribe();
-            cancelSubscription?.unsubscribe();
-            finalize();
-            resolve();
-          };
-
-          timerSubscription = timer(delay).subscribe(() => {
-            if (!cancelled) {
-              runInInjectionContext(this.injector, callback);
-            }
-            cleanup();
-          });
-
-          cancelSubscription = cancel$.subscribe(() => {
-            cleanup();
-          });
-        })
-    );
+        if (!cancelled) {
+          runInInjectionContext(this.injector, callback);
+        }
+      } finally {
+        finalize();
+      }
+    });
   }
 
   private cancelScheduledDelays(): void {
@@ -313,6 +309,10 @@ export class LocationsListComponent implements OnInit, OnDestroy {
 
   get loading(): boolean {
     return this.loadingSignal();
+  }
+
+  get refreshing(): boolean {
+    return this.refreshingSignal();
   }
 
   get error(): string | null {
@@ -360,6 +360,7 @@ export class LocationsListComponent implements OnInit, OnDestroy {
   }
 
   private map: L.Map | null = null;
+  private mapInitialized = false;
   private markers: L.Marker[] = [];
   private markersByLocationId: Map<string, L.Marker> = new Map();
   userPosition: { lat: number; lon: number } | null = null;
@@ -438,6 +439,7 @@ export class LocationsListComponent implements OnInit, OnDestroy {
       this.map = null;
     }
 
+    this.mapInitialized = false;
     this.markers.forEach((marker) => marker.remove());
     this.markers = [];
     this.markersByLocationId.clear();
@@ -445,34 +447,56 @@ export class LocationsListComponent implements OnInit, OnDestroy {
 
   private async loadLocations(): Promise<void> {
     console.log('[LocationsList] Loading locations...');
-    this.loadingSignal.set(true);
     this.errorSignal.set(null);
 
-    try {
-      const data = await firstValueFrom(this.locationsService.getLocations());
-      console.log(
-        '[LocationsList] Locations loaded:',
-        data.length,
-        'locations'
-      );
-      const filtered = data.filter(
-        (loc) => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0)
-      );
+    const cachedLocations = this.locationsService.getCachedLocationsSnapshot();
+    const hasCachedData =
+      Array.isArray(cachedLocations) && cachedLocations.length > 0;
+
+    if (hasCachedData && cachedLocations) {
+      const filtered = this.normalizeLocations(cachedLocations);
       this.locationsSignal.set(filtered);
       this.filteredLocationsSignal.set(filtered);
       this.scheduleMapRefresh();
-    } catch (error) {
-      console.error('[LocationsList] Error loading locations:', error);
-      this.errorSignal.set(this.defaultErrorMessage);
-    } finally {
-      this.loadingSignal.set(false);
     }
+
+    this.loadingSignal.set(!hasCachedData);
+    this.refreshingSignal.set(hasCachedData);
+
+    await this.pendingTasks.run(async () => {
+      try {
+        const data = await firstValueFrom(this.locationsService.getLocations());
+        console.log(
+          '[LocationsList] Locations loaded:',
+          data.length,
+          'locations'
+        );
+        const filtered = this.normalizeLocations(data);
+        this.locationsSignal.set(filtered);
+        this.filteredLocationsSignal.set(filtered);
+        this.scheduleMapRefresh();
+      } catch (error) {
+        console.error('[LocationsList] Error loading locations:', error);
+        if (!hasCachedData) {
+          this.errorSignal.set(this.defaultErrorMessage);
+        }
+      } finally {
+        this.loadingSignal.set(false);
+        this.refreshingSignal.set(false);
+      }
+    });
+  }
+
+  private normalizeLocations(data: Location[]): Location[] {
+    return data.filter(
+      (loc) => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0)
+    );
   }
 
   private scheduleMapRefresh(): void {
     this.scheduleAfterNextRender(
       () => {
-        if (!this.map) {
+        if (!this.map && !this.mapInitialized) {
           this.initMap();
         }
 
@@ -507,25 +531,18 @@ export class LocationsListComponent implements OnInit, OnDestroy {
     }
 
     // Avoid reinitializing if map already exists
-    if (this.map) {
-      console.log('[LocationsList] Map already exists, removing old instance');
-      if (this.mapLocationFoundHandler) {
-        this.map.off('locationfound', this.mapLocationFoundHandler);
-        this.mapLocationFoundHandler = undefined;
-      }
-      if (this.mapLocationErrorHandler) {
-        this.map.off('locationerror', this.mapLocationErrorHandler);
-        this.mapLocationErrorHandler = undefined;
-      }
-      this.map.remove();
-      this.map = null;
-      this.locateControl = null;
+    if (this.map || this.mapInitialized) {
+      console.log(
+        '[LocationsList] Map already exists or initialized, skipping reinit'
+      );
+      return;
     }
 
     // Set default icon path for Leaflet
     L.Icon.Default.imagePath = 'assets/leaflet/';
 
     console.log('[LocationsList] Creating Leaflet map...');
+    this.mapInitialized = true;
 
     const initialCenter: [number, number] = this.userPosition
       ? [this.userPosition.lat, this.userPosition.lon]
@@ -611,7 +628,9 @@ export class LocationsListComponent implements OnInit, OnDestroy {
     try {
       this.locateControl = locate({
         position: 'topleft',
-        flyTo: true,
+        flyTo: false,
+        keepCurrentZoomLevel: true,
+        setView: false,
         showCompass: true,
         drawCircle: false,
         drawMarker: false,
@@ -705,13 +724,27 @@ export class LocationsListComponent implements OnInit, OnDestroy {
       lon: event.latlng.lng,
     };
 
+    const hasLocations = this.filteredLocations.length > 0;
     const animateUserMarker = !this.skipNextNearestAdjust;
-    this.addUserMarker({ animate: animateUserMarker });
-    const adjustMap = !this.skipNextNearestAdjust;
+    const adjustMap = !this.skipNextNearestAdjust && hasLocations;
+    const centerOnUser = !adjustMap;
+
+    this.addUserMarker({
+      animate: animateUserMarker,
+      center: centerOnUser,
+    });
     this.skipNextNearestAdjust = false;
     this.findNearestLocation({ adjustMap });
     this.persistUserPosition(this.userPosition);
     this.restoredUserPosition = true;
+
+    if (this.locateControl && typeof this.locateControl.stop === 'function') {
+      try {
+        this.locateControl.stop();
+      } catch (error) {
+        console.warn('[LocationsList] Failed to stop locate control', error);
+      }
+    }
   }
 
   private handleLocateError(event: L.ErrorEvent): void {
@@ -1334,10 +1367,12 @@ export class LocationsListComponent implements OnInit, OnDestroy {
   /**
    * Add a marker for user's position
    */
-  private addUserMarker(options: { animate?: boolean } = {}): void {
+  private addUserMarker(
+    options: { animate?: boolean; center?: boolean } = {}
+  ): void {
     if (!this.userPosition || !this.map) return;
 
-    const { animate = true } = options;
+    const { animate = true, center = true } = options;
     const targetZoom = animate ? 13 : this.map.getZoom();
 
     // Remove existing user marker if any
@@ -1365,16 +1400,18 @@ export class LocationsListComponent implements OnInit, OnDestroy {
       .bindPopup('<strong>📍 Votre position</strong>')
       .openPopup();
 
-    // Center map on user position
-    this.map.setView(
-      [this.userPosition.lat, this.userPosition.lon],
-      targetZoom,
-      {
-        animate,
-        duration: animate ? 1 : 0,
-        noMoveStart: !animate,
-      }
-    );
+    if (center) {
+      // Center map on user position when requested
+      this.map.setView(
+        [this.userPosition.lat, this.userPosition.lon],
+        targetZoom,
+        {
+          animate,
+          duration: animate ? 1 : 0,
+          noMoveStart: !animate,
+        }
+      );
+    }
   }
 
   /**

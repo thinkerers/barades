@@ -45,6 +45,12 @@
     ></lib-sessions-filters-card>
 
     <div class="sessions-list">
+      @if (refreshing()) {
+      <div class="sessions-list__refresh" role="status" aria-live="polite">
+        Mise à jour des sessions...
+      </div>
+      }
+
       <div class="sessions-list__header">
         <h2>
           {{ isScopeFilterActive() ? 'Mes sessions' : 'Sessions disponibles' }}

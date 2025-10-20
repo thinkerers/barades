@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  PendingTasks,
   inject,
   signal,
 } from '@angular/core';
@@ -42,6 +43,7 @@ export class RegisterComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly pendingTasks = inject(PendingTasks);
 
   readonly registerForm: FormGroup = this.fb.group(
     {
@@ -84,19 +86,21 @@ export class RegisterComponent {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    try {
-      await firstValueFrom(
-        this.authService.signup(this.registerForm.getRawValue())
-      );
-      this.router.navigate(['/']);
-    } catch (error: unknown) {
-      const message =
-        (error as { error?: { message?: string } })?.error?.message ||
-        'Registration failed. Please try again.';
-      this.errorMessage.set(message);
-    } finally {
-      this.isLoading.set(false);
-    }
+    await this.pendingTasks.run(async () => {
+      try {
+        await firstValueFrom(
+          this.authService.signup(this.registerForm.getRawValue())
+        );
+        this.router.navigate(['/']);
+      } catch (error: unknown) {
+        const message =
+          (error as { error?: { message?: string } })?.error?.message ||
+          'Registration failed. Please try again.';
+        this.errorMessage.set(message);
+      } finally {
+        this.isLoading.set(false);
+      }
+    });
   }
 
   /**

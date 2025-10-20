@@ -54,8 +54,23 @@ export class SessionsService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/sessions`;
   private readonly refreshSessions$ = new BehaviorSubject<void>(undefined);
+  private readonly refreshHostedSessions$ = new BehaviorSubject<void>(
+    undefined
+  );
+  private latestSessions: Session[] | null = null;
+  private latestHostedSessions: Session[] | null = null;
   private readonly sessions$ = this.refreshSessions$.pipe(
     switchMap(() => this.http.get<Session[]>(this.apiUrl)),
+    tap((sessions) => {
+      this.latestSessions = sessions;
+    }),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
+  private readonly hostedSessions$ = this.refreshHostedSessions$.pipe(
+    switchMap(() => this.http.get<Session[]>(`${this.apiUrl}/created-by-me`)),
+    tap((sessions) => {
+      this.latestHostedSessions = sessions;
+    }),
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
@@ -70,7 +85,7 @@ export class SessionsService {
    * Retrieve sessions hosted by the authenticated user
    */
   getSessionsHostedByMe(): Observable<Session[]> {
-    return this.http.get<Session[]>(`${this.apiUrl}/created-by-me`);
+    return this.hostedSessions$;
   }
 
   /**
@@ -125,5 +140,14 @@ export class SessionsService {
 
   invalidateSessionsCache(): void {
     this.refreshSessions$.next();
+    this.refreshHostedSessions$.next();
+  }
+
+  getCachedSessionsSnapshot(): Session[] | null {
+    return this.latestSessions;
+  }
+
+  getCachedHostedSessionsSnapshot(): Session[] | null {
+    return this.latestHostedSessions;
   }
 }
