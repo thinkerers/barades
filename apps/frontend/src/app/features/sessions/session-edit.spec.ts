@@ -86,35 +86,45 @@ describe('SessionEditComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should load session on init', () => {
+  it('should load session on init', async () => {
     fixture.detectChanges();
+    await fixture.whenStable();
+
     expect(mockSessionsService.getSession).toHaveBeenCalledWith('1');
     expect(component.loading()).toBe(false);
   });
 
-  it('should pre-fill form', () => {
+  it('should pre-fill form', async () => {
     fixture.detectChanges();
+    await fixture.whenStable();
+
     expect(component.sessionForm.value.game).toBe('D&D 5e');
     expect(component.sessionForm.value.title).toBe('Test Session');
   });
 
-  it('should validate form', () => {
+  it('should validate form', async () => {
     fixture.detectChanges();
+    await fixture.whenStable();
+
     component.sessionForm.patchValue({ game: '', title: '' });
     expect(component.sessionForm.invalid).toBe(true);
   });
 
-  it('should call updateSession on submit', () => {
+  it('should call updateSession on submit', async () => {
     fixture.detectChanges();
-    component.onSubmit();
+    await fixture.whenStable();
+
+    await component.onSubmit();
     expect(mockSessionsService.updateSession).toHaveBeenCalled();
     expect(mockNotificationService.success).toHaveBeenCalledWith(
       'Session modifiée avec succès.'
     );
   });
 
-  it('should navigate on cancel', () => {
+  it('should navigate on cancel', async () => {
     fixture.detectChanges();
+    await fixture.whenStable();
+
     component.cancel();
     expect(mockRouter.navigate).toHaveBeenCalledWith(['/sessions', '1']);
   });

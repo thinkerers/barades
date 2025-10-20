@@ -2,12 +2,10 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   OnInit,
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
@@ -16,7 +14,7 @@ import {
 } from '@angular/forms';
 import { Router } from '@angular/router';
 import { GameSystemInputComponent } from '@org/ui';
-import { finalize } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { SessionsService } from '../../core/services/sessions.service';
 
@@ -33,7 +31,6 @@ export class SessionCreateComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly sessionsService = inject(SessionsService);
   private readonly authService = inject(AuthService);
-  private readonly destroyRef = inject(DestroyRef);
 
   sessionForm!: FormGroup;
   readonly loading = signal(false);
@@ -85,28 +82,19 @@ export class SessionCreateComponent implements OnInit {
 
   ngOnInit(): void {
     // Charger les jeux existants pour l'autocomplétion et les suggestions
-    this.loadExistingGames();
+    void this.loadExistingGames();
   }
 
-  loadExistingGames(): void {
-    this.sessionsService
-      .getSessions()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (sessions) => {
-          // Extraire les noms de jeux uniques et les trier
-          this.existingGames.set(
-            [...new Set(sessions.map((s) => s.game))].sort()
-          );
-        },
-        error: (err) => {
-          console.error('Erreur lors du chargement des jeux:', err);
-          // Continuer même si le chargement échoue
-        },
-      });
+  private async loadExistingGames(): Promise<void> {
+    try {
+      const sessions = await firstValueFrom(this.sessionsService.getSessions());
+      this.existingGames.set([...new Set(sessions.map((s) => s.game))].sort());
+    } catch (err) {
+      console.error('Erreur lors du chargement des jeux:', err);
+    }
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.sessionForm.invalid) {
       Object.keys(this.sessionForm.controls).forEach((key) => {
         const control = this.sessionForm.get(key);
@@ -134,24 +122,21 @@ export class SessionCreateComponent implements OnInit {
       hostId: currentUser.id,
     };
 
-    this.sessionsService
-      .createSession(sessionData)
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => this.loading.set(false))
-      )
-      .subscribe({
-        next: (session) => {
-          console.log('Session créée:', session);
-          this.router.navigate(['/sessions']);
-        },
-        error: (err) => {
-          console.error('Erreur création session:', err);
-          this.error.set(
-            err.error?.message || 'Erreur lors de la création de la session'
-          );
-        },
-      });
+    try {
+      const session = await firstValueFrom(
+        this.sessionsService.createSession(sessionData)
+      );
+      console.log('Session créée:', session);
+      this.router.navigate(['/sessions']);
+    } catch (err: unknown) {
+      console.error('Erreur création session:', err);
+      this.error.set(
+        (err as { error?: { message?: string } })?.error?.message ||
+          'Erreur lors de la création de la session'
+      );
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   cancel(): void {

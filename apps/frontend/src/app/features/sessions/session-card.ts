@@ -2,21 +2,17 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   inject,
   Input,
   OnInit,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
-import {
-  Reservation,
-  ReservationsService,
-} from '../../core/services/reservations.service';
+import { ReservationsService } from '../../core/services/reservations.service';
 import { Session } from '../../core/services/sessions.service';
 
 @Component({
@@ -34,14 +30,13 @@ export class SessionCardComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly notifications = inject(NotificationService);
-  private readonly destroyRef = inject(DestroyRef);
 
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly isRegistered = signal(false);
 
   ngOnInit(): void {
-    this.checkIfRegistered();
+    void this.checkIfRegistered();
   }
 
   getTagColorClass(color: string): string {
@@ -95,33 +90,29 @@ export class SessionCardComponent implements OnInit {
   /**
    * Check if the current user is already registered for this session
    */
-  checkIfRegistered(): void {
+  async checkIfRegistered(): Promise<void> {
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
       this.isRegistered.set(false);
       return;
     }
 
-    // Load user's reservations and check if one matches this session
-    this.reservationsService
-      .getReservations(currentUser.id)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (reservations: Reservation[]) => {
-          this.isRegistered.set(
-            reservations.some(
-              (r: { sessionId: string }) => r.sessionId === this.session.id
-            )
-          );
-        },
-        error: (err) => {
-          console.error('Error checking registration status:', err);
-          this.isRegistered.set(false);
-        },
-      });
+    try {
+      const reservations = await firstValueFrom(
+        this.reservationsService.getReservations(currentUser.id)
+      );
+      this.isRegistered.set(
+        reservations.some(
+          (reservation) => reservation.sessionId === this.session.id
+        )
+      );
+    } catch (err) {
+      console.error('Error checking registration status:', err);
+      this.isRegistered.set(false);
+    }
   }
 
-  onReserve(): void {
+  async onReserve(): Promise<void> {
     // Vérifier si l'utilisateur est connecté
     const currentUser = this.authService.getCurrentUser();
     if (!currentUser) {
@@ -142,31 +133,32 @@ export class SessionCardComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    this.reservationsService
-      .createReservation(this.session.id, currentUser.id)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (reservation: Reservation) => {
-          console.log('Réservation créée:', reservation);
-          // Mettre à jour le compteur local et le statut d'inscription
-          this.session.playersCurrent = Math.min(
-            this.session.playersMax,
-            this.session.playersCurrent + 1
-          );
-          this.isRegistered.set(true);
-          this.loading.set(false);
-          this.notifications.success(
-            'Réservation confirmée ! Vous avez reçu un email de confirmation.'
-          );
-        },
-        error: (err) => {
-          console.error('Erreur lors de la réservation:', err);
-          const errorMsg =
-            err.error?.message || 'Erreur lors de la réservation';
-          this.error.set(errorMsg);
-          this.loading.set(false);
-          this.notifications.error(errorMsg);
-        },
-      });
+    try {
+      const reservation = await firstValueFrom(
+        this.reservationsService.createReservation(
+          this.session.id,
+          currentUser.id
+        )
+      );
+
+      console.log('Réservation créée:', reservation);
+      this.session.playersCurrent = Math.min(
+        this.session.playersMax,
+        this.session.playersCurrent + 1
+      );
+      this.isRegistered.set(true);
+      this.notifications.success(
+        'Réservation confirmée ! Vous avez reçu un email de confirmation.'
+      );
+    } catch (err: unknown) {
+      console.error('Erreur lors de la réservation:', err);
+      const errorMsg =
+        (err as { error?: { message?: string } })?.error?.message ||
+        'Erreur lors de la réservation';
+      this.error.set(errorMsg);
+      this.notifications.error(errorMsg);
+    } finally {
+      this.loading.set(false);
+    }
   }
 }

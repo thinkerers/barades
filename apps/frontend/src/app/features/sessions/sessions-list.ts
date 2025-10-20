@@ -2,14 +2,13 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
-  OnInit,
   ViewChild,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   AsyncStateComponent,
@@ -19,6 +18,7 @@ import {
   SessionsScopeBanner,
   findClosestMatches,
 } from '@org/ui';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { Session, SessionsService } from '../../core/services/sessions.service';
 import { SessionCardComponent } from './session-card';
@@ -38,12 +38,14 @@ import { SessionCardComponent } from './session-card';
   styleUrl: './sessions-list.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SessionsListPage implements OnInit {
+export class SessionsListPage {
   private readonly sessionsService = inject(SessionsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
   private readonly authService = inject(AuthService);
+  private readonly queryParamMap = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
 
   @ViewChild('scopeBanner')
   scopeBanner?: SessionsScopeBanner;
@@ -118,26 +120,27 @@ export class SessionsListPage implements OnInit {
     return count;
   });
 
-  ngOnInit(): void {
-    this.route.queryParamMap
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((params) => {
-        const filterParam = params.get('filter');
-        const fromParam = params.get('from');
-        const nextMode = filterParam === 'my-hosted' ? 'my-hosted' : 'all';
-        const shouldReload =
-          this.filterMode() !== nextMode || this.sessions().length === 0;
+  private readonly syncFiltersWithQueryParams = effect(() => {
+    const params = this.queryParamMap();
+    if (!params) {
+      return;
+    }
 
-        this.filterMode.set(nextMode);
-        this.comingFromDashboard.set(fromParam === 'dashboard');
+    const filterParam = params.get('filter');
+    const fromParam = params.get('from');
+    const nextMode = filterParam === 'my-hosted' ? 'my-hosted' : 'all';
+    const shouldReload =
+      this.filterMode() !== nextMode || this.sessions().length === 0;
 
-        if (shouldReload) {
-          this.loadSessions();
-        }
-      });
-  }
+    this.filterMode.set(nextMode);
+    this.comingFromDashboard.set(fromParam === 'dashboard');
 
-  loadSessions(): void {
+    if (shouldReload) {
+      void this.loadSessions();
+    }
+  });
+
+  private async loadSessions(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
 
@@ -146,45 +149,41 @@ export class SessionsListPage implements OnInit {
         ? this.sessionsService.getSessionsHostedByMe()
         : this.sessionsService.getSessions();
 
-    source$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (sessions) => {
-        this.sessions.set(sessions);
-        this.filteredSessions.set([...sessions]);
-        this.gameSystems.set([...new Set(sessions.map((s) => s.game))].sort());
-        this.hostOptions.set(this.buildHostOptions(sessions));
+    try {
+      const sessions = await firstValueFrom(source$);
+      this.sessions.set(sessions);
+      this.filteredSessions.set([...sessions]);
+      this.gameSystems.set([...new Set(sessions.map((s) => s.game))].sort());
+      this.hostOptions.set(this.buildHostOptions(sessions));
 
-        if (this.isScopeFilterActive() && this.hostFilterValue) {
-          this.selectedHost.set(this.hostFilterValue);
-        } else if (!this.isScopeFilterActive()) {
-          this.ensureHostSelectionIsValid();
-        }
+      if (this.isScopeFilterActive() && this.hostFilterValue) {
+        this.selectedHost.set(this.hostFilterValue);
+      } else if (!this.isScopeFilterActive()) {
+        this.ensureHostSelectionIsValid();
+      }
 
-        this.filteredHostOptions.set(
-          this.filterHostSuggestions(this.selectedHost())
-        );
+      this.filteredHostOptions.set(
+        this.filterHostSuggestions(this.selectedHost())
+      );
 
-        this.loading.set(false);
+      // Apply filters if any are already set
+      this.applyFilters();
 
-        // Apply filters if any are already set
-        this.applyFilters();
-
-        // Move focus to banner for accessibility when coming from dashboard
-        if (
-          this.isScopeFilterActive() &&
-          this.comingFromDashboard() &&
-          typeof window !== 'undefined'
-        ) {
-          window.requestAnimationFrame(() => {
-            this.scopeBanner?.focus();
-          });
-        }
-      },
-      error: (err) => {
-        console.error('Error loading sessions:', err);
-        this.error.set(this.defaultErrorMessage);
-        this.loading.set(false);
-      },
-    });
+      if (
+        this.isScopeFilterActive() &&
+        this.comingFromDashboard() &&
+        typeof window !== 'undefined'
+      ) {
+        window.requestAnimationFrame(() => {
+          this.scopeBanner?.focus();
+        });
+      }
+    } catch (err) {
+      console.error('Error loading sessions:', err);
+      this.error.set(this.defaultErrorMessage);
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   /**

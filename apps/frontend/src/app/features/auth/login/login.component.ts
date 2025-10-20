@@ -17,7 +17,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -50,7 +50,7 @@ export class LoginComponent {
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
       return;
@@ -59,20 +59,19 @@ export class LoginComponent {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    this.authService
-      .login(this.loginForm.getRawValue())
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: () => {
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
-          this.router.navigateByUrl(returnUrl);
-        },
-        error: (error) => {
-          const message =
-            error.error?.message ||
-            'Identifiants incorrects. Veuillez réessayer.';
-          this.errorMessage.set(message);
-        },
-      });
+    try {
+      await firstValueFrom(
+        this.authService.login(this.loginForm.getRawValue())
+      );
+      const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+      void this.router.navigateByUrl(returnUrl);
+    } catch (error: unknown) {
+      const message =
+        (error as { error?: { message?: string } })?.error?.message ||
+        'Identifiants incorrects. Veuillez réessayer.';
+      this.errorMessage.set(message);
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 }

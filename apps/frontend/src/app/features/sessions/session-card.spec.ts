@@ -443,25 +443,25 @@ describe('SessionCardComponent', () => {
   });
 
   describe('Authentication Redirect', () => {
-    it('should redirect to login when user is not authenticated', () => {
+    it('should redirect to login when user is not authenticated', async () => {
       mockAuthService.getCurrentUser.mockReturnValue(null);
       routerMock.navigate.mockResolvedValue(true);
 
-      component.onReserve();
+      await component.onReserve();
 
       expect(routerMock.navigate).toHaveBeenCalledWith(['/login'], {
         queryParams: { returnUrl: '/sessions' },
       });
     });
 
-    it('should not create reservation when user is not authenticated', () => {
+    it('should not create reservation when user is not authenticated', async () => {
       mockAuthService.getCurrentUser.mockReturnValue(null);
       const createSpy = jest.spyOn(
         component['reservationsService'],
         'createReservation'
       );
 
-      component.onReserve();
+      await component.onReserve();
 
       expect(createSpy).not.toHaveBeenCalled();
     });
@@ -477,15 +477,15 @@ describe('SessionCardComponent', () => {
       expect(spy).toHaveBeenCalledWith('user-1');
     });
 
-    it('should set isRegistered to false when user has no reservations', () => {
+    it('should set isRegistered to false when user has no reservations', async () => {
       jest
         .spyOn(component['reservationsService'], 'getReservations')
         .mockReturnValue(of([]));
-      component.checkIfRegistered();
+      await component.checkIfRegistered();
       expect(component.isRegistered()).toBe(false);
     });
 
-    it('should set isRegistered to true when user has reservation for this session', () => {
+    it('should set isRegistered to true when user has reservation for this session', async () => {
       const mockReservations: Reservation[] = [
         {
           id: 'res-1',
@@ -498,11 +498,11 @@ describe('SessionCardComponent', () => {
       jest
         .spyOn(component['reservationsService'], 'getReservations')
         .mockReturnValue(of(mockReservations));
-      component.checkIfRegistered();
+      await component.checkIfRegistered();
       expect(component.isRegistered()).toBe(true);
     });
 
-    it('should set isRegistered to false when user has reservations for other sessions', () => {
+    it('should set isRegistered to false when user has reservations for other sessions', async () => {
       const mockReservations: Reservation[] = [
         {
           id: 'res-1',
@@ -522,13 +522,13 @@ describe('SessionCardComponent', () => {
       jest
         .spyOn(component['reservationsService'], 'getReservations')
         .mockReturnValue(of(mockReservations));
-      component.checkIfRegistered();
+      await component.checkIfRegistered();
       expect(component.isRegistered()).toBe(false);
     });
 
-    it('should set isRegistered to false when user is not authenticated', () => {
+    it('should set isRegistered to false when user is not authenticated', async () => {
       mockAuthService.getCurrentUser.mockReturnValue(null);
-      component.checkIfRegistered();
+      await component.checkIfRegistered();
       expect(component.isRegistered()).toBe(false);
     });
 
@@ -537,7 +537,7 @@ describe('SessionCardComponent', () => {
       const compiled = renderComponent({}, () => {
         checkSpy = jest
           .spyOn(component, 'checkIfRegistered')
-          .mockImplementation(() => {
+          .mockImplementation(async () => {
             /* intentionally blank for zoneless test */
           });
         component.isRegistered.set(true);
@@ -553,7 +553,7 @@ describe('SessionCardComponent', () => {
       const compiled = renderComponent({}, () => {
         checkSpy = jest
           .spyOn(component, 'checkIfRegistered')
-          .mockImplementation(() => {
+          .mockImplementation(async () => {
             /* intentionally blank for zoneless test */
           });
         component.isRegistered.set(false);
@@ -568,7 +568,7 @@ describe('SessionCardComponent', () => {
       const compiled = renderComponent({}, () => {
         checkSpy = jest
           .spyOn(component, 'checkIfRegistered')
-          .mockImplementation(() => {
+          .mockImplementation(async () => {
             /* intentionally blank for zoneless test */
           });
         component.isRegistered.set(true);
@@ -585,7 +585,7 @@ describe('SessionCardComponent', () => {
       const compiled = renderComponent({}, () => {
         checkSpy = jest
           .spyOn(component, 'checkIfRegistered')
-          .mockImplementation(() => {
+          .mockImplementation(async () => {
             /* intentionally blank for zoneless test */
           });
         component.isRegistered.set(true);
@@ -602,7 +602,7 @@ describe('SessionCardComponent', () => {
       const compiled = renderComponent({}, () => {
         checkSpy = jest
           .spyOn(component, 'checkIfRegistered')
-          .mockImplementation(() => {
+          .mockImplementation(async () => {
             /* intentionally blank for zoneless test */
           });
         component.isRegistered.set(true);

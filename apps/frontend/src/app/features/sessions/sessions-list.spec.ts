@@ -171,26 +171,29 @@ describe('SessionsListPage', () => {
       expect(component.onlyAvailable()).toBe(false);
     });
 
-    it('should load sessions on init', () => {
+    it('should load sessions on init', async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
       expect(mockSessionsService.getSessions).toHaveBeenCalled();
       expect(component.sessions()).toEqual(mockSessions);
       expect(component.filteredSessions()).toEqual(mockSessions);
     });
 
-    it('should populate game systems from sessions', () => {
+    it('should populate game systems from sessions', async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
       expect(component.gameSystems()).toContain('Dungeons & Dragons 5e');
       expect(component.gameSystems()).toContain('Pathfinder 2e');
       expect(component.gameSystems()).toContain('Call of Cthulhu');
       expect(component.gameSystems().length).toBe(3);
     });
 
-    it('should populate host options from sessions', () => {
+    it('should populate host options from sessions', async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
       expect(component.hostOptions()).toEqual([
         'CthulhuKeeper',
         'DragonMaster',
@@ -198,17 +201,19 @@ describe('SessionsListPage', () => {
       ]);
     });
 
-    it('should handle loading state', () => {
+    it('should handle loading state', async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       expect(component.loading()).toBe(true);
       fixture.detectChanges();
+      await fixture.whenStable();
       expect(component.loading()).toBe(false);
     });
 
-    it('should handle error state', () => {
+    it('should handle error state', async () => {
       const error = new Error('Failed to load sessions');
       mockSessionsService.getSessions.mockReturnValue(throwError(() => error));
       fixture.detectChanges();
+      await fixture.whenStable();
       expect(component.loading()).toBe(false);
       expect(component.error()).toBe(
         'Impossible de charger les sessions. Vérifiez que le backend est démarré.'
@@ -217,9 +222,10 @@ describe('SessionsListPage', () => {
   });
 
   describe('Search Filter', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
     });
 
     it('should filter by title (case insensitive)', () => {
@@ -271,9 +277,10 @@ describe('SessionsListPage', () => {
   });
 
   describe('Session Type Filter', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
     });
 
     it('should show all sessions when type is "all"', () => {
@@ -298,9 +305,10 @@ describe('SessionsListPage', () => {
   });
 
   describe('Game System Filter', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
     });
 
     it('should show all sessions when no game system selected', () => {
@@ -347,9 +355,10 @@ describe('SessionsListPage', () => {
   });
 
   describe('Availability Filter', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
     });
 
     it('should show all sessions when availability filter is off', () => {
@@ -380,9 +389,10 @@ describe('SessionsListPage', () => {
   });
 
   describe('Combined Filters', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
     });
 
     it('should apply search + type filters together', () => {
@@ -438,9 +448,10 @@ describe('SessionsListPage', () => {
   });
 
   describe('Host Filter', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
     });
 
     it('should filter sessions by full host name', () => {
@@ -470,9 +481,10 @@ describe('SessionsListPage', () => {
   });
 
   describe('Reset Filters', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
     });
 
     it('should reset all filter values', () => {
@@ -508,9 +520,10 @@ describe('SessionsListPage', () => {
   });
 
   describe('Active Filters Count', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
     });
 
     it('should return 0 when no filters active', () => {
@@ -567,9 +580,10 @@ describe('SessionsListPage', () => {
   });
 
   describe('UI Integration', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
     });
 
     it('should display loading state', () => {
@@ -644,36 +658,40 @@ describe('SessionsListPage', () => {
   });
 
   describe('Edge Cases', () => {
-    it('should handle empty sessions array', () => {
+    it('should handle empty sessions array', async () => {
       mockSessionsService.getSessions.mockReturnValue(of([]));
       fixture.detectChanges();
+      await fixture.whenStable();
       expect(component.sessions()).toEqual([]);
       expect(component.filteredSessions()).toEqual([]);
       expect(component.gameSystems()).toEqual([]);
     });
 
-    it('should handle sessions with duplicate game names', () => {
+    it('should handle sessions with duplicate game names', async () => {
       const duplicateSessions = [
         { ...mockSessions[0], id: '1' },
         { ...mockSessions[0], id: '2' },
       ];
       mockSessionsService.getSessions.mockReturnValue(of(duplicateSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
       expect(component.gameSystems().length).toBe(1);
       expect(component.gameSystems()[0]).toBe('Dungeons & Dragons 5e');
     });
 
-    it('should handle special characters in search', () => {
+    it('should handle special characters in search', async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
       component.searchTerm.set('D&D');
       component.applyFilters();
       expect(component.filteredSessions().length).toBeGreaterThan(0);
     });
 
-    it('should handle very long search terms', () => {
+    it('should handle very long search terms', async () => {
       mockSessionsService.getSessions.mockReturnValue(of(mockSessions));
       fixture.detectChanges();
+      await fixture.whenStable();
       component.searchTerm.set('a'.repeat(1000));
       component.applyFilters();
       expect(component.filteredSessions().length).toBe(0);

@@ -19,7 +19,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
-import { finalize } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -75,7 +75,7 @@ export class RegisterComponent {
     return null;
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.registerForm.invalid) {
       this.registerForm.markAllAsTouched();
       return;
@@ -84,19 +84,19 @@ export class RegisterComponent {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    this.authService
-      .signup(this.registerForm.getRawValue())
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: () => {
-          this.router.navigate(['/']);
-        },
-        error: (error) => {
-          const message =
-            error.error?.message || 'Registration failed. Please try again.';
-          this.errorMessage.set(message);
-        },
-      });
+    try {
+      await firstValueFrom(
+        this.authService.signup(this.registerForm.getRawValue())
+      );
+      this.router.navigate(['/']);
+    } catch (error: unknown) {
+      const message =
+        (error as { error?: { message?: string } })?.error?.message ||
+        'Registration failed. Please try again.';
+      this.errorMessage.set(message);
+    } finally {
+      this.isLoading.set(false);
+    }
   }
 
   /**

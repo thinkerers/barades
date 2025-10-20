@@ -2,12 +2,12 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   OnInit,
+  effect,
   inject,
   signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
@@ -17,7 +17,7 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router } from '@angular/router';
 import { findClosestMatches } from '@org/ui';
-import { finalize } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { Session, SessionsService } from '../../core/services/sessions.service';
@@ -37,7 +37,6 @@ export class SessionEditComponent implements OnInit {
   private readonly sessionsService = inject(SessionsService);
   private readonly authService = inject(AuthService);
   private readonly notifications = inject(NotificationService);
-  private readonly destroyRef = inject(DestroyRef);
 
   sessionForm!: FormGroup;
   readonly loading = signal(true);
@@ -93,12 +92,17 @@ export class SessionEditComponent implements OnInit {
     });
 
     // Écouter les changements du champ "game" pour détecter les fautes
-    this.sessionForm
-      .get('game')
-      ?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((value) => {
-        this.checkGameSuggestions(value);
+    const gameControl = this.sessionForm.get('game');
+    if (gameControl) {
+      const gameValue = toSignal<string | null>(gameControl.valueChanges, {
+        initialValue: gameControl.value,
       });
+
+      effect(() => {
+        const value = gameValue();
+        this.checkGameSuggestions(value ?? '');
+      });
+    }
   }
 
   ngOnInit(): void {
@@ -111,71 +115,55 @@ export class SessionEditComponent implements OnInit {
     }
 
     // Charger la session
-    this.loadSession(this.sessionId);
+    void this.loadSession(this.sessionId);
 
     // Charger les jeux existants
-    this.loadExistingGames();
+    void this.loadExistingGames();
   }
 
-  loadSession(id: string): void {
+  private async loadSession(id: string): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
 
-    this.sessionsService
-      .getSession(id)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (session) => {
-          this.session.set(session);
+    try {
+      const session = await firstValueFrom(this.sessionsService.getSession(id));
+      this.session.set(session);
 
-          // Vérifier que l'utilisateur est le créateur
-          const currentUser = this.authService.getCurrentUser();
-          if (!currentUser || session.hostId !== currentUser.id) {
-            this.error.set("Vous n'êtes pas autorisé à modifier cette session");
-            this.loading.set(false);
-            return;
-          }
+      const currentUser = this.authService.getCurrentUser();
+      if (!currentUser || session.hostId !== currentUser.id) {
+        this.error.set("Vous n'êtes pas autorisé à modifier cette session");
+        return;
+      }
 
-          // Pré-remplir le formulaire
-          const dateForInput = new Date(session.date)
-            .toISOString()
-            .slice(0, 16);
-          this.sessionForm.patchValue({
-            game: session.game,
-            title: session.title,
-            description: session.description || '',
-            date: dateForInput,
-            online: session.online,
-            level: session.level,
-            playersMax: session.playersMax,
-            tagColor: session.tagColor || 'BLUE',
-          });
-
-          this.loading.set(false);
-        },
-        error: (err) => {
-          console.error('Erreur lors du chargement de la session:', err);
-          this.error.set(
-            "Impossible de charger la session. Elle n'existe peut-être pas."
-          );
-          this.loading.set(false);
-        },
+      const dateForInput = new Date(session.date).toISOString().slice(0, 16);
+      this.sessionForm.patchValue({
+        game: session.game,
+        title: session.title,
+        description: session.description || '',
+        date: dateForInput,
+        online: session.online,
+        level: session.level,
+        playersMax: session.playersMax,
+        tagColor: session.tagColor || 'BLUE',
       });
+    } catch (err) {
+      console.error('Erreur lors du chargement de la session:', err);
+      this.error.set(
+        "Impossible de charger la session. Elle n'existe peut-être pas."
+      );
+    } finally {
+      this.loading.set(false);
+    }
   }
 
-  loadExistingGames(): void {
-    this.sessionsService
-      .getSessions()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (sessions) => {
-          const games = [...new Set(sessions.map((s) => s.game))].sort();
-          this.existingGames.set(games);
-        },
-        error: (err) => {
-          console.error('Erreur lors du chargement des jeux:', err);
-        },
-      });
+  private async loadExistingGames(): Promise<void> {
+    try {
+      const sessions = await firstValueFrom(this.sessionsService.getSessions());
+      const games = [...new Set(sessions.map((s) => s.game))].sort();
+      this.existingGames.set(games);
+    } catch (err) {
+      console.error('Erreur lors du chargement des jeux:', err);
+    }
   }
 
   checkGameSuggestions(value: string): void {
@@ -200,7 +188,7 @@ export class SessionEditComponent implements OnInit {
     this.gameSuggestions.set([]);
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     if (this.sessionForm.invalid) {
       Object.keys(this.sessionForm.controls).forEach((key) => {
         const control = this.sessionForm.get(key);
@@ -225,25 +213,21 @@ export class SessionEditComponent implements OnInit {
       date: new Date(formValue.date).toISOString(),
     };
 
-    this.sessionsService
-      .updateSession(this.sessionId, sessionData)
-      .pipe(
-        takeUntilDestroyed(this.destroyRef),
-        finalize(() => this.saving.set(false))
-      )
-      .subscribe({
-        next: (updatedSession) => {
-          this.notifications.success('Session modifiée avec succès.');
-          this.router.navigate(['/sessions', updatedSession.id]);
-        },
-        error: (err) => {
-          console.error('Erreur lors de la modification:', err);
-          this.error.set(
-            err.error?.message ||
-              'Une erreur est survenue lors de la modification de la session'
-          );
-        },
-      });
+    try {
+      const updatedSession = await firstValueFrom(
+        this.sessionsService.updateSession(this.sessionId, sessionData)
+      );
+      this.notifications.success('Session modifiée avec succès.');
+      this.router.navigate(['/sessions', updatedSession.id]);
+    } catch (err: unknown) {
+      console.error('Erreur lors de la modification:', err);
+      this.error.set(
+        (err as { error?: { message?: string } })?.error?.message ||
+          'Une erreur est survenue lors de la modification de la session'
+      );
+    } finally {
+      this.saving.set(false);
+    }
   }
 
   cancel(): void {
