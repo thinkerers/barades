@@ -70,6 +70,7 @@ Enfin, merci à ma famille et mes amis pour leur soutien essentiel.
      - 3.6.2. Fonctionnalités principales
      - 3.6.3. Intégration des APIs
      - 3.6.4. Tests et débogage
+     - 3.6.5. Documentation automatisée
    - 3.7. Mise en production
      - 3.7.1. Déploiement
      - 3.7.2. Migration de la base de données
@@ -81,6 +82,16 @@ Enfin, merci à ma famille et mes amis pour leur soutien essentiel.
    - 4.4. Bilan personnel
 5. **Références bibliographiques**
 6. **Annexes**
+   - Annexe A : Charte graphique
+   - Annexe B : Wireframes
+   - Annexe C : Maquettes
+   - Annexe D : Diagrammes de base de données (ERD, User Journeys)
+   - Annexe E : Captures d'écran
+   - Annexe F : Guide d'installation
+   - Annexe G : Architecture Nx (Graphe de dépendances)
+   - Annexe H : Code source significatif
+   - Annexe I : Résultats des tests
+   - Annexe J : Liens utiles
 
 ---
 
@@ -442,6 +453,52 @@ polls (
 )
 ```
 
+**Génération automatique du diagramme ERD :**
+
+Pour maintenir la documentation à jour avec le schéma de la base de données, le projet utilise **Prisma ERD Generator**, un outil qui génère automatiquement un diagramme visuel à partir du fichier `schema.prisma`.
+
+**Configuration dans `schema.prisma` :**
+
+```prisma
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "../../../doc/database-erd.svg"
+  theme    = "forest"  // Thème adapté au design de l'application
+}
+```
+
+**Avantages de cette approche :**
+
+- ✅ **Synchronisation automatique** : Le diagramme est régénéré à chaque modification du schéma
+- ✅ **Documentation vivante** : Toujours à jour avec la structure réelle de la base
+- ✅ **Format vectoriel (SVG)** : Qualité d'image parfaite pour l'impression du rapport
+- ✅ **Visualisation complète** : Tables, champs, types de données et relations
+- ✅ **Gain de temps** : Plus besoin de dessiner manuellement le diagramme
+
+**Génération du diagramme :**
+
+```bash
+# Commande unique qui génère à la fois le client Prisma et le diagramme ERD
+npx prisma generate
+```
+
+**Résultat :**
+
+```
+✔ Generated Prisma Client to ./generated/prisma in 128ms
+✔ Generated Entity-relationship-diagram to ./doc/database-erd.svg in 2.75s
+```
+
+Le fichier `database-erd.svg` généré (278 KB) contient :
+
+- Les 7 tables du schéma (User, Session, Location, Reservation, Group, Poll, GroupMember)
+- Tous les champs avec leurs types (String, DateTime, Int, Boolean, Json, etc.)
+- Les relations et cardinalités (1:n, n:n)
+- Les clés primaires et étrangères
+- Les contraintes d'unicité
+
+_Voir le diagramme complet en Annexe D_
+
 #### 3.4.3. Sécurité et Row Level Security
 
 **Pourquoi Supabase ?**
@@ -651,6 +708,17 @@ barades/
 - 🧪 Tests intégrés pour tout le projet
 - 🚀 Déploiements coordonnés
 - 🎯 Nx optimise les builds (cache, affected commands)
+- 📊 Visualisation des dépendances avec `nx graph`
+
+**Outils de documentation intégrés :**
+
+Le monorepo Nx inclut des outils de documentation et visualisation :
+
+- **Nx Graph** : Graphe interactif des dépendances entre apps et libraries
+- **Prisma ERD Generator** : Génération automatique du diagramme de base de données
+- **Mermaid CLI** : Création de diagrammes de flux et user journeys
+
+Ces outils permettent de maintenir automatiquement une documentation technique à jour, synchronisée avec le code source.
 
 **Architecture Angular (Frontend) :**
 
@@ -1193,6 +1261,45 @@ nx graph
 - **Supabase Dashboard** : Monitoring de la base de données et des queries
 - **Sentry** (optionnel) : Tracking des erreurs en production
 
+**Documentation automatisée :**
+
+Le projet utilise également des outils pour générer automatiquement la documentation visuelle :
+
+1. **Nx Dependency Graph** : Visualise l'architecture du monorepo et les dépendances entre projets
+
+   ```bash
+   nx graph  # Ouvre une interface interactive
+   ```
+
+2. **Mermaid Diagrams** : Génère des diagrammes de parcours utilisateurs (User Journeys)
+
+   Exemple de fichier source (`journey-signup.mmd`) :
+
+   ```mermaid
+   journey
+     title Parcours membre : inscription et réservation
+     section Découverte
+       Découvre la PWA via QR code: 3:Prospect
+       Installe l'application: 4:Prospect
+     section Authentification
+       Ouvre la PWA et consulte les sessions: 4:Visiteur
+       Crée un compte: 3:Visiteur
+       Confirme l'e-mail: 2:Visiteur
+     section Réservation
+       Filtre les sessions par localisation: 4:Membre
+       Réserve une session et reçoit l'e-mail: 5:Membre
+     section Suivi
+       Consulte la réservation hors-ligne: 4:Membre
+   ```
+
+   Génération en SVG :
+
+   ```bash
+   npx mmdc -i journey-signup.mmd -o journey-signup.svg
+   ```
+
+Ces outils permettent de maintenir une documentation technique toujours synchronisée avec le code, ce qui est essentiel pour la maintenabilité à long terme du projet.
+
 ---
 
 ### 3.7. Mise en production
@@ -1610,6 +1717,12 @@ Je compte continuer à faire évoluer Barades, en intégrant les retours des pre
 18. **Playwright**
     Playwright.dev. (2024). _Playwright Test_. Récupéré de https://playwright.dev
 
+19. **Prisma ERD Generator**
+    Github.com. (2024). _prisma-erd-generator_. Récupéré de https://github.com/keonik/prisma-erd-generator
+
+20. **Mermaid**
+    Mermaid.js.org. (2024). _Mermaid - Diagramming and charting tool_. Récupéré de https://mermaid.js.org
+
 ---
 
 ## Annexes
@@ -1646,7 +1759,48 @@ Je compte continuer à faire évoluer Barades, en intégrant les retours des pre
 
 ### Annexe D : Diagrammes de base de données
 
-[TODO: Insérer le MCD et ERD complets]
+**Diagramme ERD (Entity Relationship Diagram)**
+
+Le diagramme ERD a été généré automatiquement à partir du schéma Prisma à l'aide de `prisma-erd-generator`.
+
+**Fichier source** : `apps/backend/prisma/schema.prisma`
+
+**Commande de génération** :
+
+```bash
+npx prisma generate
+```
+
+**Fichier généré** : `doc/rapport/8. Table des figures/diagrams/database-erd.svg` (278 KB)
+
+**Contenu du diagramme :**
+
+- 7 tables principales : User, Session, Location, Reservation, Group, Poll, GroupMember
+- Tous les champs avec types de données (String, DateTime, Int, Boolean, Json, UUID)
+- Relations et cardinalités (1:1, 1:n, n:n)
+- Clés primaires (id UUID)
+- Clés étrangères (creator_id, session_id, location_id, etc.)
+- Contraintes d'unicité (email, username, etc.)
+
+_[Le diagramme SVG complet est disponible dans le dossier du projet]_
+
+**User Journey Diagrams**
+
+Trois diagrammes de parcours utilisateur ont été créés avec Mermaid pour documenter les flux principaux :
+
+1. **journey-signup.mmd** : Parcours d'inscription et première réservation
+2. **journey-offline.mmd** : Utilisation hors-ligne de la PWA
+3. **journey-group-poll.mmd** : Création de groupe et sondage
+
+**Génération des diagrammes** :
+
+```bash
+npx mmdc -i journey-signup.mmd -o journey-signup.svg
+npx mmdc -i journey-offline.mmd -o journey-offline.svg
+npx mmdc -i journey-group-poll.mmd -o journey-group-poll.svg
+```
+
+_[Les diagrammes SVG sont disponibles dans `doc/rapport/8. Table des figures/diagrams/`]_
 
 ---
 
@@ -1696,9 +1850,82 @@ nx serve frontend
 - Email : `test@barades.be`
 - Mot de passe : `TestPassword123!`
 
+**Visualiser l'architecture du projet :**
+
+Pour comprendre l'architecture du monorepo et les dépendances entre projets :
+
+```bash
+# Ouvrir le graphe interactif Nx
+nx graph
+
+# Voir uniquement les projets affectés par les changements récents
+nx affected:graph
+```
+
+Cette commande ouvre une interface web interactive montrant :
+
+- Les applications (frontend, backend)
+- Les bibliothèques partagées (ui)
+- Les tests E2E (frontend-e2e, backend-e2e)
+- Les dépendances entre tous les projets
+
 ---
 
-### Annexe G : Code source significatif
+### Annexe G : Architecture du Monorepo (Nx Graph)
+
+**Visualisation des dépendances**
+
+Le projet utilise Nx pour gérer un monorepo complexe. Le graphe de dépendances peut être visualisé avec :
+
+```bash
+nx graph
+```
+
+**Structure des dépendances :**
+
+```
+frontend (app)
+  └─→ ui (lib)
+  └─→ types (shared)
+
+backend (app)
+  └─→ prisma (generated)
+  └─→ types (shared)
+
+frontend-e2e (e2e)
+  └─→ frontend
+
+backend-e2e (e2e)
+  └─→ backend
+```
+
+**Avantages de cette architecture :**
+
+- 🔒 Isolation des projets
+- 🔄 Partage de code entre front et back
+- 🧪 Tests isolés par projet
+- ⚡ Builds optimisés (seuls les projets affectés sont rebuild)
+- 📊 Visualisation claire des dépendances
+
+**Commandes Nx utiles :**
+
+```bash
+# Builder tous les projets
+nx run-many -t build
+
+# Tester tous les projets
+nx run-many -t test
+
+# Builder uniquement les projets affectés
+nx affected -t build
+
+# Voir le graphe des projets affectés
+nx affected:graph
+```
+
+---
+
+### Annexe H : Code source significatif
 
 **Structure du projet :**
 
