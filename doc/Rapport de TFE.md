@@ -153,80 +153,30 @@ Les fonctionnalités clés sont donc:
 
 ### 3.2. Gestion de projet
 
-#### 3.2.1. Planning d'exécution
+#### 3.2.1. Déroulement
 
-Le projet Barades a été réalisé sur une période de [X mois], avec une répartition du temps selon les phases suivantes :
+La phase de développement actif s'est déroulé en un sprint intensif de huit jours consécutifs, au cours duquel l'essentiel du code a été produit.
 
-**Phase 1 : Analyse et Conception (Semaines 1-3)**
+Pour optimiser cette phase et itérer rapidement, j'ai tiré parti de plusieurs modèles d'IA de manière ciblée :
 
-- Analyse des besoins et définition du périmètre
-- Recherche et benchmarking de solutions existantes
-- Création de l'impact mapping
-- Conception de l'arborescence et wireframes
-- Élaboration de la charte graphique
+- GPT-5-Codex pour les logiques de code complexes et précises
+- Claude Sonnet 4.5 pour l'automatisation des tâches répétitives, notamment les migrations de données
+- Gemini 2.5 Pro pour le prototypage rapide de composants d'UI
 
-**Phase 2 : Modélisation de la base de données (Semaines 4-5)**
+J'ai également mis en œuvre une approche de prompt engineering pour générer les API NestJS, en assurant la conformité avec des spécifications techniques précises, comme par exemple les principes de la clean architecture.
 
-- Conception du MCD (Modèle Conceptuel de Données)
-- Création du ERD (Entity Relationship Diagram)
-- Configuration de Supabase et PostgreSQL
-- Mise en place de la sécurité (Row Level Security)
+Ce sprint intensif a été précédé par un travail préparatoire essentiel, incluant l'établissement de l'impact map, la définition des user stories fondamentales et la configuration de l'environnement de base Nx.
 
-**Phase 3 : Développement Front-end (Semaines 6-10)**
+- **Jour 1 :** prompt engineering, cadrage précis des agents pour la période de sprint, configuration de l'espace Nx/Prisma et mise en place de garde fous pour assurer la qualité du code, via tests e2e et tests unitaires.
+- **Jour 2 :** mise en place du backend NestJS (modules, guards, validation), intégration des premières migrations Prisma et mise en place de Supabase.
+- **Jours 3-4 :** production des micro-services métier (sessions, réservations, groupes) via agents LLM avec correction manuelle systématique, ajout de tests unitaires critiques.
+- **Jours 5-6 :** composition de l'interface avec les composants Angular, harmonisation graphique et responsive, branchement aux endpoints.
+- **Jour 7 :** amélioration des tests (Jest, Playwright ciblé), corrections manuelles, sécurisation RLS, durcissement de l'auth.
+- **Jour 8 :** intégrations finales, audit de performance, préparation du déploiement et rédaction du rapport.
 
-- Configuration de l'environnement Angular
-- Développement des composants UI
-- Intégration de la charte graphique
-- Mise en place du routing et de la navigation
-- Intégration des APIs (cartes, authentification)
-- Responsive design et optimisations mobiles
-
-**Phase 4 : Développement Back-end (Semaines 8-12)**
-
-- Configuration de NestJS
-- Développement des modules et services
-- Création des endpoints API
-- Intégration avec Supabase
-- Gestion de l'authentification et des sessions
-
-**Phase 5 : Tests et Débogage (Semaines 13-14)**
-
-- Tests unitaires (Jest)
-- Tests d'intégration
-- Tests end-to-end (Playwright)
-- Correction des bugs identifiés
-- Tests de performance
-
-**Phase 6 : Déploiement et Mise en Production (Semaines 15-16)**
-
-- Configuration du serveur de production
-- Migration de la base de données
-- Déploiement de l'application
-- Configuration du domaine et SSL
-- Tests en environnement de production
-
-**Planning visuel :**
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ Semaine │ 1-3  │ 4-5  │ 6-10 │ 8-12 │ 13-14│ 15-16│            │
-├─────────────────────────────────────────────────────────────────┤
-│ Analyse │ ████ │      │      │      │      │      │            │
-│ BDD     │      │ ████ │      │      │      │      │            │
-│ Front   │      │      │ ████ │      │      │      │            │
-│ Back    │      │      │   ████████  │      │      │            │
-│ Tests   │      │      │      │      │ ████ │      │            │
-│ Deploy  │      │      │      │      │      │ ████ │            │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-**Méthodologie agile :**
-
-Le projet a été géré selon une approche agile avec des sprints hebdomadaires, permettant une adaptation continue aux découvertes et défis techniques rencontrés.
+Le choix de NestJS et Angular découle directement de cette stratégie : la force de ces frameworks réside en leurs conventions strictes, leur typage fort et les outils en ligne de commandes qui laissent peu de place à l'erreur de la part des agents LLMS, ce qui en fait des outils efficaces bien qu'imparfaits.
 
 #### 3.2.2. Impact Mapping
-
-L'impact mapping est une méthode de planification stratégique qui permet de relier les objectifs business aux fonctionnalités à développer. Voici l'impact map de Barades :
 
 **Objectif principal :** Faciliter les rencontres entre joueurs de jeux de société
 
@@ -241,13 +191,13 @@ L'impact mapping est une méthode de planification stratégique qui permet de re
 _Pour les joueurs itinérants :_
 
 - Découvrir facilement des lieux ludiques près de chez eux
-- Trouver des sessions de jeu ouvertes
-- Rejoindre une communauté de joueurs
+- Trouver des sessions de jeu disponibles
+- Rejoindre une communauté
 
 _Pour les organisateurs :_
 
-- Créer et promouvoir leurs sessions de jeu
-- Recruter facilement des joueurs
+- Créer des sessions de jeu
+- Recruter des joueurs
 - Gérer les inscriptions
 
 _Pour les propriétaires de lieux :_
@@ -279,8 +229,8 @@ _Pour les propriétaires de lieux :_
 
 4. **Interface responsive**
    - Application mobile-first
-   - Performance optimale
-   - Mode hors ligne (PWA)
+   - Performance optimale (design épuré, assets légers)
+   - SPA avec support offline (PWA)
 
 ---
 
@@ -288,74 +238,70 @@ _Pour les propriétaires de lieux :_
 
 #### 3.3.1. Arborescence du site
 
-[TODO: Ajouter le diagramme d'arborescence]
-
-L'architecture du site suit une structure simple et intuitive :
-
 ```
-Accueil (/)
-│
-├── Carte des lieux (/map)
-│   └── Détail d'un lieu (/map/:locationId)
-│
-├── Sessions (/sessions)
-│   ├── Liste des sessions (/sessions)
-│   ├── Détail d'une session (/sessions/:sessionId)
-│   └── Créer une session (/sessions/create)
-│
-├── Profil (/profile)
-│   ├── Mes informations
-│   ├── Mes sessions
-│   └── Paramètres
-│
-└── Authentification
-    ├── Connexion (/login)
-    └── Inscription (/signup)
+Racine ('')
+├── '' → HomePage
+├── sessions
+│   ├── '' → SessionsListPage
+│   ├── new → SessionCreateComponent (authGuard)
+│   ├── :id → SessionDetailComponent
+│   └── :id/edit → SessionEditComponent (authGuard)
+├── locations → LocationsListComponent
+├── groups
+│   ├── '' → GroupsListComponent
+│   └── :id → GroupDetailComponent
+├── forum → ForumPage
+├── charter → CharterPage
+├── profile → ProfilePage (authGuard)
+├── dashboard → DashboardPage (authGuard)
+├── showcase → ShowcasePage
+├── about → AboutPage
+├── careers → CareersPage
+├── contact → ContactPage
+└── help → HelpPage
 ```
 
 #### 3.3.2. Wireframes
 
-[TODO: Insérer les wireframes des pages principales]
+Voici quelques unes des pages du site
 
-Les wireframes ont été conçus pour prioriser :
+![Wireframe de la page d'accueil](rapport/8.%20Table%20des%20figures/wireframes_accueil.png)
 
-- **La simplicité** : Navigation intuitive avec maximum 3 clics pour atteindre n'importe quelle fonctionnalité
-- **Le mobile-first** : Conception pensée d'abord pour smartphones
-- **L'accessibilité** : Contrastes respectant les normes WCAG 2.1
+![Wireframe de la carte des lieux](rapport/8.%20Table%20des%20figures/wireframe_lieux.png)
+
+![Wireframe de l'espace groupes](rapport/8.%20Table%20des%20figures/wireframes_groupes.png)
+
+La navigation est pensée pour être la plus intuitive possible.
 
 #### 3.3.3. Charte graphique
 
-[TODO: Voir la charte graphique complète en annexe]
-
 **Palette de couleurs :**
 
-- Couleur principale : [Spécifier]
-- Couleurs secondaires : [Spécifier]
-- Couleurs d'état (succès, erreur, warning, info)
+- Couleur principale : Indigo profond `#6366f1` (hover `#4f46e5`, focus `#818cf8`)
+- Couleurs secondaires : Fonds sombres `#0f1419`, `#1a1d2e`, `#262b3d` pour renforcer le contraste
+- Couleurs de texte : `#f9fafb` (principal), `#d1d5db` (secondaire), `#9ca3af` (tertiaire)
+- Couleurs d'état : Succès `#10b981`, Erreur `#ef4444`, Alerte `#f59e0b`, Info `#3b82f6`
 
 **Typographie :**
 
-- Titres : [Police choisie]
-- Corps de texte : [Police choisie]
-- Hiérarchie : H1 à H6 définie
+- Titres : `Inter` (gras 700 pour H1/H2, medium 600 pour H3/H4)
+- Corps de texte : `Inter` taille 1rem, graisse 400 avec un interlignage 1.5
+- Pile de secours : `system-ui`, `-apple-system`, `BlinkMacSystemFont`, `Segoe UI`, `sans-serif`
+- Hiérarchie : H1 2.5rem, H2 2rem, H3 1.5rem, H4 1.25rem, H5 1.125rem, H6 1rem
 
 **Logo et identité visuelle :**
 
-- Le logo représente [description]
-- Déclinaisons : version complète, icône, version monochrome
+![Logo Barades](rapport/8.%20Table%20des%20figures/logo_barade.svg)
 
-**Mood board :**
-L'ambiance visuelle recherchée s'inspire de [description de l'univers graphique choisi].
+- Le logo combine un pion, un dé et un livre de règle, pour symboliser les jeux sur tables.
 
 #### 3.3.4. Maquettes
 
-[TODO: Insérer les maquettes haute-fidélité]
+Voici quelques unes des pages du site:
 
-Les maquettes ont été réalisées en respectant la charte graphique et intègrent :
-
-- Les composants UI définitifs
-- Les interactions et micro-animations
-- Les états des éléments (hover, focus, disabled)
+- ![Layout accueil](rapport/8.%20Table%20des%20figures/layout_accueil.png)
+- ![Layout groups](rapport/8.%20Table%20des%20figures/layout_groups.png)
+- ![Layout lieux](rapport/8.%20Table%20des%20figures/layout_lieux.png)
 
 ---
 
