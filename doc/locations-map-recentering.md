@@ -1,6 +1,6 @@
 # Locations Map Recentering Fix
 
-**Date**: 2025-10-20  
+**Date**: 2025-10-20
 **Feature**: Frontend – Locations page map
 
 ---
@@ -24,7 +24,7 @@ Two behaviors compounded the problem:
    while the map was still being hydrated. The freshly created map used the
    latest `userPosition` snapshot for its `center` value. Because this work
    happened around tile loading, the map viewport appeared to "bounce"
-  between Brussels (default center) and the user's coordinates.
+   between Brussels (default center) and the user's coordinates.
 
 ## Fix
 
