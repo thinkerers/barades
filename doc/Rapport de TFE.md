@@ -4,11 +4,11 @@
 
 ---
 
-**Auteur :** [Votre Nom]
+**Auteur :** Théophile Desmedt
 **Formation :** Développeur Web Full Stack
 **Institution :** IFAPME Tournai
 **Année académique :** 2024-2025
-**Promoteur :** Monsieur PARFAIT Martial
+**Promoteur :** Monsieur DURIBREUX GUILLAUME
 
 ---
 
