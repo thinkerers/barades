@@ -1,5 +1,14 @@
-
-import { Component, OnInit, inject } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  NgZone,
+  ViewChild,
+  inject,
+  signal,
+} from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -11,42 +20,55 @@ import * as L from 'leaflet';
 
 @Component({
   selector: 'app-contact-page',
+  standalone: true,
   imports: [ReactiveFormsModule, MatIconModule],
   templateUrl: './contact-page.html',
   styleUrl: './contact-page.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ContactPage implements OnInit {
-  private fb = inject(FormBuilder);
+export class ContactPage implements AfterViewInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly ngZone = inject(NgZone);
 
-  contactForm: FormGroup;
-  submitted = false;
-  successMessage = '';
-  errorMessage = '';
+  @ViewChild('contactMap', { static: true })
+  private readonly mapContainer?: ElementRef<HTMLDivElement>;
+
+  readonly contactForm: FormGroup = this.fb.group({
+    name: ['', [Validators.required, Validators.minLength(2)]],
+    email: ['', [Validators.required, Validators.email]],
+    subject: ['', [Validators.required, Validators.minLength(3)]],
+    message: ['', [Validators.required, Validators.minLength(10)]],
+  });
+
+  readonly submitted = signal(false);
+  readonly successMessage = signal<string | null>(null);
+  readonly errorMessage = signal<string | null>(null);
+
   private map: L.Map | null = null;
 
   constructor() {
-    this.contactForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      email: ['', [Validators.required, Validators.email]],
-      subject: ['', [Validators.required, Validators.minLength(3)]],
-      message: ['', [Validators.required, Validators.minLength(10)]],
+    this.destroyRef.onDestroy(() => {
+      this.map?.remove();
+      this.map = null;
     });
   }
 
-  ngOnInit(): void {
-    // Initialize map after view is rendered
-    setTimeout(() => {
+  ngAfterViewInit(): void {
+    this.ngZone.runOutsideAngular(() => {
       this.initMap();
-    }, 100);
+    });
   }
 
   onSubmit(): void {
-    this.submitted = true;
-    this.successMessage = '';
-    this.errorMessage = '';
+    this.submitted.set(true);
+    this.successMessage.set(null);
+    this.errorMessage.set(null);
 
     if (this.contactForm.invalid) {
-      this.errorMessage = 'Veuillez corriger les erreurs dans le formulaire.';
+      this.errorMessage.set(
+        'Veuillez corriger les erreurs dans le formulaire.'
+      );
       return;
     }
 
@@ -56,10 +78,11 @@ export class ContactPage implements OnInit {
 
     // In a real app, you would send this to a backend service
     // For now, just show success message
-    this.successMessage =
-      'Merci pour votre message ! Nous vous répondrons dans les plus brefs délais.';
+    this.successMessage.set(
+      'Merci pour votre message ! Nous vous répondrons dans les plus brefs délais.'
+    );
     this.contactForm.reset();
-    this.submitted = false;
+    this.submitted.set(false);
   }
 
   get name() {
@@ -79,7 +102,7 @@ export class ContactPage implements OnInit {
   }
 
   private initMap(): void {
-    const container = document.getElementById('contact-map');
+    const container = this.mapContainer?.nativeElement;
     if (!container) {
       console.warn('[ContactPage] Map container not found');
       return;
@@ -98,7 +121,7 @@ export class ContactPage implements OnInit {
     const tournaiCoords: L.LatLngExpression = [50.6058, 3.3873];
 
     // Create map centered on Tournai
-    this.map = L.map('contact-map', {
+    this.map = L.map(container, {
       center: tournaiCoords,
       zoom: 16,
       scrollWheelZoom: false,
@@ -147,11 +170,11 @@ export class ContactPage implements OnInit {
 
     // Force map to recognize container size
     this.map.whenReady(() => {
-      setTimeout(() => {
+      requestAnimationFrame(() => {
         if (this.map) {
           this.map.invalidateSize(true);
         }
-      }, 100);
+      });
     });
   }
 }

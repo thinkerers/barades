@@ -26,9 +26,9 @@
             formControlName="name"
             class="form-input"
             placeholder="Élise"
-            [class.invalid]="submitted && name?.invalid"
+            [class.invalid]="submitted() && name?.invalid"
           />
-          @if (submitted && name?.invalid) {
+          @if (submitted() && name?.invalid) {
           <div class="error-message">
             @if (name?.errors?.['required']) {
             <span>Le nom est requis</span>
@@ -48,9 +48,9 @@
             formControlName="email"
             class="form-input"
             placeholder="elise@barades.com"
-            [class.invalid]="submitted && email?.invalid"
+            [class.invalid]="submitted() && email?.invalid"
           />
-          @if (submitted && email?.invalid) {
+          @if (submitted() && email?.invalid) {
           <div class="error-message">
             @if (email?.errors?.['required']) {
             <span>L'email est requis</span>
@@ -70,9 +70,9 @@
             formControlName="subject"
             class="form-input"
             placeholder="Suggestion de fonctionnalité"
-            [class.invalid]="submitted && subject?.invalid"
+            [class.invalid]="submitted() && subject?.invalid"
           />
-          @if (submitted && subject?.invalid) {
+          @if (submitted() && subject?.invalid) {
           <div class="error-message">
             @if (subject?.errors?.['required']) {
             <span>Le sujet est requis</span>
@@ -92,9 +92,9 @@
             rows="5"
             class="form-input"
             placeholder="Bonjour, je pense qu'il serait utile d'ajouter..."
-            [class.invalid]="submitted && message?.invalid"
+            [class.invalid]="submitted() && message?.invalid"
           ></textarea>
-          @if (submitted && message?.invalid) {
+          @if (submitted() && message?.invalid) {
           <div class="error-message">
             @if (message?.errors?.['required']) {
             <span>Le message est requis</span>
@@ -115,10 +115,10 @@
 
         <!-- Feedback Messages -->
         <div class="form-feedback">
-          @if (successMessage) {
-          <div class="success-message">{{ successMessage }}</div>
-          } @if (errorMessage) {
-          <div class="error-feedback">{{ errorMessage }}</div>
+          @if (successMessage()) {
+          <div class="success-message">{{ successMessage() }}</div>
+          } @if (errorMessage()) {
+          <div class="error-feedback">{{ errorMessage() }}</div>
           }
         </div>
       </form>
@@ -149,7 +149,7 @@
 
       <!-- Map Placeholder -->
       <div class="map-card">
-        <div id="contact-map" class="contact-map"></div>
+        <div #contactMap id="contact-map" class="contact-map"></div>
       </div>
     </div>
   </div>
