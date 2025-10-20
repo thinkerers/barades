@@ -21,7 +21,8 @@ import {
 } from '@org/ui';
 import * as L from 'leaflet';
 import 'leaflet.locatecontrol';
-import { Subject, Subscription, firstValueFrom, timer } from 'rxjs';
+import { EmptyError, Subject, firstValueFrom, timer } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import {
   Location,
   LocationsService,
@@ -263,31 +264,24 @@ export class LocationsListComponent implements OnInit, OnDestroy {
       this.pendingDelayCancelers.delete(cancel);
     };
 
-    void this.pendingTasks.run(
-      () =>
-        new Promise<void>((resolve) => {
-          let timerSubscription: Subscription | null = null;
-          let cancelSubscription: Subscription | null = null;
+    void this.pendingTasks.run(async () => {
+      try {
+        try {
+          await firstValueFrom(timer(delay).pipe(takeUntil(cancel$)));
+        } catch (error) {
+          if (error instanceof EmptyError) {
+            return;
+          }
+          throw error;
+        }
 
-          const cleanup = () => {
-            timerSubscription?.unsubscribe();
-            cancelSubscription?.unsubscribe();
-            finalize();
-            resolve();
-          };
-
-          timerSubscription = timer(delay).subscribe(() => {
-            if (!cancelled) {
-              runInInjectionContext(this.injector, callback);
-            }
-            cleanup();
-          });
-
-          cancelSubscription = cancel$.subscribe(() => {
-            cleanup();
-          });
-        })
-    );
+        if (!cancelled) {
+          runInInjectionContext(this.injector, callback);
+        }
+      } finally {
+        finalize();
+      }
+    });
   }
 
   private cancelScheduledDelays(): void {

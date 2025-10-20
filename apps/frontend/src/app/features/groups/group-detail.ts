@@ -15,7 +15,8 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ErrorMessageComponent } from '@org/ui';
-import { firstValueFrom, Subject, Subscription, timer } from 'rxjs';
+import { EmptyError, firstValueFrom, Subject, timer } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../core/services/auth.service';
 import {
   Group,
@@ -544,25 +545,6 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
     const countdownSeconds = signal<number | null>(totalSeconds);
     const cancel$ = new Subject<void>();
     let cancelled = false;
-    let activeTimer: Subscription | null = null;
-    let cancelSubscription: Subscription | null = null;
-    let settled = false;
-
-    const cleanup = () => {
-      if (activeTimer) {
-        activeTimer.unsubscribe();
-        activeTimer = null;
-      }
-
-      if (cancelSubscription) {
-        cancelSubscription.unsubscribe();
-        cancelSubscription = null;
-      }
-
-      if (!cancel$.closed) {
-        cancel$.complete();
-      }
-    };
 
     const cancel = () => {
       if (cancelled) {
@@ -570,12 +552,10 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
       }
 
       cancelled = true;
-
       if (!cancel$.closed) {
         cancel$.next();
+        cancel$.complete();
       }
-
-      cleanup();
     };
 
     this.autoRetryState = {
@@ -584,51 +564,44 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
       cancel,
     };
 
-    const countdownPromise = new Promise<void>((resolve) => {
-      const complete = () => {
-        if (settled) {
-          return;
+    const waitForNextSecond = async (): Promise<boolean> => {
+      try {
+        await firstValueFrom(timer(1000).pipe(takeUntil(cancel$)));
+        return true;
+      } catch (error) {
+        if (error instanceof EmptyError) {
+          return false;
         }
-
-        settled = true;
-        cleanup();
-        resolve();
-      };
-
-      cancelSubscription = cancel$.subscribe(() => {
-        cancelled = true;
-        complete();
-      });
-
-      const scheduleTick = (remaining: number): void => {
-        if (cancelled) {
-          complete();
-          return;
-        }
-
-        countdownSeconds.set(remaining);
-        this.autoRetrySeconds.set(remaining);
-        this.error.set(this.composeErrorMessage(baseMessage, remaining));
-
-        if (remaining <= 1) {
-          complete();
-          return;
-        }
-
-        activeTimer = timer(1000).subscribe(() => {
-          if (activeTimer) {
-            activeTimer.unsubscribe();
-            activeTimer = null;
-          }
-          scheduleTick(remaining - 1);
-        });
-      };
-
-      scheduleTick(totalSeconds);
-    });
+        throw error;
+      }
+    };
 
     void this.pendingTasks.run(async () => {
-      await countdownPromise;
+      try {
+        for (let remaining = totalSeconds; remaining > 0; remaining--) {
+          if (cancelled) {
+            break;
+          }
+
+          countdownSeconds.set(remaining);
+          this.autoRetrySeconds.set(remaining);
+          this.error.set(this.composeErrorMessage(baseMessage, remaining));
+
+          if (remaining <= 1) {
+            break;
+          }
+
+          const tickCompleted = await waitForNextSecond();
+          if (!tickCompleted) {
+            cancelled = true;
+            break;
+          }
+        }
+      } finally {
+        if (!cancel$.closed) {
+          cancel$.complete();
+        }
+      }
 
       if (cancelled) {
         return;

@@ -56,6 +56,40 @@ describe('GroupDetailComponent', () => {
     await Promise.resolve();
     await Promise.resolve();
   };
+
+  const flushPendingTimersAndAsyncOperations = async (): Promise<void> => {
+    let iterations = 0;
+    const maxIterations = 100;
+
+    while (iterations < maxIterations) {
+      const beforeCount =
+        typeof jest.getTimerCount === 'function'
+          ? jest.getTimerCount()
+          : undefined;
+
+      if (beforeCount && beforeCount > 0) {
+        jest.runOnlyPendingTimers();
+      }
+
+      await flushAsyncOperations();
+
+      const afterCount =
+        typeof jest.getTimerCount === 'function'
+          ? jest.getTimerCount()
+          : undefined;
+
+      if (
+        (beforeCount === 0 || beforeCount === undefined) &&
+        (afterCount === 0 || afterCount === undefined)
+      ) {
+        break;
+      }
+
+      iterations += 1;
+    }
+
+    await flushAsyncOperations();
+  };
   const detectChangesAsync = async (
     targetFixture: ComponentFixture<GroupDetailComponent> = fixture
   ): Promise<void> => {
@@ -308,9 +342,15 @@ describe('GroupDetailComponent', () => {
         );
         expect(component.autoRetrySeconds()).toBeGreaterThan(0);
 
-        jest.advanceTimersByTime(15000);
+        let safetyCounter = 0;
+        while (component.autoRetrySeconds() !== null && safetyCounter < 25) {
+          jest.advanceTimersByTime(1000);
+          await flushPendingTimersAndAsyncOperations();
+          safetyCounter += 1;
+        }
 
-        await flushAsyncOperations();
+        await flushPendingTimersAndAsyncOperations();
+        await detectChangesAsync();
 
         expect(getGroupSpy).toHaveBeenCalledTimes(2);
         expect(component.group()).toEqual(mockGroup);
