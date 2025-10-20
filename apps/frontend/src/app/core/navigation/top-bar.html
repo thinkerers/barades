@@ -12,7 +12,7 @@
     >
   </nav>
   <nav class="top-bar__actions">
-    @if (authService.isAuthenticated()) {
+    @if (isAuthenticated()) {
     <div class="top-bar__user-menu">
       <button
         type="button"
@@ -22,7 +22,7 @@
         aria-haspopup="menu"
         aria-label="Ouvrir le menu utilisateur"
       >
-        {{ getAvatarText() }}
+        {{ avatarText() }}
       </button>
       <mat-menu
         #userMenu="matMenu"

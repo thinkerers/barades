@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
 import {
+  ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  NgZone,
   OnInit,
   ViewChild,
   computed,
@@ -35,6 +37,7 @@ import { SessionCardComponent } from './session-card';
   selector: 'app-sessions-list',
   templateUrl: './sessions-list.html',
   styleUrl: './sessions-list.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SessionsListPage implements OnInit {
   private readonly sessionsService = inject(SessionsService);
@@ -42,6 +45,7 @@ export class SessionsListPage implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly authService = inject(AuthService);
+  private readonly ngZone = inject(NgZone);
 
   @ViewChild('scopeBanner')
   scopeBanner?: SessionsScopeBanner;
@@ -168,9 +172,13 @@ export class SessionsListPage implements OnInit {
 
         // Move focus to banner for accessibility when coming from dashboard
         if (this.isScopeFilterActive() && this.comingFromDashboard()) {
-          setTimeout(() => {
-            this.scopeBanner?.focus();
-          }, 100);
+          if (typeof window !== 'undefined') {
+            this.ngZone.runOutsideAngular(() => {
+              window.requestAnimationFrame(() => {
+                this.scopeBanner?.focus();
+              });
+            });
+          }
         }
       },
       error: (err) => {

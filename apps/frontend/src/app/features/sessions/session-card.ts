@@ -1,10 +1,22 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Input, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  Input,
+  OnInit,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { NotificationService } from '../../core/services/notification.service';
-import { ReservationsService } from '../../core/services/reservations.service';
+import {
+  Reservation,
+  ReservationsService,
+} from '../../core/services/reservations.service';
 import { Session } from '../../core/services/sessions.service';
 
 @Component({
@@ -13,14 +25,16 @@ import { Session } from '../../core/services/sessions.service';
   imports: [CommonModule, RouterLink, MatIconModule],
   templateUrl: './session-card.html',
   styleUrl: './session-card.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SessionCardComponent implements OnInit {
   @Input({ required: true }) session!: Session;
 
-  private reservationsService = inject(ReservationsService);
-  private authService = inject(AuthService);
-  private router = inject(Router);
-  private notifications = inject(NotificationService);
+  private readonly reservationsService = inject(ReservationsService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly notifications = inject(NotificationService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -89,17 +103,22 @@ export class SessionCardComponent implements OnInit {
     }
 
     // Load user's reservations and check if one matches this session
-    this.reservationsService.getReservations(currentUser.id).subscribe({
-      next: (reservations) => {
-        this.isRegistered.set(
-          reservations.some((r) => r.sessionId === this.session.id)
-        );
-      },
-      error: (err) => {
-        console.error('Error checking registration status:', err);
-        this.isRegistered.set(false);
-      },
-    });
+    this.reservationsService
+      .getReservations(currentUser.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (reservations: Reservation[]) => {
+          this.isRegistered.set(
+            reservations.some(
+              (r: { sessionId: string }) => r.sessionId === this.session.id
+            )
+          );
+        },
+        error: (err) => {
+          console.error('Error checking registration status:', err);
+          this.isRegistered.set(false);
+        },
+      });
   }
 
   onReserve(): void {
@@ -125,8 +144,9 @@ export class SessionCardComponent implements OnInit {
 
     this.reservationsService
       .createReservation(this.session.id, currentUser.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (reservation) => {
+        next: (reservation: Reservation) => {
           console.log('Réservation créée:', reservation);
           // Mettre à jour le compteur local et le statut d'inscription
           this.session.playersCurrent = Math.min(

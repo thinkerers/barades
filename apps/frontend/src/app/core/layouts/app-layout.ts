@@ -1,4 +1,9 @@
-import { Component, effect, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, startWith } from 'rxjs';
@@ -11,6 +16,7 @@ import { TopBar } from '../navigation/top-bar';
   selector: 'app-app-layout',
   templateUrl: './app-layout.html',
   styleUrl: './app-layout.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppLayout {
   private readonly router = inject(Router);
@@ -22,35 +28,22 @@ export class AppLayout {
     )
   );
 
-  showFooter = true;
-  isLocationsRoute = false;
-
-  constructor() {
-    this.updateRouteState(this.router.url);
-
-    effect(() => {
-      const event = this.navigationEnd();
-
-      if (!event) {
-        return;
-      }
-
-      const nextUrl = event.urlAfterRedirects ?? event.url;
-      this.updateRouteState(nextUrl);
-    });
-  }
-
-  private updateRouteState(url: string): void {
-    const isLocationsPage = this.isLocationsUrl(url);
-    this.isLocationsRoute = isLocationsPage;
-    this.showFooter = !isLocationsPage;
-  }
-
-  private isLocationsUrl(url: string): boolean {
-    if (!url) {
-      return false;
+  private readonly currentUrl = computed(() => {
+    const event = this.navigationEnd();
+    if (!event) {
+      return this.router.url ?? '';
     }
 
-    return url.startsWith('/locations');
+    return event.urlAfterRedirects ?? event.url;
+  });
+
+  readonly isLocationsRoute = computed(() =>
+    this.isLocationsUrl(this.currentUrl())
+  );
+
+  readonly showFooter = computed(() => !this.isLocationsRoute());
+
+  private isLocationsUrl(url: string): boolean {
+    return !!url && url.startsWith('/locations');
   }
 }

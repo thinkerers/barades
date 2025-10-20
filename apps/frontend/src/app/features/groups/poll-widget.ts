@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
+  ChangeDetectionStrategy,
   Component,
   EventEmitter,
   inject,
@@ -19,10 +20,11 @@ import { Poll, PollsService } from '../../core/services/polls.service';
   imports: [CommonModule, FormsModule],
   templateUrl: './poll-widget.html',
   styleUrl: './poll-widget.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PollWidgetComponent {
-  private pollsService = inject(PollsService);
-  private notifications = inject(NotificationService);
+  private readonly pollsService = inject(PollsService);
+  private readonly notifications = inject(NotificationService);
   @Input() poll: Poll | null = null;
   @Input() groupId = '';
   @Input() currentUserId: string | null = null;

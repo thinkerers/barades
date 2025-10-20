@@ -3,12 +3,12 @@
   <div class="app-layout__body">
     <main
       class="app-layout__content"
-      [class.app-layout__content--flush]="isLocationsRoute"
+      [class.app-layout__content--flush]="isLocationsRoute()"
     >
       <router-outlet></router-outlet>
     </main>
   </div>
-  @if (showFooter) {
+  @if (showFooter()) {
   <app-footer class="app-layout__footer"></app-footer>
   }
 </div>
