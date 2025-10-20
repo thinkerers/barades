@@ -142,7 +142,7 @@ export class SessionsListPage {
     }
   });
 
-  private async loadSessions(): Promise<void> {
+  async loadSessions(): Promise<void> {
     this.loading.set(true);
     this.error.set(null);
 

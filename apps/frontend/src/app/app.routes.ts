@@ -1,36 +1,23 @@
 import { Route } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { AppLayout } from './core/layouts/app-layout';
-import { AboutPage } from './features/about/about-page';
-import { LoginComponent } from './features/auth/login/login.component';
-import { RegisterComponent } from './features/auth/register/register.component';
-import { CareersPage } from './features/careers/careers-page';
-import { CharterPage } from './features/charter/charter-page';
-import { ContactPage } from './features/contact/contact-page';
-import { DashboardPage } from './features/dashboard/dashboard-page';
-import { ForumPage } from './features/forum/forum-page';
-import { GroupDetailComponent } from './features/groups/group-detail';
-import { GroupsListComponent } from './features/groups/groups-list';
-import { HelpPage } from './features/help/help-page';
 import { HomePage } from './features/home/home-page';
-import { LocationsListComponent } from './features/locations/locations-list';
-import { PartnerPage } from './features/partner/partner-page';
-import { ProfilePage } from './features/profile/profile-page';
-import { SessionCreateComponent } from './features/sessions/session-create';
-import { SessionDetailComponent } from './features/sessions/session-detail';
-import { SessionEditComponent } from './features/sessions/session-edit';
-import { SessionsListPage } from './features/sessions/sessions-list';
-import { ShowcasePage } from './features/showcase/showcase-page';
 
 export const appRoutes: Route[] = [
-  // Auth routes (no layout)
+  // Auth routes (no layout) - Lazy loaded
   {
     path: 'login',
-    component: LoginComponent,
+    loadComponent: () =>
+      import('./features/auth/login/login.component').then(
+        (m) => m.LoginComponent
+      ),
   },
   {
     path: 'register',
-    component: RegisterComponent,
+    loadComponent: () =>
+      import('./features/auth/register/register.component').then(
+        (m) => m.RegisterComponent
+      ),
   },
   // App routes (with layout)
   {
@@ -39,79 +26,118 @@ export const appRoutes: Route[] = [
     children: [
       {
         path: '',
-        component: HomePage,
+        component: HomePage, // Keep home page eager for fast initial load
       },
+      // Sessions - Lazy loaded
       {
         path: 'sessions',
-        component: SessionsListPage,
+        loadComponent: () =>
+          import('./features/sessions/sessions-list').then(
+            (m) => m.SessionsListPage
+          ),
       },
       {
         path: 'sessions/new',
-        component: SessionCreateComponent,
+        loadComponent: () =>
+          import('./features/sessions/session-create').then(
+            (m) => m.SessionCreateComponent
+          ),
         canActivate: [authGuard],
       },
       {
         path: 'sessions/:id/edit',
-        component: SessionEditComponent,
+        loadComponent: () =>
+          import('./features/sessions/session-edit').then(
+            (m) => m.SessionEditComponent
+          ),
         canActivate: [authGuard],
       },
       {
         path: 'sessions/:id',
-        component: SessionDetailComponent,
+        loadComponent: () =>
+          import('./features/sessions/session-detail').then(
+            (m) => m.SessionDetailComponent
+          ),
       },
+      // Locations - Lazy loaded (includes heavy Leaflet library)
       {
         path: 'locations',
-        component: LocationsListComponent,
+        loadComponent: () =>
+          import('./features/locations/locations-list').then(
+            (m) => m.LocationsListComponent
+          ),
       },
+      // Groups - Lazy loaded
       {
         path: 'groups',
-        component: GroupsListComponent,
+        loadComponent: () =>
+          import('./features/groups/groups-list').then(
+            (m) => m.GroupsListComponent
+          ),
       },
       {
         path: 'groups/:id',
-        component: GroupDetailComponent,
+        loadComponent: () =>
+          import('./features/groups/group-detail').then(
+            (m) => m.GroupDetailComponent
+          ),
       },
+      // Other pages - Lazy loaded
       {
         path: 'forum',
-        component: ForumPage,
+        loadComponent: () =>
+          import('./features/forum/forum-page').then((m) => m.ForumPage),
       },
       {
         path: 'charter',
-        component: CharterPage,
+        loadComponent: () =>
+          import('./features/charter/charter-page').then((m) => m.CharterPage),
       },
       {
         path: 'profile',
-        component: ProfilePage,
+        loadComponent: () =>
+          import('./features/profile/profile-page').then((m) => m.ProfilePage),
         canActivate: [authGuard],
       },
       {
         path: 'dashboard',
-        component: DashboardPage,
+        loadComponent: () =>
+          import('./features/dashboard/dashboard-page').then(
+            (m) => m.DashboardPage
+          ),
         canActivate: [authGuard],
       },
       {
         path: 'showcase',
-        component: ShowcasePage,
+        loadComponent: () =>
+          import('./features/showcase/showcase-page').then(
+            (m) => m.ShowcasePage
+          ),
       },
       {
         path: 'about',
-        component: AboutPage,
+        loadComponent: () =>
+          import('./features/about/about-page').then((m) => m.AboutPage),
       },
       {
         path: 'careers',
-        component: CareersPage,
+        loadComponent: () =>
+          import('./features/careers/careers-page').then((m) => m.CareersPage),
       },
       {
         path: 'contact',
-        component: ContactPage,
+        loadComponent: () =>
+          import('./features/contact/contact-page').then((m) => m.ContactPage),
       },
       {
         path: 'help',
-        component: HelpPage,
+        loadComponent: () =>
+          import('./features/help/help-page').then((m) => m.HelpPage),
       },
       {
         path: 'partner',
-        component: PartnerPage,
+        loadComponent: () =>
+          import('./features/partner/partner-page').then((m) => m.PartnerPage),
       },
     ],
   },
