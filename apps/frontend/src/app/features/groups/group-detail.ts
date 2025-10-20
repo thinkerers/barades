@@ -5,18 +5,17 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  DestroyRef,
   inject,
   OnDestroy,
   OnInit,
+  PendingTasks,
   signal,
   WritableSignal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ErrorMessageComponent } from '@org/ui';
-import { firstValueFrom, Subscription, timer } from 'rxjs';
+import { firstValueFrom, Subject, Subscription, timer } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import {
   Group,
@@ -28,12 +27,10 @@ import {
 import { Poll, PollsService } from '../../core/services/polls.service';
 import { PollWidgetComponent } from './poll-widget';
 
-type CountdownSubscription = Subscription | null;
-
 type AutoRetryState = {
   baseMessage: string;
   countdownSeconds: WritableSignal<number | null>;
-  subscription: CountdownSubscription;
+  cancel: () => void;
 };
 
 type GroupMember = GroupMemberSummary & {
@@ -83,7 +80,7 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
   private groupsService = inject(GroupsService);
   private pollsService = inject(PollsService);
   private authService = inject(AuthService);
-  private destroyRef = inject(DestroyRef);
+  private pendingTasks = inject(PendingTasks);
 
   readonly group = signal<GroupDetail | null>(null);
   readonly polls = signal<Poll[]>([]);
@@ -543,37 +540,104 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
   private scheduleAutoRetry(baseMessage: string): void {
     this.clearAutoRetry();
 
-    const countdownSeconds = signal<number | null>(
-      Math.ceil(this.autoRetryDelayMs / 1000)
-    );
+    const totalSeconds = Math.ceil(this.autoRetryDelayMs / 1000);
+    const countdownSeconds = signal<number | null>(totalSeconds);
+    const cancel$ = new Subject<void>();
+    let cancelled = false;
+    let activeTimer: Subscription | null = null;
+    let cancelSubscription: Subscription | null = null;
+    let settled = false;
+
+    const cleanup = () => {
+      if (activeTimer) {
+        activeTimer.unsubscribe();
+        activeTimer = null;
+      }
+
+      if (cancelSubscription) {
+        cancelSubscription.unsubscribe();
+        cancelSubscription = null;
+      }
+
+      if (!cancel$.closed) {
+        cancel$.complete();
+      }
+    };
+
+    const cancel = () => {
+      if (cancelled) {
+        return;
+      }
+
+      cancelled = true;
+
+      if (!cancel$.closed) {
+        cancel$.next();
+      }
+
+      cleanup();
+    };
 
     this.autoRetryState = {
       baseMessage,
       countdownSeconds,
-      subscription: timer(1000, 1000)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe(() => {
-          const remaining = countdownSeconds();
-          if (remaining === null) {
-            return;
-          }
-
-          const nextValue = remaining - 1;
-          if (nextValue <= 0) {
-            this.clearAutoRetry();
-            this.retryLoading();
-            return;
-          }
-
-          countdownSeconds.set(nextValue);
-          this.error.set(this.composeErrorMessage(baseMessage, nextValue));
-        }),
+      cancel,
     };
 
-    this.autoRetrySeconds.set(countdownSeconds());
-    this.error.set(
-      this.composeErrorMessage(baseMessage, countdownSeconds() ?? null)
-    );
+    const countdownPromise = new Promise<void>((resolve) => {
+      const complete = () => {
+        if (settled) {
+          return;
+        }
+
+        settled = true;
+        cleanup();
+        resolve();
+      };
+
+      cancelSubscription = cancel$.subscribe(() => {
+        cancelled = true;
+        complete();
+      });
+
+      const scheduleTick = (remaining: number): void => {
+        if (cancelled) {
+          complete();
+          return;
+        }
+
+        countdownSeconds.set(remaining);
+        this.autoRetrySeconds.set(remaining);
+        this.error.set(this.composeErrorMessage(baseMessage, remaining));
+
+        if (remaining <= 1) {
+          complete();
+          return;
+        }
+
+        activeTimer = timer(1000).subscribe(() => {
+          if (activeTimer) {
+            activeTimer.unsubscribe();
+            activeTimer = null;
+          }
+          scheduleTick(remaining - 1);
+        });
+      };
+
+      scheduleTick(totalSeconds);
+    });
+
+    void this.pendingTasks.run(async () => {
+      await countdownPromise;
+
+      if (cancelled) {
+        return;
+      }
+
+      countdownSeconds.set(null);
+      this.autoRetrySeconds.set(null);
+      this.retryLoading();
+    });
   }
 
   private composeErrorMessage(
@@ -588,7 +652,14 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
   }
 
   private clearAutoRetry(): void {
-    this.autoRetryState?.subscription?.unsubscribe();
+    if (!this.autoRetryState) {
+      this.autoRetrySeconds.set(null);
+      return;
+    }
+
+    const { cancel, countdownSeconds } = this.autoRetryState;
+    cancel();
+    countdownSeconds.set(null);
     this.autoRetryState = null;
     this.autoRetrySeconds.set(null);
   }

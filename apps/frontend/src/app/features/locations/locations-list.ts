@@ -1,10 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  Injector,
   OnDestroy,
   OnInit,
+  PendingTasks,
   afterNextRender,
-  Injector,
   inject,
   runInInjectionContext,
   signal,
@@ -20,11 +21,11 @@ import {
 } from '@org/ui';
 import * as L from 'leaflet';
 import 'leaflet.locatecontrol';
+import { Subject, Subscription, firstValueFrom, timer } from 'rxjs';
 import {
   Location,
   LocationsService,
 } from '../../core/services/locations.service';
-import { take } from 'rxjs';
 
 type AmenityFilterKey = 'wifi' | 'tables' | 'food' | 'drinks' | 'parking';
 
@@ -158,6 +159,7 @@ export class LocationsListComponent implements OnInit, OnDestroy {
 
   private locationsService = inject(LocationsService);
   private readonly injector = inject(Injector);
+  private readonly pendingTasks = inject(PendingTasks);
 
   readonly locationTypeOptions: ReadonlyArray<{
     value: string;
@@ -185,8 +187,7 @@ export class LocationsListComponent implements OnInit, OnDestroy {
   private readonly geolocationErrorSignal = signal<string | null>(null);
   private readonly isDetailsCollapsedSignal = signal(false);
   private readonly selectedLocationIdSignal = signal<string | null>(null);
-  private readonly pendingAnimationFrames = new Set<number>();
-  private readonly pendingTimeouts = new Set<number>();
+  private readonly pendingDelayCancelers = new Set<() => void>();
 
   readonly loadingMessage = 'Chargement des lieux...';
   readonly defaultErrorMessage =
@@ -231,81 +232,67 @@ export class LocationsListComponent implements OnInit, OnDestroy {
 
   private scheduleAfterDelay(callback: () => void, delayMs: number): void {
     const delay = Math.max(0, delayMs);
-    const invoke = () => runInInjectionContext(this.injector, callback);
+    const cancel$ = new Subject<void>();
+    let cancelled = false;
+    let settled = false;
 
-    let completed = false;
-    let timeoutId: number | null = null;
-    let frameId: number | null = null;
+    const cancel = () => {
+      if (cancelled) {
+        return;
+      }
+
+      cancelled = true;
+      cancel$.next();
+      if (!cancel$.closed) {
+        cancel$.complete();
+      }
+      this.pendingDelayCancelers.delete(cancel);
+    };
+
+    this.pendingDelayCancelers.add(cancel);
 
     const finalize = () => {
-      if (completed) {
-        return;
-      }
-      completed = true;
-
-      if (timeoutId !== null) {
-        clearTimeout(timeoutId);
-        this.pendingTimeouts.delete(timeoutId);
-        timeoutId = null;
-      }
-
-      if (frameId !== null) {
-        cancelAnimationFrame(frameId);
-        this.pendingAnimationFrames.delete(frameId);
-        frameId = null;
-      }
-
-      invoke();
-    };
-
-    const scheduleTimeout = () => {
-      timeoutId = setTimeout(() => {
-        if (timeoutId !== null) {
-          this.pendingTimeouts.delete(timeoutId);
-          timeoutId = null;
-        }
-        finalize();
-      }, delay);
-
-      this.pendingTimeouts.add(timeoutId);
-    };
-
-    const scheduleAnimation = () => {
-      if (typeof requestAnimationFrame !== 'function') {
+      if (settled) {
         return;
       }
 
-      const start =
-        typeof performance !== 'undefined' ? performance.now() : Date.now();
-
-      const step = (timestamp: number) => {
-        if (frameId !== null) {
-          this.pendingAnimationFrames.delete(frameId);
-        }
-
-        if (timestamp - start >= delay) {
-          frameId = null;
-          finalize();
-          return;
-        }
-
-        frameId = requestAnimationFrame(step);
-        this.pendingAnimationFrames.add(frameId);
-      };
-
-      frameId = requestAnimationFrame(step);
-      this.pendingAnimationFrames.add(frameId);
+      settled = true;
+      if (!cancel$.closed) {
+        cancel$.complete();
+      }
+      this.pendingDelayCancelers.delete(cancel);
     };
 
-    scheduleTimeout();
-    scheduleAnimation();
+    void this.pendingTasks.run(
+      () =>
+        new Promise<void>((resolve) => {
+          let timerSubscription: Subscription | null = null;
+          let cancelSubscription: Subscription | null = null;
+
+          const cleanup = () => {
+            timerSubscription?.unsubscribe();
+            cancelSubscription?.unsubscribe();
+            finalize();
+            resolve();
+          };
+
+          timerSubscription = timer(delay).subscribe(() => {
+            if (!cancelled) {
+              runInInjectionContext(this.injector, callback);
+            }
+            cleanup();
+          });
+
+          cancelSubscription = cancel$.subscribe(() => {
+            cleanup();
+          });
+        })
+    );
   }
 
-  private cancelScheduledFrames(): void {
-    this.pendingAnimationFrames.forEach((id) => cancelAnimationFrame(id));
-    this.pendingAnimationFrames.clear();
-    this.pendingTimeouts.forEach((id) => clearTimeout(id));
-    this.pendingTimeouts.clear();
+  private cancelScheduledDelays(): void {
+    this.pendingDelayCancelers.forEach((cancel) => cancel());
+    this.pendingDelayCancelers.clear();
   }
 
   get locations(): Location[] {
@@ -413,7 +400,7 @@ export class LocationsListComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.cancelScheduledFrames();
+    this.cancelScheduledDelays();
 
     if (this.locateControl) {
       if (typeof this.locateControl.stop === 'function') {
@@ -456,35 +443,30 @@ export class LocationsListComponent implements OnInit, OnDestroy {
     this.markersByLocationId.clear();
   }
 
-  private loadLocations(): void {
+  private async loadLocations(): Promise<void> {
     console.log('[LocationsList] Loading locations...');
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
 
-    this.locationsService
-      .getLocations()
-      .pipe(take(1))
-      .subscribe({
-        next: (data) => {
-          console.log(
-            '[LocationsList] Locations loaded:',
-            data.length,
-            'locations'
-          );
-          const filtered = data.filter(
-            (loc) => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0)
-          );
-          this.locationsSignal.set(filtered);
-          this.filteredLocationsSignal.set(filtered);
-          this.loadingSignal.set(false);
-          this.scheduleMapRefresh();
-        },
-        error: (error) => {
-          console.error('[LocationsList] Error loading locations:', error);
-          this.errorSignal.set(this.defaultErrorMessage);
-          this.loadingSignal.set(false);
-        },
-      });
+    try {
+      const data = await firstValueFrom(this.locationsService.getLocations());
+      console.log(
+        '[LocationsList] Locations loaded:',
+        data.length,
+        'locations'
+      );
+      const filtered = data.filter(
+        (loc) => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0)
+      );
+      this.locationsSignal.set(filtered);
+      this.filteredLocationsSignal.set(filtered);
+      this.scheduleMapRefresh();
+    } catch (error) {
+      console.error('[LocationsList] Error loading locations:', error);
+      this.errorSignal.set(this.defaultErrorMessage);
+    } finally {
+      this.loadingSignal.set(false);
+    }
   }
 
   private scheduleMapRefresh(): void {

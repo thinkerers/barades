@@ -16,7 +16,7 @@ import {
   AsyncStateStatus,
   GroupCardComponent,
 } from '@org/ui';
-import { firstValueFrom } from 'rxjs';
+import { Subject, Subscription, firstValueFrom, timer } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import {
   Group,
@@ -49,8 +49,7 @@ export class GroupsListComponent implements OnInit {
   private readonly recentlyJoined = signal(new Set<string>());
   private readonly joinErrors = signal(new Map<string, string>());
   private currentUserId: string | null = null;
-  private autoRetryTimeoutId: number | null = null;
-  private pendingAutoRetryCleanup: (() => void) | null = null;
+  private autoRetryCancel: (() => void) | null = null;
   private readonly autoRetryDelayMs = 15000;
   private readonly offlineHandler = () => {
     this.isOffline.set(true);
@@ -356,39 +355,98 @@ export class GroupsListComponent implements OnInit {
   private scheduleAutoRetry(baseMessage: string): void {
     this.clearAutoRetry();
     this.pendingErrorBaseMessage = baseMessage;
-    const initialSeconds = Math.ceil(this.autoRetryDelayMs / 1000);
-    this.autoRetrySeconds.set(initialSeconds);
-    this.error.set(this.composeErrorMessage());
+    const totalSeconds = Math.ceil(this.autoRetryDelayMs / 1000);
+    const cancel$ = new Subject<void>();
+    let cancelled = false;
+    let activeTimer: Subscription | null = null;
+    let cancelSubscription: Subscription | null = null;
+    let settled = false;
 
-    if (typeof window === 'undefined') {
-      return;
-    }
+    const cleanup = () => {
+      if (activeTimer) {
+        activeTimer.unsubscribe();
+        activeTimer = null;
+      }
 
-    const completePendingTask = this.pendingTasks.add();
-    this.pendingAutoRetryCleanup = () => completePendingTask();
+      if (cancelSubscription) {
+        cancelSubscription.unsubscribe();
+        cancelSubscription = null;
+      }
 
-    const scheduleNextTick = () => {
-      this.autoRetryTimeoutId = window.setTimeout(() => {
-        const remaining = this.autoRetrySeconds();
-
-        if (remaining === null) {
-          this.clearAutoRetry();
-          return;
-        }
-
-        if (remaining <= 1) {
-          this.clearAutoRetry();
-          void this.loadGroups();
-          return;
-        }
-
-        this.autoRetrySeconds.set(remaining - 1);
-        this.error.set(this.composeErrorMessage());
-        scheduleNextTick();
-      }, 1000);
+      if (!cancel$.closed) {
+        cancel$.complete();
+      }
     };
 
-    scheduleNextTick();
+    const cancel = () => {
+      if (cancelled) {
+        return;
+      }
+
+      cancelled = true;
+
+      if (!cancel$.closed) {
+        cancel$.next();
+      }
+
+      cleanup();
+    };
+
+    this.autoRetryCancel = cancel;
+
+    const countdownPromise = new Promise<void>((resolve) => {
+      const complete = () => {
+        if (settled) {
+          return;
+        }
+
+        settled = true;
+        cleanup();
+        resolve();
+      };
+
+      cancelSubscription = cancel$.subscribe(() => {
+        cancelled = true;
+        complete();
+      });
+
+      const scheduleTick = (remaining: number): void => {
+        if (cancelled) {
+          complete();
+          return;
+        }
+
+        this.autoRetrySeconds.set(remaining);
+        this.error.set(this.composeErrorMessage());
+
+        if (remaining <= 1) {
+          complete();
+          return;
+        }
+
+        activeTimer = timer(1000).subscribe(() => {
+          if (activeTimer) {
+            activeTimer.unsubscribe();
+            activeTimer = null;
+          }
+          scheduleTick(remaining - 1);
+        });
+      };
+
+      scheduleTick(totalSeconds);
+    });
+
+    void this.pendingTasks.run(async () => {
+      await countdownPromise;
+
+      if (cancelled) {
+        return;
+      }
+
+      this.autoRetrySeconds.set(null);
+      this.pendingErrorBaseMessage = null;
+      this.retry();
+    });
   }
 
   private composeErrorMessage(): string {
@@ -406,15 +464,10 @@ export class GroupsListComponent implements OnInit {
   }
 
   private clearAutoRetry(): void {
-    if (typeof window !== 'undefined' && this.autoRetryTimeoutId !== null) {
-      window.clearTimeout(this.autoRetryTimeoutId);
-      this.autoRetryTimeoutId = null;
-    }
-
-    if (this.pendingAutoRetryCleanup) {
-      const cleanup = this.pendingAutoRetryCleanup;
-      this.pendingAutoRetryCleanup = null;
-      cleanup();
+    if (this.autoRetryCancel) {
+      const cancel = this.autoRetryCancel;
+      this.autoRetryCancel = null;
+      cancel();
     }
     this.autoRetrySeconds.set(null);
     this.pendingErrorBaseMessage = null;

@@ -101,12 +101,13 @@ describe('LocationsListComponent', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should load locations on init', () => {
+  it('should load locations on init', async () => {
     jest
       .spyOn(locationsService, 'getLocations')
       .mockReturnValue(of(mockLocations));
 
     fixture.detectChanges();
+    await fixture.whenStable();
 
     // Should exclude online location (PRIVATE with lat=0, lon=0)
     expect(component.locations.length).toBe(3);
@@ -118,14 +119,15 @@ describe('LocationsListComponent', () => {
     expect(component.loading).toBe(false);
   });
 
-  it('should handle error when loading locations fails', () => {
+  it('should handle error when loading locations fails', async () => {
     jest
       .spyOn(locationsService, 'getLocations')
       .mockReturnValue(throwError(() => new Error('Failed to load')));
 
     fixture.detectChanges();
+    await fixture.whenStable();
 
-  expect(component.error).toBe(component.defaultErrorMessage);
+    expect(component.error).toBe(component.defaultErrorMessage);
     expect(component.loading).toBe(false);
   });
 
@@ -400,12 +402,13 @@ describe('LocationsListComponent', () => {
     });
 
     describe('Online/Private location exclusion', () => {
-      it('should exclude locations with lat=0 and lon=0 on load', () => {
+      it('should exclude locations with lat=0 and lon=0 on load', async () => {
         jest
           .spyOn(locationsService, 'getLocations')
           .mockReturnValue(of(mockLocations));
 
-        component.ngOnInit();
+        fixture.detectChanges();
+        await fixture.whenStable();
 
         expect(component.locations.length).toBe(3);
         expect(
@@ -413,12 +416,13 @@ describe('LocationsListComponent', () => {
         ).toBe(true);
       });
 
-      it('should exclude PRIVATE locations with no coordinates on load', () => {
+      it('should exclude PRIVATE locations with no coordinates on load', async () => {
         jest
           .spyOn(locationsService, 'getLocations')
           .mockReturnValue(of(mockLocations));
 
-        component.ngOnInit();
+        fixture.detectChanges();
+        await fixture.whenStable();
 
         const hasPrivateWithNoCoords = component.locations.some(
           (loc) => loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0
@@ -426,7 +430,7 @@ describe('LocationsListComponent', () => {
         expect(hasPrivateWithNoCoords).toBe(false);
       });
 
-      it('should not exclude PRIVATE locations with valid coordinates', () => {
+      it('should not exclude PRIVATE locations with valid coordinates', async () => {
         const privateLocationWithCoords = {
           ...mockLocations[3],
           lat: 50.8503,
@@ -438,7 +442,8 @@ describe('LocationsListComponent', () => {
             of([...mockLocations.slice(0, 3), privateLocationWithCoords])
           );
 
-        component.ngOnInit();
+        fixture.detectChanges();
+        await fixture.whenStable();
 
         const hasPrivateWithCoords = component.locations.some(
           (loc) => loc.type === 'PRIVATE' && loc.lat !== 0 && loc.lon !== 0
@@ -543,7 +548,7 @@ describe('LocationsListComponent', () => {
         expect(component.selectedLocationId).toBe('1');
       });
 
-      it('should call scrollIntoView if element exists', () => {
+      it('should call scrollIntoView if element exists', async () => {
         jest.useFakeTimers();
         const mockElement = {
           scrollIntoView: jest.fn(),
@@ -559,6 +564,7 @@ describe('LocationsListComponent', () => {
 
         component.onMarkerClick('1');
         jest.runOnlyPendingTimers();
+        await Promise.resolve();
 
         expect(mockElement.scrollIntoView).toHaveBeenCalledWith({
           behavior: 'smooth',
@@ -568,7 +574,7 @@ describe('LocationsListComponent', () => {
         jest.restoreAllMocks();
       });
 
-      it('should add and remove highlight class', () => {
+      it('should add and remove highlight class', async () => {
         jest.useFakeTimers();
         const mockElement = {
           scrollIntoView: jest.fn(),
@@ -585,12 +591,14 @@ describe('LocationsListComponent', () => {
 
         component.onMarkerClick('1');
         jest.advanceTimersByTime(0);
+        await Promise.resolve();
 
         // Verify class is added after scroll handler runs
         expect(mockElement.classList.add).toHaveBeenCalledWith('highlight');
 
         // Fast-forward time by 2 seconds
         jest.advanceTimersByTime(2000);
+        await Promise.resolve();
 
         // Verify class is removed after 2 seconds
         expect(mockElement.classList.remove).toHaveBeenCalledWith('highlight');
