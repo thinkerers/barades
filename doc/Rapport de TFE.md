@@ -313,8 +313,6 @@ Les wireframes ont été conçus pour prioriser :
 
 #### 3.3.3. Charte graphique
 
-#### 3.3.3. Charte graphique
-
 [TODO: Voir la charte graphique complète en annexe]
 
 **Palette de couleurs :**
