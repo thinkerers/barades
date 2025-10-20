@@ -1,5 +1,4 @@
-
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 
@@ -8,6 +7,7 @@ import { RouterLink } from '@angular/router';
   imports: [RouterLink, MatIconModule],
   templateUrl: './about-page.html',
   styleUrl: './about-page.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AboutPage {
   teamMembers = [

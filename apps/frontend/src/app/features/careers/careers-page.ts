@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
 interface JobOpening {
@@ -22,6 +22,7 @@ interface Highlight {
   imports: [MatIconModule],
   templateUrl: './careers-page.html',
   styleUrl: './careers-page.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CareersPage {
   private readonly applicationEmail = 'talents@barades.com';

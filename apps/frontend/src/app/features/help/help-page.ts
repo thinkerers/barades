@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
@@ -15,6 +15,7 @@ interface HelpFaq {
   imports: [FormsModule, MatIconModule, RouterLink],
   templateUrl: './help-page.html',
   styleUrl: './help-page.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HelpPage {
   searchTerm = '';

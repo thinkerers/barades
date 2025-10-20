@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
 interface ForumTopic {
@@ -22,6 +22,7 @@ interface ForumCategory {
   imports: [MatIconModule],
   templateUrl: './forum-page.html',
   styleUrl: './forum-page.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ForumPage {
   readonly categories: ForumCategory[] = [

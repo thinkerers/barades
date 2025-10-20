@@ -8,6 +8,7 @@ import {
   importProvidersFrom,
   isDevMode,
   provideBrowserGlobalErrorListeners,
+  provideCheckNoChangesConfig,
   provideZonelessChangeDetection,
 } from '@angular/core';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
@@ -22,6 +23,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     importProvidersFrom(MatSnackBarModule),
     provideZonelessChangeDetection(),
+    ...(isDevMode() ? [provideCheckNoChangesConfig({ exhaustive: true })] : []),
     provideRouter(appRoutes),
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     provideAnimations(),
