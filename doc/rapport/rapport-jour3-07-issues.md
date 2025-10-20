@@ -1,6 +1,6 @@
 # Jour 3 - Problèmes rencontrés et solutions
 
-[← Tests](./rapport-jour3-06-tests.md) | [→ Retour à l'index](./rapport-jour3-00-index.md)
+[← Tests](rapport-jour3-06-tests.md) | [→ Retour à l'index](rapport-jour3-00-index.md)
 
 ---
 
@@ -565,5 +565,5 @@ console.log(`[LocationsList] Adding marker ${index + 1}:`, location.name);
 
 ## 🔗 Navigation
 
-- [← Retour à Tests](./rapport-jour3-06-tests.md)
-- [→ Retour à l'index](./rapport-jour3-00-index.md)
+- [← Retour à Tests](rapport-jour3-06-tests.md)
+- [→ Retour à l'index](rapport-jour3-00-index.md)

@@ -1,6 +1,6 @@
 # Jour 3 - Composants de page
 
-[← Services](./rapport-jour3-02-services.md) | [→ Leaflet](./rapport-jour3-04-leaflet.md)
+[← Services](rapport-jour3-02-services.md) | [→ Leaflet](rapport-jour3-04-leaflet.md)
 
 ---
 
@@ -689,5 +689,5 @@ export class GroupsListComponent implements OnInit {
 
 ## 🔗 Navigation
 
-- [← Retour à Services](./rapport-jour3-02-services.md)
-- [→ Continuer avec Leaflet](./rapport-jour3-04-leaflet.md)
+- [← Retour à Services](rapport-jour3-02-services.md)
+- [→ Continuer avec Leaflet](rapport-jour3-04-leaflet.md)

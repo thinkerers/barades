@@ -4,12 +4,12 @@
 
 Ce rapport est divisé en plusieurs fichiers pour faciliter la lecture :
 
-1. **[rapport-jour2-01-configuration.md](./rapport-jour2-01-configuration.md)** - Configuration initiale Supabase et Prisma
-2. **[rapport-jour2-02-schema.md](./rapport-jour2-02-schema.md)** - Conception du schéma de base de données
-3. **[rapport-jour2-03-securite.md](./rapport-jour2-03-securite.md)** - Sécurisation avec Row Level Security (RLS)
-4. **[rapport-jour2-04-seed.md](./rapport-jour2-04-seed.md)** - Génération des données de test
-5. **[rapport-jour2-05-api.md](./rapport-jour2-05-api.md)** - Développement de l'API REST NestJS
-6. **[rapport-jour2-06-bilan.md](./rapport-jour2-06-bilan.md)** - Bilan et perspectives
+1. **[rapport-jour2-01-configuration.md](rapport-jour2-01-configuration.md)** - Configuration initiale Supabase et Prisma
+2. **[rapport-jour2-02-schema.md](rapport-jour2-02-schema.md)** - Conception du schéma de base de données
+3. **[rapport-jour2-03-securite.md](rapport-jour2-03-securite.md)** - Sécurisation avec Row Level Security (RLS)
+4. **[rapport-jour2-04-seed.md](rapport-jour2-04-seed.md)** - Génération des données de test
+5. **[rapport-jour2-05-api.md](rapport-jour2-05-api.md)** - Développement de l'API REST NestJS
+6. **[rapport-jour2-06-bilan.md](rapport-jour2-06-bilan.md)** - Bilan et perspectives
 
 ## Résumé exécutif
 

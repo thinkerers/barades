@@ -295,4 +295,4 @@ curl https://yugtxsppenzskyutjytx.supabase.co/rest/v1/User \
 
 **Résultat** : ✅ Base de données sécurisée, RLS activé, PostgREST bloqué
 
-**Prochaine étape** : → [Partie 4 : Données de test (seed)](./rapport-jour2-04-seed.md)
+**Prochaine étape** : → [Partie 4 : Données de test (seed)](rapport-jour2-04-seed.md)

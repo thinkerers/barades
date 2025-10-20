@@ -1,6 +1,6 @@
 # Jour 3 - Vue d'ensemble
 
-[← Retour à l'index](./rapport-jour3-00-index.md) | [→ Services Angular](./rapport-jour3-02-services.md)
+[← Retour à l'index](rapport-jour3-00-index.md) | [→ Services Angular](rapport-jour3-02-services.md)
 
 ---
 
@@ -219,5 +219,5 @@ const playstyleColors = {
 
 ## 🔗 Navigation
 
-- [← Retour à l'index](./rapport-jour3-00-index.md)
-- [→ Continuer avec Services Angular](./rapport-jour3-02-services.md)
+- [← Retour à l'index](rapport-jour3-00-index.md)
+- [→ Continuer avec Services Angular](rapport-jour3-02-services.md)

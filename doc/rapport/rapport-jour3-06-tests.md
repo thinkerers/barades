@@ -1,6 +1,6 @@
 # Jour 3 - Tests unitaires
 
-[← Navigation](./rapport-jour3-05-navigation.md) | [→ Problèmes](./rapport-jour3-07-issues.md)
+[← Navigation](rapport-jour3-05-navigation.md) | [→ Problèmes](rapport-jour3-07-issues.md)
 
 ---
 
@@ -464,4 +464,4 @@ it('should render session title', () => {
 
 ---
 
-**Navigation :** [← Navigation](./rapport-jour3-05-navigation.md) | [→ Problèmes](./rapport-jour3-07-issues.md)
+**Navigation :** [← Navigation](rapport-jour3-05-navigation.md) | [→ Problèmes](rapport-jour3-07-issues.md)

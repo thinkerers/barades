@@ -9,13 +9,13 @@
 
 ## 📋 Table des matières
 
-1. [Vue d'ensemble](./rapport-jour3-01-overview.md)
-2. [Services Angular](./rapport-jour3-02-services.md)
-3. [Composants de pages](./rapport-jour3-03-components.md)
-4. [Intégration Leaflet](./rapport-jour3-04-leaflet.md)
-5. [Navigation et Layout](./rapport-jour3-05-navigation.md)
-6. [Tests unitaires](./rapport-jour3-06-tests.md)
-7. [Problèmes rencontrés](./rapport-jour3-07-issues.md)
+1. [Vue d'ensemble](rapport-jour3-01-overview.md)
+2. [Services Angular](rapport-jour3-02-services.md)
+3. [Composants de pages](rapport-jour3-03-components.md)
+4. [Intégration Leaflet](rapport-jour3-04-leaflet.md)
+5. [Navigation et Layout](rapport-jour3-05-navigation.md)
+6. [Tests unitaires](rapport-jour3-06-tests.md)
+7. [Problèmes rencontrés](rapport-jour3-07-issues.md)
 
 ---
 
@@ -61,9 +61,9 @@
 ## 🔗 Navigation
 
 - [← Retour au rapport Jour 2](./rapport-jour2-00-index.md)
-- [→ Continuer avec Vue d'ensemble](./rapport-jour3-01-overview.md)
-- [📚 Retour à la documentation générale](../README.md)
+- [→ Continuer avec Vue d'ensemble](rapport-jour3-01-overview.md)
+- [📚 Retour à la documentation générale](barades/README.md)
 
 ---
 
-**Prochaine étape :** [Jour 4 - DTOs et Validation](./rapport-jour4-00-index.md)
+**Prochaine étape :** [Jour 4 - DTOs et Validation](rapport-jour4-00-index.md)

@@ -1,6 +1,6 @@
 # Jour 3 - Services Angular
 
-[← Vue d'ensemble](./rapport-jour3-01-overview.md) | [→ Composants](./rapport-jour3-03-components.md)
+[← Vue d'ensemble](rapport-jour3-01-overview.md) | [→ Composants](rapport-jour3-03-components.md)
 
 ---
 
@@ -355,5 +355,5 @@ this.sessionsService.getSessions().subscribe({
 
 ## 🔗 Navigation
 
-- [← Retour à Vue d'ensemble](./rapport-jour3-01-overview.md)
-- [→ Continuer avec Composants](./rapport-jour3-03-components.md)
+- [← Retour à Vue d'ensemble](rapport-jour3-01-overview.md)
+- [→ Continuer avec Composants](rapport-jour3-03-components.md)

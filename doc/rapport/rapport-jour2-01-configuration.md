@@ -152,4 +152,4 @@ datasource db {
 
 **Résultat** : ✅ Configuration validée, connexion testée avec `npx prisma db push`
 
-**Prochaine étape** : → [Partie 2 : Conception du schéma](./rapport-jour2-02-schema.md)
+**Prochaine étape** : → [Partie 2 : Conception du schéma](rapport-jour2-02-schema.md)

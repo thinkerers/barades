@@ -1,6 +1,6 @@
 # Jour 3 - Intégration Leaflet
 
-[← Composants](./rapport-jour3-03-components.md) | [→ Navigation](./rapport-jour3-05-navigation.md)
+[← Composants](rapport-jour3-03-components.md) | [→ Navigation](rapport-jour3-05-navigation.md)
 
 ---
 
@@ -501,5 +501,5 @@ window.dispatchEvent(new Event('resize'));
 
 ## 🔗 Navigation
 
-- [← Retour à Composants](./rapport-jour3-03-components.md)
-- [→ Continuer avec Navigation](./rapport-jour3-05-navigation.md)
+- [← Retour à Composants](rapport-jour3-03-components.md)
+- [→ Continuer avec Navigation](rapport-jour3-05-navigation.md)

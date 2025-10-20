@@ -599,4 +599,4 @@ const prisma = new PrismaClient({
 
 **Résultat** : ✅ API REST fonctionnelle avec 3 ressources, relations complètes, tests validés
 
-**Prochaine étape** : → [Partie 6 : Bilan et perspectives](./rapport-jour2-06-bilan.md)
+**Prochaine étape** : → [Partie 6 : Bilan et perspectives](rapport-jour2-06-bilan.md)

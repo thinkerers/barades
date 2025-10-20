@@ -332,4 +332,4 @@ npx prisma db push
 
 **Résultat** : ✅ Schéma validé et déployé sur Supabase
 
-**Prochaine étape** : → [Partie 3 : Sécurisation RLS](./rapport-jour2-03-securite.md)
+**Prochaine étape** : → [Partie 3 : Sécurisation RLS](rapport-jour2-03-securite.md)

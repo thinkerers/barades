@@ -1,6 +1,6 @@
 # Jour 3 - Navigation et Layout
 
-[← Leaflet](./rapport-jour3-04-leaflet.md) | [→ Tests](./rapport-jour3-06-tests.md)
+[← Leaflet](rapport-jour3-04-leaflet.md) | [→ Tests](rapport-jour3-06-tests.md)
 
 ---
 
@@ -550,5 +550,5 @@ export const appRoutes: Route[] = [
 
 ## 🔗 Navigation
 
-- [← Retour à Leaflet](./rapport-jour3-04-leaflet.md)
-- [→ Continuer avec Tests](./rapport-jour3-06-tests.md)
+- [← Retour à Leaflet](rapport-jour3-04-leaflet.md)
+- [→ Continuer avec Tests](rapport-jour3-06-tests.md)

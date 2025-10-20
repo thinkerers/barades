@@ -406,4 +406,4 @@ Relations validées :
 
 **Résultat** : ✅ Base de données peuplée avec données réalistes, ERD généré
 
-**Prochaine étape** : → [Partie 5 : API REST NestJS](./rapport-jour2-05-api.md)
+**Prochaine étape** : → [Partie 5 : API REST NestJS](rapport-jour2-05-api.md)
