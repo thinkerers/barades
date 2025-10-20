@@ -1,5 +1,6 @@
+Pitch
 
-Simplifiez l'organisation de vos sessions JDR ! Planifiez des parties en ligne ou irl, trouvez des lieux via notre carte interactive, créez des groupes et fiches de perso, et découvrez les meilleurs spots. Un espace pour rassembler les passionnés de JDR !
+Planifiez des parties en ligne ou irl, créez des groupes et fiches de perso, et découvrez de nouveaux lieux pour jouer. Un espace pour rassembler les passionnés de JDR !
 
 ---
 
