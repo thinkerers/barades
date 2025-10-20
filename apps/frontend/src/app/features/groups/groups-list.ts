@@ -1,7 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import {
+  ChangeDetectionStrategy,
   Component,
-  OnDestroy,
+  DestroyRef,
+  NgZone,
   OnInit,
   WritableSignal,
   computed,
@@ -29,11 +31,14 @@ import {
   imports: [GroupCardComponent, AsyncStateComponent],
   templateUrl: './groups-list.html',
   styleUrl: './groups-list.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class GroupsListComponent implements OnInit, OnDestroy {
-  private groupsService = inject(GroupsService);
-  private router = inject(Router);
-  private authService = inject(AuthService);
+export class GroupsListComponent implements OnInit {
+  private readonly groupsService = inject(GroupsService);
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly ngZone = inject(NgZone);
   readonly groups = signal<Group[]>([]);
   readonly loading = signal<boolean>(true);
   readonly error = signal<string | null>(null);
@@ -71,6 +76,16 @@ export class GroupsListComponent implements OnInit, OnDestroy {
     return 'ready';
   });
 
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('offline', this.offlineHandler);
+        window.removeEventListener('online', this.onlineHandler);
+      }
+      this.clearAutoRetry();
+    });
+  }
+
   ngOnInit(): void {
     this.currentUserId = this.authService.getCurrentUserId();
     if (typeof navigator !== 'undefined') {
@@ -82,14 +97,6 @@ export class GroupsListComponent implements OnInit, OnDestroy {
       window.addEventListener('online', this.onlineHandler);
     }
     void this.loadGroups();
-  }
-
-  ngOnDestroy(): void {
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('offline', this.offlineHandler);
-      window.removeEventListener('online', this.onlineHandler);
-    }
-    this.clearAutoRetry();
   }
 
   private async loadGroups(): Promise<void> {
@@ -351,21 +358,31 @@ export class GroupsListComponent implements OnInit, OnDestroy {
     this.autoRetrySeconds.set(Math.ceil(this.autoRetryDelayMs / 1000));
     this.error.set(this.composeErrorMessage());
 
-    this.autoRetryInterval = setInterval(() => {
-      const remaining = this.autoRetrySeconds();
+    if (typeof window === 'undefined') {
+      return;
+    }
 
-      if (remaining === null) {
-        return;
-      }
+    this.ngZone.runOutsideAngular(() => {
+      this.autoRetryInterval = window.setInterval(() => {
+        const remaining = this.autoRetrySeconds();
 
-      if (remaining <= 1) {
-        this.clearAutoRetry();
-        void this.loadGroups();
-      } else {
-        this.autoRetrySeconds.set(remaining - 1);
-        this.error.set(this.composeErrorMessage());
-      }
-    }, 1000);
+        if (remaining === null) {
+          return;
+        }
+
+        if (remaining <= 1) {
+          this.ngZone.run(() => {
+            this.clearAutoRetry();
+            void this.loadGroups();
+          });
+        } else {
+          this.ngZone.run(() => {
+            this.autoRetrySeconds.set(remaining - 1);
+            this.error.set(this.composeErrorMessage());
+          });
+        }
+      }, 1000);
+    });
   }
 
   private composeErrorMessage(): string {
@@ -383,8 +400,8 @@ export class GroupsListComponent implements OnInit, OnDestroy {
   }
 
   private clearAutoRetry(): void {
-    if (this.autoRetryInterval) {
-      clearInterval(this.autoRetryInterval);
+    if (this.autoRetryInterval && typeof window !== 'undefined') {
+      window.clearInterval(this.autoRetryInterval);
       this.autoRetryInterval = null;
     }
     this.autoRetrySeconds.set(null);
