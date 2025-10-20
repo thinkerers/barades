@@ -54,7 +54,8 @@ export class SessionsListPage {
 
   readonly sessions = signal<Session[]>([]);
   readonly filteredSessions = signal<Session[]>([]);
-  readonly loading = signal<boolean>(true);
+  readonly loading = signal<boolean>(false);
+  readonly refreshing = signal<boolean>(false);
   readonly error = signal<string | null>(null);
   readonly defaultErrorMessage =
     'Impossible de charger les sessions. Vérifiez que le backend est démarré.';
@@ -143,51 +144,69 @@ export class SessionsListPage {
   });
 
   async loadSessions(): Promise<void> {
-    this.loading.set(true);
     this.error.set(null);
 
-    const source$ =
-      this.filterMode() === 'my-hosted'
-        ? this.sessionsService.getSessionsHostedByMe()
-        : this.sessionsService.getSessions();
+    const isHostedMode = this.filterMode() === 'my-hosted';
+    const cachedSessions = isHostedMode
+      ? this.sessionsService.getCachedHostedSessionsSnapshot()
+      : this.sessionsService.getCachedSessionsSnapshot();
+    const hasCachedData =
+      Array.isArray(cachedSessions) && cachedSessions.length > 0;
+
+    if (hasCachedData && cachedSessions) {
+      this.updateSessionsState(cachedSessions);
+    }
+
+    this.loading.set(!hasCachedData);
+    this.refreshing.set(hasCachedData);
+
+    const source$ = isHostedMode
+      ? this.sessionsService.getSessionsHostedByMe()
+      : this.sessionsService.getSessions();
 
     await this.pendingTasks.run(async () => {
       try {
         const sessions = await firstValueFrom(source$);
-        this.sessions.set(sessions);
-        this.filteredSessions.set([...sessions]);
-        this.gameSystems.set([...new Set(sessions.map((s) => s.game))].sort());
-        this.hostOptions.set(this.buildHostOptions(sessions));
-
-        if (this.isScopeFilterActive() && this.hostFilterValue) {
-          this.selectedHost.set(this.hostFilterValue);
-        } else if (!this.isScopeFilterActive()) {
-          this.ensureHostSelectionIsValid();
-        }
-
-        this.filteredHostOptions.set(
-          this.filterHostSuggestions(this.selectedHost())
-        );
-
-        // Apply filters if any are already set
-        this.applyFilters();
-
-        if (
-          this.isScopeFilterActive() &&
-          this.comingFromDashboard() &&
-          typeof window !== 'undefined'
-        ) {
-          window.requestAnimationFrame(() => {
-            this.scopeBanner?.focus();
-          });
-        }
+        this.updateSessionsState(sessions);
       } catch (err) {
         console.error('Error loading sessions:', err);
-        this.error.set(this.defaultErrorMessage);
+        if (!hasCachedData) {
+          this.error.set(this.defaultErrorMessage);
+        }
       } finally {
         this.loading.set(false);
+        this.refreshing.set(false);
       }
     });
+  }
+
+  private updateSessionsState(sessions: Session[]): void {
+    this.sessions.set(sessions);
+    this.filteredSessions.set([...sessions]);
+    this.gameSystems.set([...new Set(sessions.map((s) => s.game))].sort());
+    this.hostOptions.set(this.buildHostOptions(sessions));
+
+    if (this.isScopeFilterActive() && this.hostFilterValue) {
+      this.selectedHost.set(this.hostFilterValue);
+    } else if (!this.isScopeFilterActive()) {
+      this.ensureHostSelectionIsValid();
+    }
+
+    this.filteredHostOptions.set(
+      this.filterHostSuggestions(this.selectedHost())
+    );
+
+    this.applyFilters();
+
+    if (
+      this.isScopeFilterActive() &&
+      this.comingFromDashboard() &&
+      typeof window !== 'undefined'
+    ) {
+      window.requestAnimationFrame(() => {
+        this.scopeBanner?.focus();
+      });
+    }
   }
 
   /**

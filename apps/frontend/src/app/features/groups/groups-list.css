@@ -154,6 +154,37 @@
   gap: 2rem;
 }
 
+.groups-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  color: var(--color-text-secondary, #666);
+}
+
+.groups-refresh::before {
+  content: '';
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background-color: currentColor;
+  opacity: 0.75;
+  animation: groups-refresh-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes groups-refresh-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+}
+
 .group-feedback {
   margin-top: -1.5rem;
   font-size: 0.875rem;

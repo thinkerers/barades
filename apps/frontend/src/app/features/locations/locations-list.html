@@ -138,6 +138,12 @@
           }
         </button>
 
+        @if (refreshing) {
+        <div class="locations-list__refresh" role="status" aria-live="polite">
+          Mise à jour des lieux...
+        </div>
+        }
+
         <div id="locations-details">
           @if (!isDetailsCollapsed) {
           <h2 class="locations-details__heading">Détails du lieu</h2>

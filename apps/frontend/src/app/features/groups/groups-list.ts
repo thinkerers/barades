@@ -41,7 +41,8 @@ export class GroupsListComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly pendingTasks = inject(PendingTasks);
   readonly groups = signal<Group[]>([]);
-  readonly loading = signal<boolean>(true);
+  readonly loading = signal<boolean>(false);
+  readonly refreshing = signal<boolean>(false);
   readonly error = signal<string | null>(null);
   readonly isOffline = signal<boolean>(false);
   readonly autoRetrySeconds = signal<number | null>(null);
@@ -101,23 +102,41 @@ export class GroupsListComponent implements OnInit {
   }
 
   private async loadGroups(): Promise<void> {
-    this.loading.set(true);
     this.error.set(null);
     this.pendingErrorBaseMessage = null;
     this.clearAutoRetry();
+
+    const cachedGroups = this.groupsService.getCachedGroupsSnapshot();
+    const hasCachedData =
+      Array.isArray(cachedGroups) && cachedGroups.length > 0;
+
+    if (hasCachedData && cachedGroups) {
+      this.groups.set(cachedGroups);
+      this.syncJoinedGroups(cachedGroups);
+    }
+
+    this.loading.set(!hasCachedData);
+    this.refreshing.set(hasCachedData);
 
     await this.pendingTasks.run(async () => {
       try {
         const data = await firstValueFrom(this.groupsService.getGroups());
         this.groups.set(data);
         this.syncJoinedGroups(data);
-        this.loading.set(false);
         this.error.set(null);
         this.isOffline.set(false);
       } catch (err) {
         console.error('Error loading groups:', err);
+
+        if (!hasCachedData) {
+          this.handleLoadError(err);
+        } else {
+          const httpError = err instanceof HttpErrorResponse ? err : null;
+          this.detectOffline(httpError);
+        }
+      } finally {
         this.loading.set(false);
-        this.handleLoadError(err);
+        this.refreshing.set(false);
       }
     });
   }

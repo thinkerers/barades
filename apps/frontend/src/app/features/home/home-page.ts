@@ -114,16 +114,22 @@ export class HomePage implements OnInit {
   }
 
   async loadFeaturedSessions(): Promise<void> {
-    this.loading.set(true);
     this.error.set(null);
+
+    // Debounced loading spinner - only show if data takes > 100ms
+    const loadingTimeout = setTimeout(() => {
+      this.loading.set(true);
+    }, 100);
 
     await this.pendingTasks.run(async () => {
       try {
         const sessions = await firstValueFrom(
           this.sessionsService.getSessions()
         );
+        clearTimeout(loadingTimeout);
         this.featuredSessions.set(sessions.slice(0, 3));
       } catch (err) {
+        clearTimeout(loadingTimeout);
         console.error('Error loading featured sessions:', err);
         this.error.set(this.defaultErrorMessage);
       } finally {

@@ -25,6 +25,12 @@
     (retry)="retry()"
   >
     <div class="groups-list">
+      @if (refreshing()) {
+      <div class="groups-refresh" role="status" aria-live="polite">
+        Actualisation des groupes...
+      </div>
+      }
+
       <!-- Empty State -->
       @if (groups().length === 0) {
       <div class="empty-state">

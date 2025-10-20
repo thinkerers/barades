@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, shareReplay, switchMap } from 'rxjs';
+import { BehaviorSubject, Observable, shareReplay, switchMap, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface Location {
@@ -34,8 +34,12 @@ export class LocationsService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/locations`;
   private refreshLocations$ = new BehaviorSubject<void>(undefined);
+  private latestLocations: Location[] | null = null;
   private locations$ = this.refreshLocations$.pipe(
     switchMap(() => this.http.get<Location[]>(this.apiUrl)),
+    tap((locations) => {
+      this.latestLocations = locations;
+    }),
     shareReplay({ bufferSize: 1, refCount: true })
   );
 
@@ -66,5 +70,9 @@ export class LocationsService {
 
   invalidateLocationsCache(): void {
     this.refreshLocations$.next();
+  }
+
+  getCachedLocationsSnapshot(): Location[] | null {
+    return this.latestLocations;
   }
 }

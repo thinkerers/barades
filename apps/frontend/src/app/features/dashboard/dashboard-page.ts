@@ -48,7 +48,8 @@ export class DashboardPage implements OnInit {
 
   stats = signal<DashboardStat[]>([]);
   upcomingActions = signal<UpcomingAction[]>([]);
-  loading = signal(true);
+  // Start with loading false - will be set to true after 100ms if data takes longer
+  loading = signal(false);
   error = signal<string | null>(null);
 
   ngOnInit(): void {
@@ -56,7 +57,12 @@ export class DashboardPage implements OnInit {
   }
 
   async loadDashboardData(): Promise<void> {
-    this.loading.set(true);
+    // Debounced loading: only show spinner if request takes >100ms
+    // This prevents spinner flicker when data is cached (typically <100ms)
+    const loadingTimeout = setTimeout(() => {
+      this.loading.set(true);
+    }, 100);
+
     this.error.set(null);
 
     try {
@@ -70,6 +76,9 @@ export class DashboardPage implements OnInit {
             actionItems: this.usersService.getActionItems(),
           })
         );
+
+        // Clear timeout if data arrived quickly (cached)
+        clearTimeout(loadingTimeout);
 
         this.stats.set([
           {
@@ -100,6 +109,8 @@ export class DashboardPage implements OnInit {
         this.upcomingActions.set(this.buildUpcomingActions(data.actionItems));
       });
     } catch (err) {
+      // Clear timeout on error as well
+      clearTimeout(loadingTimeout);
       console.error('Error loading dashboard data:', err);
       this.error.set('Impossible de charger les données du dashboard');
     } finally {

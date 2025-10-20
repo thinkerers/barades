@@ -178,7 +178,8 @@ export class LocationsListComponent implements OnInit, OnDestroy {
 
   private readonly locationsSignal = signal<Location[]>([]);
   private readonly filteredLocationsSignal = signal<Location[]>([]);
-  private readonly loadingSignal = signal(true);
+  private readonly loadingSignal = signal(false);
+  private readonly refreshingSignal = signal(false);
   private readonly errorSignal = signal<string | null>(null);
   private readonly searchTermSignal = signal('');
   private readonly selectedTypeSignal = signal('');
@@ -307,6 +308,10 @@ export class LocationsListComponent implements OnInit, OnDestroy {
 
   get loading(): boolean {
     return this.loadingSignal();
+  }
+
+  get refreshing(): boolean {
+    return this.refreshingSignal();
   }
 
   get error(): string | null {
@@ -439,8 +444,21 @@ export class LocationsListComponent implements OnInit, OnDestroy {
 
   private async loadLocations(): Promise<void> {
     console.log('[LocationsList] Loading locations...');
-    this.loadingSignal.set(true);
     this.errorSignal.set(null);
+
+    const cachedLocations = this.locationsService.getCachedLocationsSnapshot();
+    const hasCachedData =
+      Array.isArray(cachedLocations) && cachedLocations.length > 0;
+
+    if (hasCachedData && cachedLocations) {
+      const filtered = this.normalizeLocations(cachedLocations);
+      this.locationsSignal.set(filtered);
+      this.filteredLocationsSignal.set(filtered);
+      this.scheduleMapRefresh();
+    }
+
+    this.loadingSignal.set(!hasCachedData);
+    this.refreshingSignal.set(hasCachedData);
 
     await this.pendingTasks.run(async () => {
       try {
@@ -450,19 +468,26 @@ export class LocationsListComponent implements OnInit, OnDestroy {
           data.length,
           'locations'
         );
-        const filtered = data.filter(
-          (loc) => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0)
-        );
+        const filtered = this.normalizeLocations(data);
         this.locationsSignal.set(filtered);
         this.filteredLocationsSignal.set(filtered);
         this.scheduleMapRefresh();
       } catch (error) {
         console.error('[LocationsList] Error loading locations:', error);
-        this.errorSignal.set(this.defaultErrorMessage);
+        if (!hasCachedData) {
+          this.errorSignal.set(this.defaultErrorMessage);
+        }
       } finally {
         this.loadingSignal.set(false);
+        this.refreshingSignal.set(false);
       }
     });
+  }
+
+  private normalizeLocations(data: Location[]): Location[] {
+    return data.filter(
+      (loc) => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0)
+    );
   }
 
   private scheduleMapRefresh(): void {
