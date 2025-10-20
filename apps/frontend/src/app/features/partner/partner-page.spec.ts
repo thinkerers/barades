@@ -23,7 +23,7 @@ describe('PartnerPage', () => {
     component.onSubmit();
 
     expect(component.partnerForm.invalid).toBe(true);
-    expect(component.errorMessage).toContain('Veuillez');
+    expect(component.errorMessage()).toContain('Veuillez');
   });
 
   it('should accept valid submissions and reset the form', () => {
@@ -36,8 +36,8 @@ describe('PartnerPage', () => {
 
     component.onSubmit();
 
-    expect(component.errorMessage).toBe('');
-    expect(component.successMessage).toContain('Merci');
+    expect(component.errorMessage()).toBeNull();
+    expect(component.successMessage()).toContain('Merci');
     expect(component.partnerForm.pristine).toBe(true);
   });
 });

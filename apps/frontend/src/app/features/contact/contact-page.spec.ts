@@ -118,12 +118,12 @@ describe('ContactPage', () => {
     jest.spyOn(console, 'log');
     component.onSubmit();
 
-    expect(component.submitted).toBe(true);
+    expect(component.submitted()).toBe(true);
     expect(console.log).not.toHaveBeenCalled();
-    expect(component.errorMessage).toBe(
+    expect(component.errorMessage()).toBe(
       'Veuillez corriger les erreurs dans le formulaire.'
     );
-    expect(component.successMessage).toBe('');
+    expect(component.successMessage()).toBeNull();
   });
 
   it('should submit when form is valid', () => {
@@ -138,17 +138,17 @@ describe('ContactPage', () => {
 
     component.onSubmit();
 
-    expect(component.submitted).toBe(false); // Reset après succès
+    expect(component.submitted()).toBe(false); // Reset après succès
     expect(console.log).toHaveBeenCalledWith('Form submitted:', {
       name: 'Alice',
       email: 'alice@example.com',
       subject: 'Test Subject',
       message: 'This is a test message',
     });
-    expect(component.successMessage).toBe(
+    expect(component.successMessage()).toBe(
       'Merci pour votre message ! Nous vous répondrons dans les plus brefs délais.'
     );
-    expect(component.errorMessage).toBe('');
+    expect(component.errorMessage()).toBeNull();
   });
 
   it('should reset form after successful submission', () => {
@@ -208,7 +208,7 @@ describe('ContactPage', () => {
   });
 
   it('should clear error message on successful submission', () => {
-    component.errorMessage = 'Some error';
+    component.errorMessage.set('Some error');
     component.contactForm.setValue({
       name: 'Alice',
       email: 'alice@example.com',
@@ -218,6 +218,6 @@ describe('ContactPage', () => {
 
     component.onSubmit();
 
-    expect(component.errorMessage).toBe('');
+    expect(component.errorMessage()).toBeNull();
   });
 });
