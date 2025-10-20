@@ -1,0 +1,1 @@
+Les fichiers de ce dossiers me servent de référence pour implémenter des features / planifier des modifications à effectuer sur le code, avec ou sans l'aide d'agents LLM

@@ -1,0 +1,2 @@
+- [https://startplaying.games/](https://startplaying.games/)
+- [https://blinkr.events](https://blinkr.events)

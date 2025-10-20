@@ -561,4 +561,4 @@ git commit -m "feat: setup project structure and generate base components"
 
 **Vous êtes prêt à démarrer ! 🚀**
 
-**Suivant** : [GUIDE_MIGRATION.md](./GUIDE_MIGRATION.md) pour migrer les composants du prototype
+**Suivant** : [GUIDE_MIGRATION.md](GUIDE_MIGRATION.md) pour migrer les composants du prototype
