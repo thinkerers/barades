@@ -1,4 +1,9 @@
-import { Component, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -25,6 +30,7 @@ interface PartnerProfile {
   imports: [ReactiveFormsModule, MatIconModule],
   templateUrl: './partner-page.html',
   styleUrl: './partner-page.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PartnerPage {
   private readonly fb = inject(FormBuilder);
@@ -84,27 +90,28 @@ export class PartnerPage {
     message: ['', [Validators.required, Validators.minLength(10)]],
   });
 
-  submitted = false;
-  successMessage = '';
-  errorMessage = '';
+  readonly submitted = signal(false);
+  readonly successMessage = signal<string | null>(null);
+  readonly errorMessage = signal<string | null>(null);
 
   onSubmit(): void {
-    this.submitted = true;
-    this.successMessage = '';
-    this.errorMessage = '';
+    this.submitted.set(true);
+    this.successMessage.set(null);
+    this.errorMessage.set(null);
 
     if (this.partnerForm.invalid) {
-      this.errorMessage = 'Veuillez compléter les champs requis.';
+      this.errorMessage.set('Veuillez compléter les champs requis.');
       return;
     }
 
     const payload = this.partnerForm.value;
     console.log('[PartnerPage] Partnership request', payload);
 
-    this.successMessage =
-      'Merci pour votre message ! Nous revenons vers vous sous 48 heures.';
+    this.successMessage.set(
+      'Merci pour votre message ! Nous revenons vers vous sous 48 heures.'
+    );
     this.partnerForm.reset();
-    this.submitted = false;
+    this.submitted.set(false);
   }
 
   get organization() {

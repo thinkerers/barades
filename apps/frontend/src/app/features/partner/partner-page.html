@@ -64,10 +64,10 @@
           id="organization"
           type="text"
           formControlName="organization"
-          [class.field-error]="submitted && organization?.invalid"
+          [class.field-error]="submitted() && organization?.invalid"
           placeholder="Bar ludique, boutique, association..."
         />
-        @if (submitted && organization?.invalid) {
+        @if (submitted() && organization?.invalid) {
         <p class="field-hint">Veuillez indiquer le nom de votre structure.</p>
         }
       </div>
@@ -78,10 +78,10 @@
           id="contactName"
           type="text"
           formControlName="contactName"
-          [class.field-error]="submitted && contactName?.invalid"
+          [class.field-error]="submitted() && contactName?.invalid"
           placeholder="Prénom Nom"
         />
-        @if (submitted && contactName?.invalid) {
+        @if (submitted() && contactName?.invalid) {
         <p class="field-hint">Ce champ est requis.</p>
         }
       </div>
@@ -92,10 +92,10 @@
           id="email"
           type="email"
           formControlName="email"
-          [class.field-error]="submitted && email?.invalid"
+          [class.field-error]="submitted() && email?.invalid"
           placeholder="contact@votresociete.com"
         />
-        @if (submitted && email?.invalid) {
+        @if (submitted() && email?.invalid) {
         <p class="field-hint">Renseignez une adresse e-mail valide.</p>
         }
       </div>
@@ -106,10 +106,10 @@
           id="message"
           rows="5"
           formControlName="message"
-          [class.field-error]="submitted && message?.invalid"
+          [class.field-error]="submitted() && message?.invalid"
           placeholder="Présentez votre activité, vos attentes et vos disponibilités."
         ></textarea>
-        @if (submitted && message?.invalid) {
+        @if (submitted() && message?.invalid) {
         <p class="field-hint">
           Ajoutez quelques détails pour que nous puissions préparer notre
           réponse.
@@ -117,10 +117,10 @@
         }
       </div>
 
-      @if (errorMessage) {
-      <p class="form-feedback form-feedback--error">{{ errorMessage }}</p>
-      } @if (successMessage) {
-      <p class="form-feedback form-feedback--success">{{ successMessage }}</p>
+      @if (errorMessage()) {
+      <p class="form-feedback form-feedback--error">{{ errorMessage() }}</p>
+      } @if (successMessage()) {
+      <p class="form-feedback form-feedback--success">{{ successMessage() }}</p>
       }
 
       <button type="submit" class="partner-submit">Envoyer la demande</button>
