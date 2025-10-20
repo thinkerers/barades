@@ -83,25 +83,35 @@ describe('SearchInputComponent', () => {
     component.clear();
   });
 
-  it('should debounce input when debounce is set', (done) => {
-    fixture = TestBed.createComponent(SearchInputComponent);
-    component = fixture.componentInstance;
-    component.debounce = 300;
-    fixture.detectChanges();
+  it('should debounce input when debounce is set', async () => {
+    jest.useFakeTimers();
+    try {
+      fixture = TestBed.createComponent(SearchInputComponent);
+      component = fixture.componentInstance;
+      component.debounce = 300;
+      fixture.detectChanges();
 
-    let emitCount = 0;
-    component.valueChange.subscribe(() => {
-      emitCount++;
-    });
+      let emitCount = 0;
+      component.valueChange.subscribe(() => {
+        emitCount++;
+      });
 
-    component.onInput('test1');
-    component.onInput('test2');
-    component.onInput('test3');
+      component.onInput('test1');
+      component.onInput('test2');
+      component.onInput('test3');
 
-    setTimeout(() => {
+      jest.advanceTimersByTime(299);
+      await Promise.resolve();
+      fixture.detectChanges();
+      expect(emitCount).toBe(0);
+
+      jest.advanceTimersByTime(1);
+      await Promise.resolve();
+      fixture.detectChanges();
       expect(emitCount).toBe(1);
-      done();
-    }, 350);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('should emit immediately when debounce is 0', () => {
@@ -111,7 +121,9 @@ describe('SearchInputComponent', () => {
     });
 
     component.onInput('test1');
+    fixture.detectChanges();
     component.onInput('test2');
+    fixture.detectChanges();
 
     expect(emitCount).toBe(2);
   });
@@ -131,18 +143,28 @@ describe('SearchInputComponent', () => {
     expect(input.hasAttribute('id')).toBe(false);
   });
 
-  it('should clear timer on destroy', () => {
-    fixture = TestBed.createComponent(SearchInputComponent);
-    component = fixture.componentInstance;
-    component.debounce = 300;
-    fixture.detectChanges();
+  it('should cancel pending debounced emission when cleared', async () => {
+    jest.useFakeTimers();
+    try {
+      fixture = TestBed.createComponent(SearchInputComponent);
+      component = fixture.componentInstance;
+      component.debounce = 200;
+      fixture.detectChanges();
 
-    const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
-    component.onInput('test');
+      let emitCount = 0;
+      component.valueChange.subscribe(() => {
+        emitCount++;
+      });
 
-    fixture.destroy();
+      component.onInput('value');
+      component.clear();
 
-    expect(clearTimeoutSpy).toHaveBeenCalled();
-    clearTimeoutSpy.mockRestore();
+      jest.runAllTimers();
+      await Promise.resolve();
+
+      expect(emitCount).toBe(1);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 });
