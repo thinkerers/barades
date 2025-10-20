@@ -4,7 +4,6 @@ import {
   Component,
   DestroyRef,
   ElementRef,
-  NgZone,
   ViewChild,
   inject,
   signal,
@@ -29,7 +28,6 @@ import * as L from 'leaflet';
 export class ContactPage implements AfterViewInit {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly ngZone = inject(NgZone);
 
   @ViewChild('contactMap', { static: true })
   private readonly mapContainer?: ElementRef<HTMLDivElement>;
@@ -55,9 +53,7 @@ export class ContactPage implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.ngZone.runOutsideAngular(() => {
-      this.initMap();
-    });
+    this.initMap();
   }
 
   onSubmit(): void {

@@ -3,7 +3,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  NgZone,
   OnInit,
   ViewChild,
   computed,
@@ -45,7 +44,6 @@ export class SessionsListPage implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   private readonly authService = inject(AuthService);
-  private readonly ngZone = inject(NgZone);
 
   @ViewChild('scopeBanner')
   scopeBanner?: SessionsScopeBanner;
@@ -171,14 +169,14 @@ export class SessionsListPage implements OnInit {
         this.applyFilters();
 
         // Move focus to banner for accessibility when coming from dashboard
-        if (this.isScopeFilterActive() && this.comingFromDashboard()) {
-          if (typeof window !== 'undefined') {
-            this.ngZone.runOutsideAngular(() => {
-              window.requestAnimationFrame(() => {
-                this.scopeBanner?.focus();
-              });
-            });
-          }
+        if (
+          this.isScopeFilterActive() &&
+          this.comingFromDashboard() &&
+          typeof window !== 'undefined'
+        ) {
+          window.requestAnimationFrame(() => {
+            this.scopeBanner?.focus();
+          });
         }
       },
       error: (err) => {

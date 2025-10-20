@@ -3,8 +3,8 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
-  NgZone,
   OnInit,
+  PendingTasks,
   WritableSignal,
   computed,
   inject,
@@ -38,7 +38,7 @@ export class GroupsListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
-  private readonly ngZone = inject(NgZone);
+  private readonly pendingTasks = inject(PendingTasks);
   readonly groups = signal<Group[]>([]);
   readonly loading = signal<boolean>(true);
   readonly error = signal<string | null>(null);
@@ -49,7 +49,8 @@ export class GroupsListComponent implements OnInit {
   private readonly recentlyJoined = signal(new Set<string>());
   private readonly joinErrors = signal(new Map<string, string>());
   private currentUserId: string | null = null;
-  private autoRetryInterval: ReturnType<typeof setInterval> | null = null;
+  private autoRetryTimeoutId: number | null = null;
+  private pendingAutoRetryCleanup: (() => void) | null = null;
   private readonly autoRetryDelayMs = 15000;
   private readonly offlineHandler = () => {
     this.isOffline.set(true);
@@ -355,34 +356,39 @@ export class GroupsListComponent implements OnInit {
   private scheduleAutoRetry(baseMessage: string): void {
     this.clearAutoRetry();
     this.pendingErrorBaseMessage = baseMessage;
-    this.autoRetrySeconds.set(Math.ceil(this.autoRetryDelayMs / 1000));
+    const initialSeconds = Math.ceil(this.autoRetryDelayMs / 1000);
+    this.autoRetrySeconds.set(initialSeconds);
     this.error.set(this.composeErrorMessage());
 
     if (typeof window === 'undefined') {
       return;
     }
 
-    this.ngZone.runOutsideAngular(() => {
-      this.autoRetryInterval = window.setInterval(() => {
+    const completePendingTask = this.pendingTasks.add();
+    this.pendingAutoRetryCleanup = () => completePendingTask();
+
+    const scheduleNextTick = () => {
+      this.autoRetryTimeoutId = window.setTimeout(() => {
         const remaining = this.autoRetrySeconds();
 
         if (remaining === null) {
+          this.clearAutoRetry();
           return;
         }
 
         if (remaining <= 1) {
-          this.ngZone.run(() => {
-            this.clearAutoRetry();
-            void this.loadGroups();
-          });
-        } else {
-          this.ngZone.run(() => {
-            this.autoRetrySeconds.set(remaining - 1);
-            this.error.set(this.composeErrorMessage());
-          });
+          this.clearAutoRetry();
+          void this.loadGroups();
+          return;
         }
+
+        this.autoRetrySeconds.set(remaining - 1);
+        this.error.set(this.composeErrorMessage());
+        scheduleNextTick();
       }, 1000);
-    });
+    };
+
+    scheduleNextTick();
   }
 
   private composeErrorMessage(): string {
@@ -400,9 +406,15 @@ export class GroupsListComponent implements OnInit {
   }
 
   private clearAutoRetry(): void {
-    if (this.autoRetryInterval && typeof window !== 'undefined') {
-      window.clearInterval(this.autoRetryInterval);
-      this.autoRetryInterval = null;
+    if (typeof window !== 'undefined' && this.autoRetryTimeoutId !== null) {
+      window.clearTimeout(this.autoRetryTimeoutId);
+      this.autoRetryTimeoutId = null;
+    }
+
+    if (this.pendingAutoRetryCleanup) {
+      const cleanup = this.pendingAutoRetryCleanup;
+      this.pendingAutoRetryCleanup = null;
+      cleanup();
     }
     this.autoRetrySeconds.set(null);
     this.pendingErrorBaseMessage = null;
