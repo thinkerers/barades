@@ -3,6 +3,7 @@ import {
   Component,
   inject,
   OnInit,
+  PendingTasks,
   signal,
 } from '@angular/core';
 import { Router } from '@angular/router';
@@ -43,6 +44,7 @@ export class DashboardPage implements OnInit {
   private readonly reservationsService = inject(ReservationsService);
   private readonly usersService = inject(UsersService);
   private readonly router = inject(Router);
+  private readonly pendingTasks = inject(PendingTasks);
 
   stats = signal<DashboardStat[]>([]);
   upcomingActions = signal<UpcomingAction[]>([]);
@@ -58,43 +60,45 @@ export class DashboardPage implements OnInit {
     this.error.set(null);
 
     try {
-      const data = await firstValueFrom(
-        forkJoin({
-          sessionStats: this.sessionsService.getCreatedByMeStats(),
-          groupStats: this.groupsService.getManagedByMeStats(),
-          pendingReservations:
-            this.reservationsService.getPendingForMySessions(),
-          actionItems: this.usersService.getActionItems(),
-        })
-      );
+      await this.pendingTasks.run(async () => {
+        const data = await firstValueFrom(
+          forkJoin({
+            sessionStats: this.sessionsService.getCreatedByMeStats(),
+            groupStats: this.groupsService.getManagedByMeStats(),
+            pendingReservations:
+              this.reservationsService.getPendingForMySessions(),
+            actionItems: this.usersService.getActionItems(),
+          })
+        );
 
-      this.stats.set([
-        {
-          key: 'sessions-created',
-          label: 'Sessions créées',
-          value: data.sessionStats.totalCount,
-          trend: `+${data.sessionStats.recentCount} ${data.sessionStats.period}`,
-        },
-        {
-          key: 'groups-managed',
-          label: 'Groupes gérés',
-          value: data.groupStats.totalCount,
-          trend: 'Stable',
-        },
-        {
-          key: 'pending-reservations',
-          label: 'Réservations en attente',
-          value: data.pendingReservations.length,
-          trend:
-            data.pendingReservations.length > 0
-              ? `${data.pendingReservations.length} nouvelle${
-                  data.pendingReservations.length > 1 ? 's' : ''
-                } demande${data.pendingReservations.length > 1 ? 's' : ''}`
-              : 'Aucune demande',
-        },
-      ]);
+        this.stats.set([
+          {
+            key: 'sessions-created',
+            label: 'Sessions créées',
+            value: data.sessionStats.totalCount,
+            trend: `+${data.sessionStats.recentCount} ${data.sessionStats.period}`,
+          },
+          {
+            key: 'groups-managed',
+            label: 'Groupes gérés',
+            value: data.groupStats.totalCount,
+            trend: 'Stable',
+          },
+          {
+            key: 'pending-reservations',
+            label: 'Réservations en attente',
+            value: data.pendingReservations.length,
+            trend:
+              data.pendingReservations.length > 0
+                ? `${data.pendingReservations.length} nouvelle${
+                    data.pendingReservations.length > 1 ? 's' : ''
+                  } demande${data.pendingReservations.length > 1 ? 's' : ''}`
+                : 'Aucune demande',
+          },
+        ]);
 
-      this.upcomingActions.set(this.buildUpcomingActions(data.actionItems));
+        this.upcomingActions.set(this.buildUpcomingActions(data.actionItems));
+      });
     } catch (err) {
       console.error('Error loading dashboard data:', err);
       this.error.set('Impossible de charger les données du dashboard');

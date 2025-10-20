@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  PendingTasks,
   ViewChild,
   computed,
   effect,
@@ -43,6 +44,7 @@ export class SessionsListPage {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
+  private readonly pendingTasks = inject(PendingTasks);
   private readonly queryParamMap = toSignal(this.route.queryParamMap, {
     initialValue: this.route.snapshot.queryParamMap,
   });
@@ -149,41 +151,43 @@ export class SessionsListPage {
         ? this.sessionsService.getSessionsHostedByMe()
         : this.sessionsService.getSessions();
 
-    try {
-      const sessions = await firstValueFrom(source$);
-      this.sessions.set(sessions);
-      this.filteredSessions.set([...sessions]);
-      this.gameSystems.set([...new Set(sessions.map((s) => s.game))].sort());
-      this.hostOptions.set(this.buildHostOptions(sessions));
+    await this.pendingTasks.run(async () => {
+      try {
+        const sessions = await firstValueFrom(source$);
+        this.sessions.set(sessions);
+        this.filteredSessions.set([...sessions]);
+        this.gameSystems.set([...new Set(sessions.map((s) => s.game))].sort());
+        this.hostOptions.set(this.buildHostOptions(sessions));
 
-      if (this.isScopeFilterActive() && this.hostFilterValue) {
-        this.selectedHost.set(this.hostFilterValue);
-      } else if (!this.isScopeFilterActive()) {
-        this.ensureHostSelectionIsValid();
+        if (this.isScopeFilterActive() && this.hostFilterValue) {
+          this.selectedHost.set(this.hostFilterValue);
+        } else if (!this.isScopeFilterActive()) {
+          this.ensureHostSelectionIsValid();
+        }
+
+        this.filteredHostOptions.set(
+          this.filterHostSuggestions(this.selectedHost())
+        );
+
+        // Apply filters if any are already set
+        this.applyFilters();
+
+        if (
+          this.isScopeFilterActive() &&
+          this.comingFromDashboard() &&
+          typeof window !== 'undefined'
+        ) {
+          window.requestAnimationFrame(() => {
+            this.scopeBanner?.focus();
+          });
+        }
+      } catch (err) {
+        console.error('Error loading sessions:', err);
+        this.error.set(this.defaultErrorMessage);
+      } finally {
+        this.loading.set(false);
       }
-
-      this.filteredHostOptions.set(
-        this.filterHostSuggestions(this.selectedHost())
-      );
-
-      // Apply filters if any are already set
-      this.applyFilters();
-
-      if (
-        this.isScopeFilterActive() &&
-        this.comingFromDashboard() &&
-        typeof window !== 'undefined'
-      ) {
-        window.requestAnimationFrame(() => {
-          this.scopeBanner?.focus();
-        });
-      }
-    } catch (err) {
-      console.error('Error loading sessions:', err);
-      this.error.set(this.defaultErrorMessage);
-    } finally {
-      this.loading.set(false);
-    }
+    });
   }
 
   /**

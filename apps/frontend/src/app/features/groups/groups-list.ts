@@ -106,18 +106,20 @@ export class GroupsListComponent implements OnInit {
     this.pendingErrorBaseMessage = null;
     this.clearAutoRetry();
 
-    try {
-      const data = await firstValueFrom(this.groupsService.getGroups());
-      this.groups.set(data);
-      this.syncJoinedGroups(data);
-      this.loading.set(false);
-      this.error.set(null);
-      this.isOffline.set(false);
-    } catch (err) {
-      console.error('Error loading groups:', err);
-      this.loading.set(false);
-      this.handleLoadError(err);
-    }
+    await this.pendingTasks.run(async () => {
+      try {
+        const data = await firstValueFrom(this.groupsService.getGroups());
+        this.groups.set(data);
+        this.syncJoinedGroups(data);
+        this.loading.set(false);
+        this.error.set(null);
+        this.isOffline.set(false);
+      } catch (err) {
+        console.error('Error loading groups:', err);
+        this.loading.set(false);
+        this.handleLoadError(err);
+      }
+    });
   }
 
   retry(): void {

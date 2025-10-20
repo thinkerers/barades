@@ -5,6 +5,7 @@ import {
   computed,
   inject,
   OnInit,
+  PendingTasks,
   signal,
 } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
@@ -42,6 +43,7 @@ import { SessionCardComponent } from '../sessions/session-card';
 export class HomePage implements OnInit {
   private router = inject(Router);
   private sessionsService = inject(SessionsService);
+  private pendingTasks = inject(PendingTasks);
 
   // Form controls pour la recherche
   gameControl = new FormControl('');
@@ -115,15 +117,19 @@ export class HomePage implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    try {
-      const sessions = await firstValueFrom(this.sessionsService.getSessions());
-      this.featuredSessions.set(sessions.slice(0, 3));
-    } catch (err) {
-      console.error('Error loading featured sessions:', err);
-      this.error.set(this.defaultErrorMessage);
-    } finally {
-      this.loading.set(false);
-    }
+    await this.pendingTasks.run(async () => {
+      try {
+        const sessions = await firstValueFrom(
+          this.sessionsService.getSessions()
+        );
+        this.featuredSessions.set(sessions.slice(0, 3));
+      } catch (err) {
+        console.error('Error loading featured sessions:', err);
+        this.error.set(this.defaultErrorMessage);
+      } finally {
+        this.loading.set(false);
+      }
+    });
   }
 
   private _filterGames(value: string): string[] {

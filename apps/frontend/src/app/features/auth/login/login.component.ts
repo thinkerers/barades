@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  PendingTasks,
   inject,
   signal,
 } from '@angular/core';
@@ -41,6 +42,7 @@ export class LoginComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly pendingTasks = inject(PendingTasks);
 
   readonly loginForm: FormGroup = this.fb.group({
     username: ['', [Validators.required]],
@@ -59,19 +61,21 @@ export class LoginComponent {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    try {
-      await firstValueFrom(
-        this.authService.login(this.loginForm.getRawValue())
-      );
-      const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
-      void this.router.navigateByUrl(returnUrl);
-    } catch (error: unknown) {
-      const message =
-        (error as { error?: { message?: string } })?.error?.message ||
-        'Identifiants incorrects. Veuillez réessayer.';
-      this.errorMessage.set(message);
-    } finally {
-      this.isLoading.set(false);
-    }
+    await this.pendingTasks.run(async () => {
+      try {
+        await firstValueFrom(
+          this.authService.login(this.loginForm.getRawValue())
+        );
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
+        void this.router.navigateByUrl(returnUrl);
+      } catch (error: unknown) {
+        const message =
+          (error as { error?: { message?: string } })?.error?.message ||
+          'Identifiants incorrects. Veuillez réessayer.';
+        this.errorMessage.set(message);
+      } finally {
+        this.isLoading.set(false);
+      }
+    });
   }
 }

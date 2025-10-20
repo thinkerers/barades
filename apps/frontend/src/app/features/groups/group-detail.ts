@@ -179,34 +179,37 @@ export class GroupDetailComponent implements OnInit, OnDestroy {
     this.leaveInProgress.set(false);
     this.leaveError.set(null);
 
-    try {
-      const data = (await firstValueFrom(
-        this.groupsService.getGroup(id)
-      )) as GroupDetail;
+    await this.pendingTasks.run(async () => {
+      try {
+        const data = (await firstValueFrom(
+          this.groupsService.getGroup(id)
+        )) as GroupDetail;
 
-      const isMemberFromApi =
-        typeof data.currentUserIsMember === 'boolean'
-          ? data.currentUserIsMember
-          : data.members?.some((m) => m.userId === this.currentUserId);
+        const isMemberFromApi =
+          typeof data.currentUserIsMember === 'boolean'
+            ? data.currentUserIsMember
+            : data.members?.some((m) => m.userId === this.currentUserId);
 
-      this.group.set(data);
-      this.isMember.set(Boolean(isMemberFromApi));
-      this.loading.set(false);
-      this.error.set(null);
-      this.isOffline.set(false);
+        this.group.set(data);
+        this.isMember.set(Boolean(isMemberFromApi));
 
-      if (!this.initialPollsLoaded || refreshPolls) {
-        this.initialPollsLoaded = true;
-        await this.loadPolls(id);
+        this.loading.set(false);
+        this.error.set(null);
+        this.isOffline.set(false);
+
+        if (!this.initialPollsLoaded || refreshPolls) {
+          this.initialPollsLoaded = true;
+          await this.loadPolls(id);
+        }
+
+        if (this.autoJoinRequested) {
+          this.handlePendingAutoJoin();
+        }
+      } catch (err) {
+        this.loading.set(false);
+        this.handleGroupError(err);
       }
-
-      if (this.autoJoinRequested) {
-        this.handlePendingAutoJoin();
-      }
-    } catch (err) {
-      this.loading.set(false);
-      this.handleGroupError(err);
-    }
+    });
   }
 
   private async loadPolls(groupId: string): Promise<void> {

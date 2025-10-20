@@ -442,25 +442,27 @@ export class LocationsListComponent implements OnInit, OnDestroy {
     this.loadingSignal.set(true);
     this.errorSignal.set(null);
 
-    try {
-      const data = await firstValueFrom(this.locationsService.getLocations());
-      console.log(
-        '[LocationsList] Locations loaded:',
-        data.length,
-        'locations'
-      );
-      const filtered = data.filter(
-        (loc) => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0)
-      );
-      this.locationsSignal.set(filtered);
-      this.filteredLocationsSignal.set(filtered);
-      this.scheduleMapRefresh();
-    } catch (error) {
-      console.error('[LocationsList] Error loading locations:', error);
-      this.errorSignal.set(this.defaultErrorMessage);
-    } finally {
-      this.loadingSignal.set(false);
-    }
+    await this.pendingTasks.run(async () => {
+      try {
+        const data = await firstValueFrom(this.locationsService.getLocations());
+        console.log(
+          '[LocationsList] Locations loaded:',
+          data.length,
+          'locations'
+        );
+        const filtered = data.filter(
+          (loc) => !(loc.type === 'PRIVATE' && loc.lat === 0 && loc.lon === 0)
+        );
+        this.locationsSignal.set(filtered);
+        this.filteredLocationsSignal.set(filtered);
+        this.scheduleMapRefresh();
+      } catch (error) {
+        console.error('[LocationsList] Error loading locations:', error);
+        this.errorSignal.set(this.defaultErrorMessage);
+      } finally {
+        this.loadingSignal.set(false);
+      }
+    });
   }
 
   private scheduleMapRefresh(): void {

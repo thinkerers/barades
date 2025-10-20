@@ -2,10 +2,10 @@ import {
   ChangeDetectionStrategy,
   Component,
   OnInit,
+  PendingTasks,
   inject,
   signal,
 } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
 import {
   FormBuilder,
   FormGroup,
@@ -20,6 +20,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { User } from '../../core/models/auth.model';
 import { AuthService } from '../../core/services/auth.service';
 import {
@@ -49,6 +50,7 @@ export class ProfilePage implements OnInit {
   private usersService = inject(UsersService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
+  private pendingTasks = inject(PendingTasks);
   private readonly userSignal = signal<User | null>(null);
   readonly profileForm: FormGroup;
   private readonly isEditingSignal = signal(false);
@@ -88,39 +90,41 @@ export class ProfilePage implements OnInit {
     this.isLoadingSignal.set(true);
     this.errorMessageSignal.set('');
 
-    try {
-      const profile = await firstValueFrom(this.usersService.getMyProfile());
-      if (!profile) {
-        throw new Error('Profil introuvable');
+    await this.pendingTasks.run(async () => {
+      try {
+        const profile = await firstValueFrom(this.usersService.getMyProfile());
+        if (!profile) {
+          throw new Error('Profil introuvable');
+        }
+
+        this.userSignal.set({
+          id: profile.id,
+          email: profile.email,
+          username: profile.username,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          bio: profile.bio,
+          avatar: profile.avatar,
+        });
+
+        this.profileForm.patchValue({
+          username: profile.username,
+          email: profile.email,
+          firstName: profile.firstName || '',
+          lastName: profile.lastName || '',
+          bio: profile.bio || '',
+          skillLevel: profile.skillLevel || '',
+        });
+        this.isLoadingSignal.set(false);
+      } catch (error) {
+        console.error('Profile load error:', error);
+        const message =
+          (error as { error?: { message?: string } })?.error?.message ||
+          'Erreur lors du chargement du profil';
+        this.errorMessageSignal.set(message);
+        this.isLoadingSignal.set(false);
       }
-
-      this.userSignal.set({
-        id: profile.id,
-        email: profile.email,
-        username: profile.username,
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        bio: profile.bio,
-        avatar: profile.avatar,
-      });
-
-      this.profileForm.patchValue({
-        username: profile.username,
-        email: profile.email,
-        firstName: profile.firstName || '',
-        lastName: profile.lastName || '',
-        bio: profile.bio || '',
-        skillLevel: profile.skillLevel || '',
-      });
-      this.isLoadingSignal.set(false);
-    } catch (error) {
-      console.error('Profile load error:', error);
-      const message =
-        (error as { error?: { message?: string } })?.error?.message ||
-        'Erreur lors du chargement du profil';
-      this.errorMessageSignal.set(message);
-      this.isLoadingSignal.set(false);
-    }
+    });
   }
 
   async toggleEdit(): Promise<void> {
