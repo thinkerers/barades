@@ -1,3 +1,4 @@
+#documentation
 # Rapport de Travail de Fin d'Études
 
 ## Barades - Application Web de Rencontre pour Joueurs
