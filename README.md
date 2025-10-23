@@ -8,7 +8,12 @@
 
 **Barades** est une Progressive Web App (PWA) conçue pour connecter les joueurs de jeux de société et de jeux de rôle. Elle permet de créer des groupes de joueurs, de trouver des parties (sessions) près de chez soi ou en ligne, et d'organiser facilement des événements ludiques.
 
-Le projet est structuré en monorepo avec [Nx](https://nx.dev) pour orchestrer une PWA [Angular](https://angular.io/), une API [NestJS](https://nestjs.com/) et une base de données [PostgreSQL](https://www.postgresql.org/) gérée par [Prisma](https://www.prisma.io/).
+Le projet est structuré en monorepo avec [Nx](https://nx.dev) :
+
+- frontend: PWA [Angular](https://angular.io/)
+- backend: API [NestJS](https://nestjs.com/)
+- base de données : [PostgreSQL](https://www.postgresql.org/)
+- ORM: [Prisma](https://www.prisma.io/).
 
 ---
 
