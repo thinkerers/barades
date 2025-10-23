@@ -199,8 +199,10 @@ Add your production URL(s) to Render's environment variables (comma-separated if
 1. Go to Render Dashboard → `barades-backend` → **Environment** tab
 2. Click **"Add Environment Variable"**
 3. Add or update the variable:
-  - **Key:** `FRONTEND_URL`
-  - **Value:** `https://barades-3bxrlhne8-theophile-desmedts-projects.vercel.app`
+
+- **Key:** `FRONTEND_URL`
+- **Value:** `https://barades-3bxrlhne8-theophile-desmedts-projects.vercel.app`
+
 4. Click **"Save Changes"**
 
 Render will automatically redeploy (2-3 minutes).
@@ -213,11 +215,7 @@ const envOrigins = (process.env.FRONTEND_URL || '')
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-const origins = [
-  'http://localhost:4200',
-  'http://localhost:4201',
-  ...(envOrigins.length > 0 ? envOrigins : ['https://barades.vercel.app']),
-];
+const origins = ['http://localhost:4200', 'http://localhost:4201', ...(envOrigins.length > 0 ? envOrigins : ['https://barades.vercel.app'])];
 
 app.enableCors({
   origin: origins,
@@ -312,7 +310,9 @@ Once DNS propagates and both domains resolve:
 1. Decide your canonical domain (e.g., `https://www.barades.com`)
 2. Go to Render → `barades-backend` → **Environment**
 3. Set `FRONTEND_URL` to both domains (comma separated):
-  - Example: `https://barades.com,https://www.barades.com`
+
+- Example: `https://barades.com,https://www.barades.com`
+
 4. Save (Render will redeploy automatically)
 
 ---
