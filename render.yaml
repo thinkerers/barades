@@ -6,7 +6,7 @@ services:
     plan: free
     buildCommand: npm install && npx nx build backend --configuration=production
     startCommand: node dist/apps/backend/main.js
-    autoDeploy: false
+    autoDeploy: true
     envVars:
       - key: DATABASE_URL
         sync: false
