@@ -1,5 +1,7 @@
 # Barades - Plateforme de Rencontre de Joueur sur Table
 
+[![Rapport de TFE](https://img.shields.io/badge/📄_Rapport_de_TFE-2025-blue?style=flat-square)](TFE%20Barades%202025.pdf)
+
 [![Angular](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.io/)
 [![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
