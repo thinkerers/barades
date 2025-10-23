@@ -28,6 +28,21 @@
 
 ## 🎯 Step 1: Deploy Backend to Render
 
+### 1.0 Confirm Code Preparation (already committed)
+
+- ✅ `.nvmrc` exists at repo root with `22.14.0`
+- ✅ `package.json` contains
+  ```json
+  "engines": {
+    "node": ">=22.0.0 <23.0.0"
+  }
+  ```
+- ✅ `render.yaml` has the Prisma-aware build command:
+  ```yaml
+  buildCommand: npm install && npx prisma generate --schema=apps/backend/prisma/schema.prisma && npx nx build backend --configuration=production
+  ```
+- ✅ `render.yaml` has `autoDeploy: true`
+
 ### 1.1 Push Code to GitHub
 
 ```bash
@@ -163,6 +178,10 @@ git push origin main
    - **Build Command:** `npx nx build frontend --configuration=production`
    - **Output Directory:** `dist/apps/frontend/browser`
    - **Environment Variables:** None needed (hardcoded in environment.prod.ts)
+
+- If Vercel prompts for a different root, keep `./` (do not select `apps/frontend`)
+- If Vercel pre-fills an example environment variable, delete it before deploying
+
 5. Click **"Deploy"**
 
 ### 2.5 Wait for Deployment
@@ -175,22 +194,33 @@ git push origin main
 
 ## 🔧 Step 3: Update Backend CORS
 
-Add the Vercel URL to Render's environment variables:
+Add your production URL(s) to Render's environment variables (comma-separated if more than one):
 
 1. Go to Render Dashboard → `barades-backend` → **Environment** tab
 2. Click **"Add Environment Variable"**
-3. Add:
-   - **Key:** `FRONTEND_URL`
-   - **Value:** `https://barades-3bxrlhne8-theophile-desmedts-projects.vercel.app`
+3. Add or update the variable:
+  - **Key:** `FRONTEND_URL`
+  - **Value:** `https://barades-3bxrlhne8-theophile-desmedts-projects.vercel.app`
 4. Click **"Save Changes"**
 
 Render will automatically redeploy (2-3 minutes).
 
-**Note:** The backend already has this CORS configuration in `apps/backend/src/main.ts`:
+**Note:** The backend uses the comma-separated origins in `apps/backend/src/main.ts`:
 
 ```typescript
+const envOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const origins = [
+  'http://localhost:4200',
+  'http://localhost:4201',
+  ...(envOrigins.length > 0 ? envOrigins : ['https://barades.vercel.app']),
+];
+
 app.enableCors({
-  origin: ['http://localhost:4200', 'http://localhost:4201', process.env.FRONTEND_URL || 'https://barades.vercel.app'],
+  origin: origins,
   credentials: true,
 });
 ```
@@ -277,12 +307,13 @@ www        IN CNAME     a3f5223adabd5435.vercel-dns-017.com.
 
 ### 4.4 Update Backend CORS for Custom Domain
 
-Once DNS propagates and `https://barades.com` works:
+Once DNS propagates and both domains resolve:
 
-1. Go to Render → `barades-backend` → **Environment**
-2. Edit `FRONTEND_URL`
-3. Change to: `https://barades.com`
-4. Save (Render will redeploy)
+1. Decide your canonical domain (e.g., `https://www.barades.com`)
+2. Go to Render → `barades-backend` → **Environment**
+3. Set `FRONTEND_URL` to both domains (comma separated):
+  - Example: `https://barades.com,https://www.barades.com`
+4. Save (Render will redeploy automatically)
 
 ---
 

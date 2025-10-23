@@ -20,12 +20,19 @@ async function bootstrap() {
   );
 
   // Enable CORS for frontend
+  const envOrigins = (process.env.FRONTEND_URL || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  const origins = [
+    'http://localhost:4200',
+    'http://localhost:4201',
+    ...(envOrigins.length > 0 ? envOrigins : ['https://barades.vercel.app']),
+  ];
+
   app.enableCors({
-    origin: [
-      'http://localhost:4200',
-      'http://localhost:4201',
-      process.env.FRONTEND_URL || 'https://barades.vercel.app',
-    ],
+    origin: origins,
     credentials: true,
   });
 
