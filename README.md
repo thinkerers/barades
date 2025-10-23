@@ -1,4 +1,4 @@
-# Barades - Plateforme de Rencontre pour Rôlistes
+# Barades - Plateforme de Rencontre de Joueur sur Table
 
 [![Angular](https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.io/)
 [![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
