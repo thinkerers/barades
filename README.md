@@ -216,8 +216,6 @@ Le projet est configuré pour être déployé sur :
 - **Frontend** : Vercel (configuration dans `vercel.json`)
 - **Backend** : Render (configuration dans `render.yaml`)
 
-Les fichiers de configuration sont prêts ; il suffit de connecter les repos et de définir les variables d'environnement requises.
-
 ---
 
 ## 📄 Licence
