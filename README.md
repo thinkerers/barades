@@ -197,18 +197,6 @@ Les sources se trouvent dans `doc/diagrams/` :
 
 ---
 
-## 📚 Documentation Complète
-
-Consultez le dossier `doc/` pour accéder aux rapports techniques détaillés :
-
-- **Charte graphique** : `doc/charte-graphique.md`
-- **Impact mapping** : `doc/impact-mapping.md`
-- **Rapports journaliers** : `doc/rapport-jour*.md`
-- **Tests manuels** : `doc/TESTS_MANUELS.md`
-- **Bonnes pratiques CI** : `doc/CI_BEST_PRACTICES.md`
-
----
-
 ## 🚢 Déploiement
 
 Le projet est configuré pour être déployé sur :
