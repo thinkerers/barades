@@ -1,6 +1,7 @@
 # 🚀 Deployment Guide - Barades
 
-**Date:** October 22, 2025
+**Last Updated:** October 23, 2025
+**Status:** ✅ Successfully Deployed
 **Target:** Production deployment on Vercel (Frontend) + Render (Backend)
 
 ---
@@ -9,79 +10,103 @@
 
 ### ✅ Prerequisites
 
-- [ ] GitHub repository with all latest changes pushed
-- [ ] Supabase database ready with production data
-- [ ] Resend API key for email service
-- [ ] Vercel account (free tier is sufficient)
-- [ ] Render account (free tier is sufficient)
+- [x] GitHub repository with all latest changes pushed
+- [x] Supabase database ready with production data
+- [x] Resend API key for email service
+- [x] Vercel account (free tier)
+- [x] Render account (free tier)
+- [x] Domain name configured (barades.com)
 
 ### ✅ Environment Variables Ready
 
-- [ ] `DATABASE_URL` (Supabase PostgreSQL connection string)
-- [ ] `JWT_SECRET` (generate a secure random string)
-- [ ] `RESEND_API_KEY` (from Resend dashboard)
+- [x] `DATABASE_URL` (Supabase PostgreSQL connection string with pooling)
+- [x] `JWT_SECRET` (generated via Render's secure generator)
+- [x] `RESEND_API_KEY` (from Resend dashboard)
+- [x] `FRONTEND_URL` (Vercel production URL for CORS)
 
 ---
 
 ## 🎯 Step 1: Deploy Backend to Render
 
-### 1.1 Create Render Service
+### 1.1 Push Code to GitHub
 
-1. Go to https://render.com and sign in
-2. Click **"New +"** → **"Web Service"**
+```bash
+git add .
+git commit -m "chore: prepare for production deployment"
+git push origin main
+```
+
+### 1.2 Create Render Service via Blueprint
+
+1. Go to https://dashboard.render.com and sign in
+2. Click **"New +"** → **"Blueprint"**
 3. Connect your GitHub account if not already done
-4. Select the `barades` repository
-5. Configure the service:
-   - **Name:** `barades-backend`
-   - **Region:** Frankfurt (or closest to your users)
-   - **Branch:** `main`
-   - **Root Directory:** Leave empty (monorepo handled by build command)
-   - **Runtime:** Node
-   - **Build Command:** `npm install && npx nx build backend --configuration=production`
-   - **Start Command:** `node dist/apps/backend/main.js`
-   - **Plan:** Free
+4. Select the `thinkerers/barades` repository
+5. Render will automatically detect `render.yaml` in the root
+6. Name your blueprint: `barades`
 
-### 1.2 Add Environment Variables
+### 1.3 Configure Environment Variables
 
-In the Render dashboard, add these environment variables:
+Render will show you the required environment variables from `render.yaml`:
 
-```env
-NODE_ENV=production
-DATABASE_URL=postgresql://user:password@host:5432/database
-JWT_SECRET=your-super-secret-jwt-key-change-this-NOW
-RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxx
-PORT=3000
-```
+**DATABASE_URL:**
 
-**To generate a secure JWT_SECRET:**
+- Get from Supabase: Settings → Database → Connection String → **Transaction mode** (with pooling)
+- Format: `postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres?pgbouncer=true`
+- Example: `postgresql://postgres.yugtxsppenzskyutjytx:Crayon1-Anew3-Luckiness0-Choking4-Phoney2-Bouncy4-Automatic8-Flask5-Voice7-Aching2@aws-1-eu-west-3.pooler.supabase.com:6543/postgres?pgbouncer=true`
+
+**JWT_SECRET:**
+
+- Click the **"Generate"** button in Render (recommended)
+- Or generate manually: `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`
+
+**RESEND_API_KEY:**
+
+- Get from https://resend.com/api-keys
+- Format: `re_xxxxxxxxxxxxxxxxxxxxxxxxxx`
+
+### 1.4 Configure Supabase IP Allowlist
+
+⚠️ **Critical Step:** Render's IPs must be allowed by Supabase
+
+1. Go to Render Dashboard → Your Service → **"Outbound"** tab
+2. Copy the outbound IP addresses shown (e.g., `18.156.158.53`, `52.59.103.54`, etc.)
+3. Go to Supabase Dashboard → Settings → Database → **Network Restrictions**
+4. Add each Render IP address:
+   - Current IPs: `18.156.158.53`, `18.156.42.200`, `52.59.103.54`
+   - New IP ranges (from Oct 27, 2025): `74.220.51.0/24`, `74.220.59.0/24`
+5. Click **"Save"**
+
+### 1.5 Deploy
+
+1. Click **"Apply"** to deploy the blueprint
+2. Render will:
+   - Install dependencies
+   - Generate Prisma Client (`npx prisma generate`)
+   - Build backend (`npx nx build backend --configuration=production`)
+   - Start the server (`node dist/apps/backend/main.js`)
+3. Wait for build to complete (5-10 minutes)
+4. Note your backend URL: `https://barades-backend.onrender.com`
+
+### 1.6 Verify Backend Deployment
 
 ```bash
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-```
-
-### 1.3 Deploy
-
-1. Click **"Create Web Service"**
-2. Wait for the build to complete (5-10 minutes)
-3. Once deployed, note your backend URL: `https://barades-backend.onrender.com`
-
-### 1.4 Test Backend
-
-```bash
-# Test health endpoint
+# Test API health
 curl https://barades-backend.onrender.com/api
 
 # Test sessions endpoint
 curl https://barades-backend.onrender.com/api/sessions
 ```
 
+Expected: JSON response with sessions data or empty array
+
 ---
 
 ## 🎨 Step 2: Deploy Frontend to Vercel
 
-### 2.1 Update Backend URL
+### 2.1 Update Backend URL in Code
 
-First, update the production environment file with your actual Render URL:
+Update the production environment file with your actual Render backend URL:
 
 **File:** `apps/frontend/src/environments/environment.prod.ts`
 
@@ -113,76 +138,294 @@ export const environment = {
 
 ```bash
 git add apps/frontend/src/environments/environment.prod.ts vercel.json
-git commit -m "chore: update production backend URL for deployment"
+git commit -m "feat: configure frontend to use production backend URL"
 git push origin main
 ```
 
-### 2.3 Deploy to Vercel
+### 2.3 Make Repository Public (Required for Vercel Free Tier)
+
+1. Go to https://github.com/thinkerers/barades
+2. Click **Settings**
+3. Scroll to **"Danger Zone"**
+4. Click **"Change visibility"** → **"Make public"**
+5. Type repository name to confirm
+
+⚠️ **Ensure no secrets are committed** (`.env` files are in `.gitignore`)
+
+### 2.4 Deploy to Vercel
 
 1. Go to https://vercel.com and sign in
-2. Click **"Add New"** → **"Project"**
-3. Import your `barades` repository from GitHub
+2. Click **"Add New..."** → **"Project"**
+3. Import `thinkerers/barades` repository
 4. Configure the project:
-
-   - **Framework Preset:** Other
-   - **Root Directory:** Leave as is
+   - **Framework Preset:** Angular (auto-detected)
+   - **Root Directory:** `./`
    - **Build Command:** `npx nx build frontend --configuration=production`
    - **Output Directory:** `dist/apps/frontend/browser`
-   - **Install Command:** `npm install`
-
+   - **Environment Variables:** None needed (hardcoded in environment.prod.ts)
 5. Click **"Deploy"**
 
-### 2.4 Wait for Deployment
+### 2.5 Wait for Deployment
 
-- First deployment takes ~5-10 minutes
-- Vercel will provide a URL like: `https://barades-xxxxx.vercel.app`
-- You can add a custom domain later if desired
+- First deployment takes ~3-5 minutes
+- Vercel provides a URL: `https://barades-3bxrlhne8-theophile-desmedts-projects.vercel.app`
+- Note this URL for the next step
 
 ---
 
 ## 🔧 Step 3: Update Backend CORS
 
-Once you have your Vercel URL, update the backend CORS settings:
+Add the Vercel URL to Render's environment variables:
 
-**File:** `apps/backend/src/main.ts`
+1. Go to Render Dashboard → `barades-backend` → **Environment** tab
+2. Click **"Add Environment Variable"**
+3. Add:
+   - **Key:** `FRONTEND_URL`
+   - **Value:** `https://barades-3bxrlhne8-theophile-desmedts-projects.vercel.app`
+4. Click **"Save Changes"**
 
-Update the CORS configuration to allow your Vercel domain:
+Render will automatically redeploy (2-3 minutes).
+
+**Note:** The backend already has this CORS configuration in `apps/backend/src/main.ts`:
 
 ```typescript
 app.enableCors({
-  origin: [
-    'http://localhost:4200',
-    'https://barades-xxxxx.vercel.app', // Replace with your actual Vercel URL
-    'https://barades.vercel.app', // If you set up a custom domain
-  ],
+  origin: ['http://localhost:4200', 'http://localhost:4201', process.env.FRONTEND_URL || 'https://barades.vercel.app'],
   credentials: true,
 });
 ```
 
-Then redeploy the backend:
+---
 
-```bash
-git add apps/backend/src/main.ts
-git commit -m "chore: update CORS for production frontend URL"
-git push origin main
+## 🌐 Step 4: Configure Custom Domain (barades.com)
+
+### 4.1 Add Domain to Vercel
+
+1. Go to Vercel Dashboard → Your `barades` project
+2. Click **"Settings"** → **"Domains"**
+3. Click **"Add"**
+4. Enter `barades.com` → Select **"Production"** environment → **"Save"**
+5. Also add `www.barades.com` → Select **"Production"** → **"Save"**
+
+Vercel will show DNS records to configure.
+
+### 4.2 Update DNS Records at OVH
+
+Edit your DNS zone file in **text mode**:
+
+**Before:**
+
+```dns
+@    IN A     51.91.236.255
+www  IN A     51.91.236.255
+www  IN AAAA  2001:41d0:301::29
+www  IN TXT   "3|welcome"
 ```
 
-Render will auto-deploy the changes (if auto-deploy is enabled).
+**After:**
+
+```dns
+@    IN A     216.198.79.1
+www  IN CNAME a3f5223adabd5435.vercel-dns-017.com.
+```
+
+**Complete zone file (keep all email records):**
+
+```dns
+$TTL 3600
+@	IN SOA dns200.anycast.me. tech.ovh.net. (2025102301 86400 3600 3600000 60)
+        IN NS     dns200.anycast.me.
+        IN NS     ns200.anycast.me.
+        IN NS     piper.ns.cloudflare.com.
+        IN NS     renan.ns.cloudflare.com.
+        IN MX     1 mx1.mail.ovh.net.
+        IN MX     5 mx2.mail.ovh.net.
+        IN MX     100 mx3.mail.ovh.net.
+        IN A     216.198.79.1
+        IN TXT     "v=spf1 include:mx.ovh.com -all"
+_autodiscover._tcp        IN SRV     0 0 443 mailconfig.ovh.net.
+_dmarc        IN TXT     "v=DMARC1; p=none;"
+_imaps._tcp        IN SRV     0 0 993 ssl0.ovh.net.
+_submission._tcp        IN SRV     0 0 465 ssl0.ovh.net.
+autoconfig        IN CNAME     mailconfig.ovh.net.
+autodiscover        IN CNAME     mailconfig.ovh.net.
+ftp        IN CNAME     barades.com.
+imap        IN CNAME     ssl0.ovh.net.
+mail        IN CNAME     ssl0.ovh.net.
+ovhmo5366088-selector1._domainkey        IN CNAME     ovhmo5366088-selector1._domainkey.4037928.fk.dkim.mail.ovh.net.
+ovhmo5366088-selector2._domainkey        IN CNAME     ovhmo5366088-selector2._domainkey.4037927.fk.dkim.mail.ovh.net.
+pop3        IN CNAME     ssl0.ovh.net.
+resend._domainkey        IN TXT     "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCrYp/Uj6nJG1Ev55rjnSVj5Q8p7IAitgI6uqDuzsQCLbCYuCjVfemeyPWkolHIgoFLbI/p9rxDsO+XO/tuLFiFffCbiqV4seKM3bxJO3fRkFmNO9PvdMXnuD6KA3/a9aa9x4um3hONqMy4JfPCmkCCDI+E0eUSVRhjxBxBVxLWSwIDAQAB"
+send        IN MX     10 feedback-smtp.eu-west-1.amazonses.com.
+send        IN TXT     "v=spf1 include:amazonses.com ~all"
+smtp        IN CNAME     ssl0.ovh.net.
+www        IN CNAME     a3f5223adabd5435.vercel-dns-017.com.
+```
+
+**Key changes:**
+
+- Apex `@` points to Vercel's IP: `216.198.79.1`
+- `www` is a CNAME to Vercel: `a3f5223adabd5435.vercel-dns-017.com.`
+- Removed `www` AAAA and TXT records (conflict with CNAME)
+- All email records preserved
+
+### 4.3 Wait for DNS Propagation
+
+- DNS changes take **10-30 minutes** (up to 48 hours maximum)
+- Check propagation: https://dnschecker.org → Enter `barades.com` and `www.barades.com`
+- Vercel will auto-issue SSL certificate once DNS is detected
+
+### 4.4 Update Backend CORS for Custom Domain
+
+Once DNS propagates and `https://barades.com` works:
+
+1. Go to Render → `barades-backend` → **Environment**
+2. Edit `FRONTEND_URL`
+3. Change to: `https://barades.com`
+4. Save (Render will redeploy)
 
 ---
 
-## ✅ Step 4: Verify Deployment
+## ✅ Step 5: Verify Deployment
 
-### 4.1 Test Frontend
+### 5.1 Test Vercel Deployment
 
-1. Visit your Vercel URL: `https://barades-xxxxx.vercel.app`
-2. Check that the homepage loads
-3. Try navigating to different pages
+Visit your deployment URL:
 
-### 4.2 Test Backend Connection
+- **Vercel URL:** `https://barades-3bxrlhne8-theophile-desmedts-projects.vercel.app`
+- **Custom Domain:** `https://barades.com` (after DNS propagates)
+- **WWW:** `https://www.barades.com` (after DNS propagates)
 
-1. Go to Sessions page
-2. Verify sessions load from the backend
+### 5.2 Test Frontend-Backend Connection
+
+1. Open the Vercel URL in your browser
+2. Navigate to **Sessions** page
+3. Verify sessions load from Render backend
+4. Check browser console for any CORS errors
+5. Test authentication flow (signup/login)
+
+### 5.3 Test Full User Flow
+
+- [ ] Homepage loads with gradient and navigation
+- [ ] Sessions list displays correctly
+- [ ] Map view shows session locations
+- [ ] User can sign up / log in
+- [ ] Authenticated users can create sessions
+- [ ] Reservations work correctly
+- [ ] Email notifications sent via Resend
+
+### 5.4 Monitor Logs
+
+**Render Backend Logs:**
+
+- Go to Render Dashboard → `barades-backend` → **Logs** tab
+- Watch for any errors or warnings
+
+**Vercel Frontend Logs:**
+
+- Go to Vercel Dashboard → Your project → **Deployments** → Latest → **Logs**
+- Check for build warnings or runtime errors
+
+---
+
+## 🔧 Troubleshooting
+
+### Issue: CORS Errors
+
+**Symptom:** Browser console shows `Access-Control-Allow-Origin` errors
+
+**Solution:**
+
+1. Verify `FRONTEND_URL` environment variable is set in Render
+2. Check the value matches your actual Vercel/domain URL (no trailing slash)
+3. Redeploy backend after changing environment variables
+
+### Issue: DNS Not Propagating
+
+**Symptom:** `barades.com` shows `ERR_CONNECTION_CLOSED` or old site
+
+**Solution:**
+
+1. Wait 15-30 minutes for DNS propagation
+2. Clear browser cache (Ctrl+Shift+Delete)
+3. Check propagation status: https://dnschecker.org
+4. Verify DNS records in OVH match the configuration above
+
+### Issue: Backend Database Connection Fails
+
+**Symptom:** Render logs show `Address not in tenant allow_list`
+
+**Solution:**
+
+1. Get Render's outbound IPs from: Render Dashboard → Service → **Outbound** tab
+2. Add each IP to Supabase: Settings → Database → Network Restrictions
+3. Redeploy Render service (Manual Deploy)
+
+### Issue: Prisma Client Not Generated
+
+**Symptom:** Build fails with `Property 'user' does not exist on type 'PrismaService'`
+
+**Solution:**
+
+- Verify `render.yaml` includes: `npx prisma generate --schema=apps/backend/prisma/schema.prisma`
+- Current build command:
+  ```bash
+  npm install && npx prisma generate --schema=apps/backend/prisma/schema.prisma && npx nx build backend --configuration=production
+  ```
+
+### Issue: Node Version Mismatch
+
+**Symptom:** Build fails with incompatibility errors
+
+**Solution:**
+
+- Verify `.nvmrc` file exists with: `22.14.0`
+- Verify `package.json` has:
+  ```json
+  "engines": {
+    "node": ">=22.0.0 <23.0.0"
+  }
+  ```
+
+---
+
+## 📊 Production URLs
+
+- **Frontend (Vercel):** https://barades-3bxrlhne8-theophile-desmedts-projects.vercel.app
+- **Custom Domain:** https://barades.com (when DNS propagates)
+- **Backend (Render):** https://barades-backend.onrender.com
+- **Database:** Supabase (eu-west-3)
+- **Email:** Resend
+
+---
+
+## 🔐 Security Checklist
+
+- [x] JWT_SECRET is cryptographically secure (generated by Render)
+- [x] DATABASE_URL uses connection pooling (port 6543)
+- [x] CORS restricted to production domains only
+- [x] Supabase IP allowlist configured for Render IPs
+- [x] Environment variables stored securely (Render dashboard)
+- [x] `.env` files in `.gitignore` (not committed to repo)
+- [x] HTTPS enforced on both frontend and backend
+- [ ] Consider adding rate limiting (future enhancement)
+- [ ] Consider adding Helmet middleware (future enhancement)
+- [ ] Consider adding refresh tokens (future enhancement)
+
+---
+
+## 🚀 Deployment Complete!
+
+**Frontend:** ✅ Live on Vercel
+**Backend:** ✅ Live on Render
+**Database:** ✅ Connected via Supabase
+**Domain:** ⏳ DNS propagating (10-30 minutes)
+
+Your application is now live and accessible at:
+
+- https://barades-3bxrlhne8-theophile-desmedts-projects.vercel.app
+- https://barades.com (after DNS propagates)
+
 3. Try the map view
 4. Check that locations display correctly
 
