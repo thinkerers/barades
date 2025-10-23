@@ -682,4 +682,38 @@ npx nx e2e frontend-e2e
 
 ---
 
+## 🤖 GitHub Actions Deployment Hand-off
+
+Once the initial production deployment is stable, use this checklist to migrate to the GitHub Actions-driven workflow that only redeploys when the impacted Nx projects change.
+
+### Phase 1 – Update Hosting Configuration
+
+- [ ] Vercel → **Project Settings → Git**: disable automatic deployments (disconnect the Git integration).
+- [ ] Render → **Deploys** tab: disable automatic deployments for the service.
+- [ ] Render → **Deploy Hooks**: copy the HTTP hook URL (or generate one) for manual deploys.
+- [ ] Vercel → **Project Settings → Deploy Hooks**: create a deploy hook for the production branch and copy the URL.
+
+### Phase 2 – (Optional) Nx Cloud Setup
+
+- [ ] Run `npx nx connect-to-nx-cloud` if the workspace is not already connected.
+- [ ] Copy the generated `NX_CLOUD_ACCESS_TOKEN` and store it as a GitHub secret named `NX_CLOUD_ACCESS_TOKEN` (skip if not using Nx Cloud).
+
+### Phase 3 – Register GitHub Secrets
+
+- [ ] Add `RENDER_DEPLOY_HOOK_URL` with the Render hook URL.
+- [ ] Add `VERCEL_DEPLOY_HOOK_URL` with the Vercel hook URL.
+- [ ] (Optional) Add the Nx Cloud token (`NX_CLOUD_ACCESS_TOKEN`).
+
+### Phase 4 – Verify GitHub Actions Workflows
+
+- [ ] Ensure `.github/workflows/deploy.yml` exists (created earlier) with the conditional deployment logic.
+- [ ] Confirm the workflow runs `npm ci`, sets Nx SHAs, and calls `npx nx print-affected --target=build`.
+- [ ] Confirm the workflow triggers the Render deploy hook only when the `backend` project is affected.
+- [ ] Confirm the workflow triggers the Vercel deploy hook only when the `frontend` project is affected.
+- [ ] (Optional) Add a PR preview workflow if you want review builds via Vercel.
+
+When these items are completed, doc-only commits can merge without redeploying production, and production builds remain reproducible via CI.
+
+---
+
 **Good luck with your deployment! 🚀**
