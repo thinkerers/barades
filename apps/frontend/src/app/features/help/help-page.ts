@@ -51,12 +51,12 @@ export class HelpPage {
       answer:
         'Une session correspond à une partie ponctuelle. Un groupe rassemble des joueurs sur le long terme pour planifier plusieurs aventures ensemble.',
     },
-    {
-      category: 'Utilisation des outils',
-      question: 'Le lanceur de dés est-il vraiment aléatoire ?',
-      answer:
-        "Oui, nous utilisons un générateur pseudo-aléatoire de haute qualité. Chaque lancer est aussi imprévisible qu'avec de vrais dés.",
-    },
+    // {
+    //   category: 'Utilisation des outils',
+    //   question: 'Le lanceur de dés est-il vraiment aléatoire ?',
+    //   answer:
+    //     "Oui, nous utilisons un générateur pseudo-aléatoire de haute qualité. Chaque lancer est aussi imprévisible qu'avec de vrais dés.",
+    // },
   ];
 
   get filteredFaqs(): HelpFaq[] {
