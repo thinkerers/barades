@@ -92,14 +92,36 @@ Render will show you the required environment variables from `render.yaml`:
    - New IP ranges (from Oct 27, 2025): `74.220.51.0/24`, `74.220.59.0/24`
 5. Click **"Save"**
 
-### 1.5 Deploy
+### 1.5 Configure Render Build Filters (avoid doc-only redeploys)
+
+Once the service is created, keep `autoDeploy` enabled but scope it to backend changes only:
+
+1. Open your Render service → **Settings** tab → **Build & Deploy → Build Filters** → **Edit**
+2. Under **Included Paths**, add the following relative paths:
+
+- `apps/backend/**`
+- `package.json`
+- `package-lock.json`
+- `nx.json`
+- `tsconfig.base.json`
+- `tsconfig.json`
+- `render.yaml`
+
+3. Leave **Ignored Paths** empty (filters already exclude everything else)
+4. Save the filters
+
+Render will now skip auto-deploys when commits touch only documentation or unrelated projects.
+
+### 1.6 Deploy
 
 1. Click **"Apply"** to deploy the blueprint
 2. Render will:
-   - Install dependencies
-   - Generate Prisma Client (`npx prisma generate`)
-   - Build backend (`npx nx build backend --configuration=production`)
-   - Start the server (`node dist/apps/backend/main.js`)
+
+- Install dependencies
+- Generate Prisma Client (`npx prisma generate`)
+- Build backend (`npx nx build backend --configuration=production`)
+- Start the server (`node dist/apps/backend/main.js`)
+
 3. Wait for build to complete (5-10 minutes)
 4. Note your backend URL: `https://barades-backend.onrender.com`
 
