@@ -10,10 +10,11 @@
 
 Le projet est structuré en monorepo avec [Nx](https://nx.dev) :
 
-- frontend: PWA [Angular](https://angular.io/)
-- backend: API [NestJS](https://nestjs.com/)
-- base de données : [PostgreSQL](https://www.postgresql.org/)
-- ORM: [Prisma](https://www.prisma.io/).
+- frontend: PWA [Angular](https://angular.io/), hébergé sur vercel
+- backend: API [NestJS](https://nestjs.com/), hébergé sur render
+- base de données : [PostgreSQL](https://www.postgresql.org/), hébergé sur supabase
+
+Envois de mail: resend
 
 ---
 
