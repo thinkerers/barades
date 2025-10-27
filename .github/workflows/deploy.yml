@@ -1,0 +1,64 @@
+name: Conditional Deploys
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  determine-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      NX_DAEMON: "false"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set Nx base and head SHAs
+        uses: nrwl/nx-set-shas@v4
+
+      - name: Detect affected projects with build target
+        id: detect
+        run: |
+          AFFECTED=$(npx nx print-affected --target=build --select=projects | tr ',' '\n' | sed '/^$/d')
+          echo "Affected projects: ${AFFECTED:-<none>}"
+
+          if echo "$AFFECTED" | grep -Fxq "backend"; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "backend=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if echo "$AFFECTED" | grep -Fxq "frontend"; then
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "frontend=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Trigger Render deploy
+        if: steps.detect.outputs.backend == 'true'
+        run: |
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+
+      - name: Trigger Vercel deploy
+        if: steps.detect.outputs.frontend == 'true'
+        run: |
+          curl -fsS -X POST "$VERCEL_DEPLOY_HOOK_URL"
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}

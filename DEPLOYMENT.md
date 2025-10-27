@@ -684,14 +684,17 @@ npx nx e2e frontend-e2e
 
 ## 🤖 GitHub Actions Deployment Hand-off
 
+Goal: keep production deploys reproducible and prevent documentation-only commits from redeploying the apps. Everything ships through CI, and Render/Vercel only build when their projects truly change.
+
 Once the initial production deployment is stable, use this checklist to migrate to the GitHub Actions-driven workflow that only redeploys when the impacted Nx projects change.
 
 ### Phase 1 – Update Hosting Configuration
 
-- [ ] Vercel → **Project Settings → Git**: disable automatic deployments (disconnect the Git integration).
-- [ ] Render → **Deploys** tab: disable automatic deployments for the service.
-- [ ] Render → **Deploy Hooks**: copy the HTTP hook URL (or generate one) for manual deploys.
-- [ ] Vercel → **Project Settings → Deploy Hooks**: create a deploy hook for the production branch and copy the URL.
+- [x] Vercel → **Project Settings → Git**: disable automatic deployments (disconnect the Git integration).
+- [x] Update `vercel.json` with `"git": { "deploymentEnabled": false }` to ensure Vercel respects the CI-only workflow (redeploy the project so the setting takes effect).
+- [x] Render → **Deploys** tab: disable automatic deployments for the service (and set `autoDeploy: false` in `render.yaml`, then re-apply the blueprint).
+- [x] Render → **Deploy Hooks**: copy the HTTP hook URL (or generate one) for manual deploys.
+- [x] Vercel → **Project Settings → Deploy Hooks**: create a deploy hook for the production branch and copy the URL.
 
 ### Phase 2 – (Optional) Nx Cloud Setup
 

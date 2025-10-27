@@ -2,7 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npx nx build frontend --configuration=production",
   "outputDirectory": "dist/apps/frontend/browser",
-  "framework": null,
+  "framework": "angular",
+  "git": {
+    "deploymentEnabled": false
+  },
   "rewrites": [
     {
       "source": "/api/:path*",
