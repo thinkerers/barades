@@ -204,6 +204,8 @@ Le projet est configuré pour être déployé sur :
 - **Frontend** : Vercel (configuration dans `vercel.json`)
 - **Backend** : Render (configuration dans `render.yaml`)
 
+> _Test note (27 Oct 2025)_: cette branche sert aussi à valider que les déploiements Vercel/Render ne sont plus déclenchés automatiquement lorsque seuls des fichiers de documentation changent.
+
 ---
 
 ## 📄 Licence
