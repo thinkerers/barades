@@ -34,8 +34,25 @@ jobs:
       - name: Detect affected projects with build target
         id: detect
         run: |
-          AFFECTED=$(npx nx print-affected --target=build --select=projects | tr ',' '\n' | sed '/^$/d')
-          echo "Affected projects: ${AFFECTED:-<none>}"
+          RAW=$(npx nx show projects --affected --target=build --base="$NX_BASE" --head="$NX_HEAD" --json || echo "[]")
+          AFFECTED=$(RAW_JSON="$RAW" node - <<'NODE'
+          const data = process.env.RAW_JSON || '[]';
+          let arr = [];
+          try {
+            arr = JSON.parse(data);
+          } catch {
+            arr = [];
+          }
+          process.stdout.write(arr.join('\n'));
+          NODE
+          )
+
+          if [ -n "$AFFECTED" ]; then
+            echo "Affected projects:"
+            echo "$AFFECTED"
+          else
+            echo "Affected projects: <none>"
+          fi
 
           if echo "$AFFECTED" | grep -Fxq "backend"; then
             echo "backend=true" >> "$GITHUB_OUTPUT"
