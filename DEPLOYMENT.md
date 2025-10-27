@@ -1,6 +1,6 @@
 # 🚀 Deployment Guide - Barades
 
-**Last Updated:** October 23, 2025
+**Last Updated:** October 28, 2025
 **Status:** ✅ Successfully Deployed
 **Target:** Production deployment on Vercel (Frontend) + Render (Backend)
 
@@ -41,7 +41,7 @@
   ```yaml
   buildCommand: npm install && npx prisma generate --schema=apps/backend/prisma/schema.prisma && npx nx build backend --configuration=production
   ```
-- ✅ `render.yaml` has `autoDeploy: true`
+- ✅ `render.yaml` has `autoDeploy: false`
 
 ### 1.1 Push Code to GitHub
 
@@ -710,9 +710,10 @@ Once the initial production deployment is stable, use this checklist to migrate 
 ### Phase 4 – Verify GitHub Actions Workflows
 
 - [ ] Ensure `.github/workflows/deploy.yml` exists (created earlier) with the conditional deployment logic.
-- [ ] Confirm the workflow runs `npm ci`, sets Nx SHAs, and calls `npx nx print-affected --target=build`.
+- [ ] Confirm the workflow runs `npm ci`, sets Nx SHAs, and calls `npx nx show projects --affected --target=build`.
 - [ ] Confirm the workflow triggers the Render deploy hook only when the `backend` project is affected.
 - [ ] Confirm the workflow triggers the Vercel deploy hook only when the `frontend` project is affected.
+  > ℹ️ **Cost-saving note:** the workflow currently stops after calling the hook. Monitor the Vercel deployment dashboard (and Render logs when applicable) to verify the platform completed the deploy successfully.
 - [ ] (Optional) Add a PR preview workflow if you want review builds via Vercel.
 
 When these items are completed, doc-only commits can merge without redeploying production, and production builds remain reproducible via CI.
