@@ -34,18 +34,7 @@ jobs:
       - name: Detect affected projects with build target
         id: detect
         run: |
-          RAW=$(npx nx show projects --affected --target=build --base="$NX_BASE" --head="$NX_HEAD" --json || echo "[]")
-          AFFECTED=$(RAW_JSON="$RAW" node - <<'NODE'
-          const data = process.env.RAW_JSON || '[]';
-          let arr = [];
-          try {
-            arr = JSON.parse(data);
-          } catch {
-            arr = [];
-          }
-          process.stdout.write(arr.join('\n'));
-          NODE
-          )
+          AFFECTED=$(npx nx show projects --affected --target=build --base="$NX_BASE" --head="$NX_HEAD" || echo "")
 
           if [ -n "$AFFECTED" ]; then
             echo "Affected projects:"
