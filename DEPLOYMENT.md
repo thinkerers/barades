@@ -1,7 +1,5 @@
 # Barades.com: Deployment Reference Guide
 
-This document explains the production deployment architecture for the Barades TFE project. It covers the services used, the CI/CD workflow, and key operational procedures for maintenance and troubleshooting.
-
 ## 1. High-Level Overview
 
 The deployment strategy is split across best-in-class providers, coordinated by a central CI/CD workflow:
