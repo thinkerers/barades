@@ -380,9 +380,7 @@ export class EmailService {
     const statusColor = isConfirmed ? '#4caf50' : '#f44336';
     const statusIcon = isConfirmed ? '✅' : '❌';
     const statusText = isConfirmed ? 'confirmée' : 'refusée';
-    const headerGradient = isConfirmed
-      ? 'linear-gradient(135deg, #4caf50 0%, #8bc34a 100%)'
-      : 'linear-gradient(135deg, #f44336 0%, #e91e63 100%)';
+    const titleText = isConfirmed ? 'Réservation confirmée' : 'Réservation refusée';
 
     return `
 <!DOCTYPE html>
@@ -390,9 +388,10 @@ export class EmailService {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${titleText}</title>
 </head>
 <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-  <div style="background: ${headerGradient}; color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
     <h1 style="margin: 0; font-size: 28px;">🎲 Barades</h1>
     <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">${statusIcon} Réservation ${statusText}</p>
   </div>
@@ -408,7 +407,8 @@ export class EmailService {
     <p>Voici les détails de la session concernée :</p>`
     }
     
-    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${statusColor};">
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <h2 style="margin-top: 0; color: #667eea; font-size: 18px;">📅 Détails de la session</h2>
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="padding: 8px 0; color: #666; width: 40%;">🎮 Session</td>
@@ -432,7 +432,7 @@ export class EmailService {
     ${
       isConfirmed
         ? `<div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; margin: 20px 0; border-radius: 4px;">
-      <p style="margin: 0; color: #1b5e20;">
+      <p style="margin: 0; color: #2e7d32;">
         <strong>🎉 Préparez-vous pour la partie !</strong><br/>
         N'hésitez pas à contacter l'organisateur si vous avez des questions.
       </p>
@@ -451,6 +451,9 @@ export class EmailService {
   
   <div style="text-align: center; margin-top: 20px; padding: 20px; color: #999; font-size: 12px;">
     <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+    <p style="margin-top: 10px;">
+      <strong>Vision future :</strong> Propulsé par Resend, évolution vers Mailcoach (solution belge) pour la production.
+    </p>
   </div>
 </body>
 </html>
