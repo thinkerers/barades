@@ -17,6 +17,7 @@ import {
   AsyncStateComponent,
   AsyncStateStatus,
   GroupCardComponent,
+  SessionsScopeBanner,
 } from '@org/ui';
 import { EmptyError, Subject, firstValueFrom, timer } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -31,7 +32,7 @@ import {
 @Component({
   selector: 'app-groups-list',
   standalone: true,
-  imports: [GroupCardComponent, AsyncStateComponent, RouterLink],
+  imports: [GroupCardComponent, AsyncStateComponent, RouterLink, SessionsScopeBanner],
   templateUrl: './groups-list.html',
   styleUrl: './groups-list.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -205,6 +206,18 @@ export class GroupsListComponent implements OnInit {
   retry(): void {
     this.clearAutoRetry();
     void this.loadGroups();
+  }
+
+  returnToDashboard(): void {
+    this.router.navigate(['/dashboard']);
+  }
+
+  clearScopeFilter(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { filter: null, from: null },
+      queryParamsHandling: 'merge',
+    });
   }
 
   viewGroupDetails(groupId: string): void {

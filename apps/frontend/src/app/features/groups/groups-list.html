@@ -2,17 +2,17 @@
   <header class="groups-header">
     <h1>{{ pageTitle() }}</h1>
     <p>{{ pageSubtitle() }}</p>
-  </header>
 
-  @if (scopeBannerMessage()) {
-  <div class="scope-banner" role="status">
-    <span class="scope-banner__icon" aria-hidden="true">🎯</span>
-    <span>{{ scopeBannerMessage() }}</span>
-    @if (comingFromDashboard()) {
-    <a routerLink="/groups" class="scope-banner__link">Voir tous les groupes</a>
+    @if (isScopeFilterActive()) {
+    <lib-sessions-scope-banner
+      [message]="scopeBannerMessage()"
+      [showBackAction]="comingFromDashboard()"
+      [clearActionLabel]="'Voir tous les groupes'"
+      (backAction)="returnToDashboard()"
+      (clearAction)="clearScopeFilter()"
+    ></lib-sessions-scope-banner>
     }
-  </div>
-  }
+  </header>
 
   @if (isOffline()) {
   <div class="offline-banner" role="status">

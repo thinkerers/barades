@@ -126,37 +126,6 @@
   background-color: var(--color-primary-dark, #4338ca);
 }
 
-/* Scope Banner */
-.scope-banner {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.875rem 1.25rem;
-  border-radius: 0.5rem;
-  background-color: rgba(79, 70, 229, 0.08);
-  color: var(--color-text-primary, #1a1a1a);
-  border: 1px solid rgba(79, 70, 229, 0.2);
-  margin-bottom: 1.5rem;
-  font-size: 0.95rem;
-}
-
-.scope-banner__icon {
-  font-size: 1.125rem;
-}
-
-.scope-banner__link {
-  margin-left: auto;
-  color: var(--color-primary, #4f46e5);
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.15s ease;
-}
-
-.scope-banner__link:hover {
-  color: var(--color-primary-dark, #4338ca);
-  text-decoration: underline;
-}
-
 /* Empty State */
 .empty-state {
   display: flex;
