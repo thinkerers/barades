@@ -16,22 +16,23 @@ datasource db {
 }
 
 model User {
-  id             String        @id @default(uuid())
-  email          String        @unique
-  username       String        @unique
-  passwordHash   String
-  firstName      String?
-  lastName       String?
-  bio            String?
-  avatar         String?
-  skillLevel     SkillLevel?
-  preferences    Json?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  groupMembers   GroupMember[]
-  createdGroups  Group[]       @relation("GroupCreator")
-  reservations   Reservation[]
-  hostedSessions Session[]
+  id               String        @id @default(uuid())
+  email            String        @unique
+  username         String        @unique
+  passwordHash     String
+  firstName        String?
+  lastName         String?
+  bio              String?
+  avatar           String?
+  skillLevel       SkillLevel?
+  preferences      Json?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  groupMembers     GroupMember[]
+  createdGroups    Group[]       @relation("GroupCreator")
+  createdLocations Location[]    @relation("LocationCreator")
+  reservations     Reservation[]
+  hostedSessions   Session[]
 
   @@map("users")
 }
@@ -55,7 +56,7 @@ model Session {
   locationId        String?
   reservations      Reservation[]
   host              User          @relation(fields: [hostId], references: [id], onDelete: Cascade)
-  location          Location?     @relation(fields: [locationId], references: [id])
+  location          Location?     @relation(fields: [locationId], references: [id], onDelete: SetNull)
 
   @@index([date])
   @@index([hostId])
@@ -77,12 +78,16 @@ model Location {
   lat          Float
   lon          Float
   website      String?
+  isPrivate    Boolean      @default(false)
+  creatorId    String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   sessions     Session[]
+  creator      User?        @relation("LocationCreator", fields: [creatorId], references: [id])
 
   @@index([city])
   @@index([lat, lon])
+  @@index([creatorId])
   @@map("locations")
 }
 

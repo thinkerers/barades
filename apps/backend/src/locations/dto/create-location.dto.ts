@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsArray,
   IsUrl,
+  IsBoolean,
   Min,
   Max,
   MinLength,
@@ -58,4 +59,8 @@ export class CreateLocationDto {
   @IsOptional()
   @IsString()
   icon?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isPrivate?: boolean;
 }
