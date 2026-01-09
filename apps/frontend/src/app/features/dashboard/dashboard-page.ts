@@ -6,7 +6,7 @@ import {
   PendingTasks,
   signal,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom, forkJoin } from 'rxjs';
 import { GroupsService } from '../../core/services/groups.service';
 import { ReservationsService } from '../../core/services/reservations.service';
@@ -40,6 +40,7 @@ interface UpcomingAction {
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
+  imports: [RouterLink],
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

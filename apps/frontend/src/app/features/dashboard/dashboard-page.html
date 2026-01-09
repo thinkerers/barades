@@ -1,9 +1,20 @@
 <section class="dashboard">
   <header class="dashboard__header">
-    <h1>Tableau de bord</h1>
-    <p class="dashboard__subtitle">
-      Visualisez un aperçu rapide de vos activités, sessions et groupes.
-    </p>
+    <div class="dashboard__header-top">
+      <div>
+        <h1>Tableau de bord</h1>
+        <p class="dashboard__subtitle">
+          Visualisez un aperçu rapide de vos activités, sessions et groupes.
+        </p>
+      </div>
+      <a routerLink="/sessions/new" class="dashboard__create-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Créer une session
+      </a>
+    </div>
   </header>
 
   @if (loading()) {
