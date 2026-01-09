@@ -138,7 +138,9 @@
 
         <div id="locations-details">
           @if (!isDetailsCollapsed) {
-          <h2 class="locations-details__heading">Détails du lieu</h2>
+          <h2 class="locations-details__heading">
+            {{ selectedLocation ? 'Détails du lieu' : 'Lieux disponibles' }}
+          </h2>
 
           <div class="locations-details__content">
             @if (selectedLocation; as location) {
@@ -218,15 +220,63 @@
               </section>
             </article>
             } @else {
-            <div class="locations-details__placeholder">
-              <mat-icon aria-hidden="true">touch_app</mat-icon>
-              <div>
-                <h3>Sélectionnez un lieu sur la carte</h3>
-                <p>
-                  Cliquez sur un indicateur ou sur une entrée de la carte pour
-                  afficher ses informations détaillées ici.
-                </p>
+            <!-- Liste des lieux (quand aucun lieu sélectionné) -->
+            <div class="location-cards">
+              @for (location of filteredLocations; track location.id) {
+              <article
+                class="location-card"
+                [class.selected]="selectedLocationId === location.id"
+                (click)="onLocationClick(location.id)"
+                role="button"
+                tabindex="0"
+                (keydown.enter)="onLocationClick(location.id)"
+                (keydown.space)="onLocationClick(location.id)"
+              >
+                <header class="location-header">
+                  <h3>{{ location.name }}</h3>
+                  <span class="location-type">{{ getLocationTypeLabel(location.type) }}</span>
+                </header>
+                <div class="location-info">
+                  @if (location.address || location.city) {
+                  <div class="info-row">
+                    <mat-icon aria-hidden="true">place</mat-icon>
+                    <span>{{ location.address ? (location.address + ', ' + location.city) : location.city }}</span>
+                  </div>
+                  }
+                  <div class="info-row">
+                    <mat-icon aria-hidden="true">star</mat-icon>
+                    <span>{{ location.rating.toFixed(1) }}/5</span>
+                  </div>
+                  @if (location.capacity) {
+                  <div class="info-row">
+                    <mat-icon aria-hidden="true">groups</mat-icon>
+                    <span>{{ location.capacity }} pers.</span>
+                  </div>
+                  }
+                </div>
+                @if (location.amenities.length > 0) {
+                <div class="amenities">
+                  @for (amenity of location.amenities.slice(0, 3); track amenity) {
+                  <span class="amenity-tag">
+                    <mat-icon aria-hidden="true">{{ getAmenityIconName(amenity) }}</mat-icon>
+                    {{ amenity }}
+                  </span>
+                  }
+                  @if (location.amenities.length > 3) {
+                  <span class="amenity-tag">+{{ location.amenities.length - 3 }}</span>
+                  }
+                </div>
+                }
+              </article>
+              } @empty {
+              <div class="locations-list__empty">
+                <mat-icon aria-hidden="true">search_off</mat-icon>
+                <div>
+                  <h3>Aucun lieu trouvé</h3>
+                  <p>Essayez de modifier vos filtres de recherche.</p>
+                </div>
               </div>
+              }
             </div>
             }
           </div>
