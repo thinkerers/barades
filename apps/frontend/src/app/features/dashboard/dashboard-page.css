@@ -22,6 +22,12 @@
   flex-wrap: wrap;
 }
 
+.dashboard__header-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
 .dashboard__create-btn {
   display: inline-flex;
   align-items: center;
@@ -50,6 +56,16 @@
 
 .dashboard__create-btn svg {
   flex-shrink: 0;
+}
+
+.dashboard__create-btn--secondary {
+  background: rgba(75, 85, 99, 0.6);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.dashboard__create-btn--secondary:hover {
+  background: rgba(99, 102, 241, 0.3);
+  border-color: rgba(99, 102, 241, 0.5);
 }
 
 .dashboard__subtitle {

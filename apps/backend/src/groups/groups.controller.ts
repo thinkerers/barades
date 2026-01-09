@@ -23,10 +23,10 @@ export class GroupsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   create(
-    @CurrentUser() _userId: string,
+    @CurrentUser() userId: string,
     @Body() createGroupDto: CreateGroupDto
   ) {
-    return this.groupsService.create(createGroupDto);
+    return this.groupsService.create(createGroupDto, userId);
   }
 
   @Get()

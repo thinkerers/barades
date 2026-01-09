@@ -13,9 +13,50 @@ import { UpdateGroupDto } from './dto/update-group.dto';
 export class GroupsService {
   constructor(private prisma: PrismaService) {}
 
-  create(_createGroupDto: CreateGroupDto) {
-    // TODO: Implement with proper Zod validation
-    throw new Error('Method not implemented yet');
+  async create(createGroupDto: CreateGroupDto, userId: string) {
+    // Create the group with the user as creator
+    const group = await this.prisma.group.create({
+      data: {
+        name: createGroupDto.name,
+        games: createGroupDto.games,
+        location: createGroupDto.location,
+        playstyle: createGroupDto.playstyle,
+        description: createGroupDto.description,
+        recruiting: createGroupDto.recruiting ?? true,
+        isPublic: createGroupDto.isPublic ?? true,
+        avatar: createGroupDto.avatar,
+        creatorId: userId,
+        // Automatically add creator as ADMIN member
+        members: {
+          create: {
+            userId: userId,
+            role: 'ADMIN',
+          },
+        },
+      },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+          },
+        },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                avatar: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return group;
   }
 
   async findAll(userId?: string) {

@@ -1,0 +1,172 @@
+<div class="create-group-page">
+  <header class="create-group-page__header">
+    <h1>Créer un nouveau groupe</h1>
+    <p>Rassemblez des joueurs autour de vos jeux préférés</p>
+  </header>
+
+  <form [formGroup]="groupForm" (ngSubmit)="onSubmit()" class="group-form">
+    <!-- Error Message -->
+    @if (error(); as errorMessage) {
+    <div class="error-message">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      {{ errorMessage }}
+    </div>
+    }
+
+    <!-- Name -->
+    <div class="form-group">
+      <label for="name">
+        Nom du groupe <span class="required">*</span>
+      </label>
+      <input
+        type="text"
+        id="name"
+        formControlName="name"
+        placeholder="ex: Les Aventuriers de Bruxelles"
+        [class.error]="groupForm.get('name')?.touched && groupForm.get('name')?.invalid"
+      />
+      @if (groupForm.get('name')?.touched && groupForm.get('name')?.invalid) {
+      <span class="error-text">{{ getErrorMessage('name') }}</span>
+      }
+    </div>
+
+    <!-- Games -->
+    <div class="form-group">
+      <label for="gameInput">
+        Jeux pratiqués <span class="required">*</span>
+      </label>
+      <div class="game-input-row">
+        <input
+          type="text"
+          id="gameInput"
+          formControlName="gameInput"
+          list="game-list"
+          placeholder="Tapez un jeu et appuyez sur Entrée"
+          (keydown)="onGameInputKeydown($event)"
+        />
+        <button type="button" class="button button--secondary" (click)="addGame()">
+          Ajouter
+        </button>
+      </div>
+      <datalist id="game-list">
+        @for (game of existingGames(); track game) {
+        <option [value]="game">{{ game }}</option>
+        }
+      </datalist>
+      @if (selectedGames().length > 0) {
+      <div class="selected-games">
+        @for (game of selectedGames(); track game) {
+        <span class="game-tag">
+          {{ game }}
+          <button type="button" class="game-tag__remove" (click)="removeGame(game)">×</button>
+        </span>
+        }
+      </div>
+      }
+      @if (selectedGames().length === 0) {
+      <span class="hint-text">Ajoutez au moins un jeu pour votre groupe</span>
+      }
+    </div>
+
+    <!-- Location & Playstyle -->
+    <div class="form-row">
+      <div class="form-group">
+        <label for="location">
+          Localisation <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="location"
+          formControlName="location"
+          placeholder="ex: Bruxelles, Belgique"
+          [class.error]="groupForm.get('location')?.touched && groupForm.get('location')?.invalid"
+        />
+        @if (groupForm.get('location')?.touched && groupForm.get('location')?.invalid) {
+        <span class="error-text">{{ getErrorMessage('location') }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="playstyle">
+          Style de jeu <span class="required">*</span>
+        </label>
+        <select id="playstyle" formControlName="playstyle">
+          @for (style of playstyles; track style.value) {
+          <option [value]="style.value">{{ style.label }}</option>
+          }
+        </select>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="form-group">
+      <label for="description">
+        Description <span class="required">*</span>
+      </label>
+      <textarea
+        id="description"
+        formControlName="description"
+        rows="4"
+        placeholder="Décrivez votre groupe, son ambiance, ce que vous recherchez chez les nouveaux membres..."
+        [class.error]="groupForm.get('description')?.touched && groupForm.get('description')?.invalid"
+      ></textarea>
+      @if (groupForm.get('description')?.touched && groupForm.get('description')?.invalid) {
+      <span class="error-text">{{ getErrorMessage('description') }}</span>
+      }
+    </div>
+
+    <!-- Options -->
+    <div class="form-row">
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="recruiting" />
+          <span>Recrutement ouvert</span>
+        </label>
+        <span class="hint-text">Les joueurs pourront demander à rejoindre le groupe</span>
+      </div>
+
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="isPublic" />
+          <span>Groupe public</span>
+        </label>
+        <span class="hint-text">Le groupe sera visible par tous les utilisateurs</span>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button
+        type="button"
+        (click)="cancel()"
+        class="button button--secondary"
+        [disabled]="loading()"
+      >
+        Annuler
+      </button>
+      <button
+        type="submit"
+        class="button button--primary"
+        [disabled]="loading() || groupForm.invalid || selectedGames().length === 0"
+      >
+        @if (!loading()) {
+        <span>Créer le groupe</span>
+        } @else {
+        <span>Création en cours...</span>
+        }
+      </button>
+    </div>
+  </form>
+</div>

@@ -51,6 +51,17 @@ export interface LeaveGroupResponse {
   isRecruiting: boolean;
 }
 
+export interface CreateGroupData {
+  name: string;
+  games: string[];
+  location: string;
+  playstyle: 'CASUAL' | 'COMPETITIVE' | 'STORY_DRIVEN' | 'SOCIAL';
+  description: string;
+  recruiting?: boolean;
+  isPublic?: boolean;
+  avatar?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -91,9 +102,10 @@ export class GroupsService {
   }
 
   // TODO Day 4: Implement POST/PATCH/DELETE
-  createGroup(data: Partial<Group>): Observable<Group> {
-    void data;
-    throw new Error('Not implemented yet');
+  createGroup(data: CreateGroupData): Observable<Group> {
+    return this.http
+      .post<Group>(this.apiUrl, data)
+      .pipe(tap(() => this.invalidateGroupsCache()));
   }
 
   updateGroup(id: string, data: Partial<Group>): Observable<Group> {

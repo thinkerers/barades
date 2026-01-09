@@ -76,6 +76,14 @@ export const appRoutes: Route[] = [
           ),
       },
       {
+        path: 'groups/new',
+        loadComponent: () =>
+          import('./features/groups/group-create').then(
+            (m) => m.GroupCreateComponent
+          ),
+        canActivate: [authGuard],
+      },
+      {
         path: 'groups/:id',
         loadComponent: () =>
           import('./features/groups/group-detail').then(
