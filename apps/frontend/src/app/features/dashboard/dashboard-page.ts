@@ -65,8 +65,8 @@ export class DashboardPage implements OnInit {
 
     this.error.set(null);
 
-    try {
-      await this.pendingTasks.run(async () => {
+    await this.pendingTasks.run(async () => {
+      try {
         const data = await firstValueFrom(
           forkJoin({
             sessionStats: this.sessionsService.getCreatedByMeStats(),
@@ -107,15 +107,15 @@ export class DashboardPage implements OnInit {
         ]);
 
         this.upcomingActions.set(this.buildUpcomingActions(data.actionItems));
-      });
-    } catch (err) {
-      // Clear timeout on error as well
-      clearTimeout(loadingTimeout);
-      console.error('Error loading dashboard data:', err);
-      this.error.set('Impossible de charger les données du dashboard');
-    } finally {
-      this.loading.set(false);
-    }
+      } catch (err) {
+        // Clear timeout on error as well
+        clearTimeout(loadingTimeout);
+        console.error('Error loading dashboard data:', err);
+        this.error.set('Impossible de charger les données du dashboard');
+      } finally {
+        this.loading.set(false);
+      }
+    });
   }
 
   private buildUpcomingActions(actionItems: ActionItems): UpcomingAction[] {
