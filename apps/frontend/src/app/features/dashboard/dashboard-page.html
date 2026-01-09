@@ -43,13 +43,49 @@
     <p class="dashboard__no-actions">Aucune action à venir</p>
     } @else {
     <ul>
-      @for (action of upcomingActions(); track action.title) {
-      <li class="dashboard__action-item">
-        <h3>{{ action.title }}</h3>
-        <p>{{ action.description }}</p>
-        <span class="dashboard__action-date">
-          À faire avant le {{ action.dueDate }}
-        </span>
+      @for (action of upcomingActions(); track action.reservationId ?? action.sessionId ?? action.title) {
+      <li class="dashboard__action-item" [class.dashboard__action-item--processing]="action.processing">
+        <div class="dashboard__action-content">
+          <h3>{{ action.title }}</h3>
+          <p>{{ action.description }}</p>
+          <span class="dashboard__action-date">
+            À faire avant le {{ action.dueDate }}
+          </span>
+        </div>
+        @if (action.type === 'pending-reservation') {
+        <div class="dashboard__action-buttons">
+          <button
+            class="dashboard__action-btn dashboard__action-btn--confirm"
+            [disabled]="action.processing"
+            (click)="confirmReservation(action)"
+            title="Confirmer la réservation"
+          >
+            @if (action.processing) {
+            <span>...</span>
+            } @else {
+            <span>✓ Confirmer</span>
+            }
+          </button>
+          <button
+            class="dashboard__action-btn dashboard__action-btn--reject"
+            [disabled]="action.processing"
+            (click)="rejectReservation(action)"
+            title="Refuser la réservation"
+          >
+            <span>✗ Refuser</span>
+          </button>
+        </div>
+        } @else if (action.type === 'upcoming-session') {
+        <div class="dashboard__action-buttons">
+          <button
+            class="dashboard__action-btn dashboard__action-btn--view"
+            (click)="viewSession(action)"
+            title="Voir la session"
+          >
+            Voir détails
+          </button>
+        </div>
+        }
       </li>
       }
     </ul>

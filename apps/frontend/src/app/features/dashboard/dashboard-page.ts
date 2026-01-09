@@ -25,10 +25,16 @@ interface DashboardStat {
   trend: string;
 }
 
+type ActionType = 'pending-reservation' | 'upcoming-session';
+
 interface UpcomingAction {
+  type: ActionType;
   title: string;
   description: string;
   dueDate: string;
+  reservationId?: string;
+  sessionId?: string;
+  processing?: boolean;
 }
 
 @Component({
@@ -124,6 +130,7 @@ export class DashboardPage implements OnInit {
     // Add pending reservations as actions
     actionItems.pendingReservations.forEach((reservation) => {
       actions.push({
+        type: 'pending-reservation',
         title: `Confirmer la réservation pour "${reservation.session.title}"`,
         description: `${reservation.user.username} souhaite rejoindre cette session`,
         dueDate: new Date(reservation.session.date).toLocaleDateString(
@@ -133,6 +140,8 @@ export class DashboardPage implements OnInit {
             month: 'long',
           }
         ),
+        reservationId: reservation.id,
+        sessionId: reservation.session.id,
       });
     });
 
@@ -142,17 +151,112 @@ export class DashboardPage implements OnInit {
       const locationName = item.session.location?.name || 'En ligne';
 
       actions.push({
+        type: 'upcoming-session',
         title: `Session "${item.session.title}"`,
         description: `${item.session.game} - ${locationName}`,
         dueDate: sessionDate.toLocaleDateString('fr-FR', {
           day: 'numeric',
           month: 'long',
         }),
+        sessionId: item.session.id,
       });
     });
 
     // Sort by date (most urgent first) and limit to 5
     return actions.slice(0, 5);
+  }
+
+  /**
+   * Confirm a pending reservation
+   */
+  async confirmReservation(action: UpcomingAction): Promise<void> {
+    if (!action.reservationId) return;
+
+    // Set processing state
+    this.updateActionProcessing(action.reservationId, true);
+
+    try {
+      await firstValueFrom(
+        this.reservationsService.updateReservationStatus(
+          action.reservationId,
+          'CONFIRMED'
+        )
+      );
+      // Remove the action from the list and update stats
+      this.removeActionAndUpdateStats(action.reservationId);
+    } catch (err) {
+      console.error('Error confirming reservation:', err);
+      this.updateActionProcessing(action.reservationId, false);
+    }
+  }
+
+  /**
+   * Reject a pending reservation
+   */
+  async rejectReservation(action: UpcomingAction): Promise<void> {
+    if (!action.reservationId) return;
+
+    // Set processing state
+    this.updateActionProcessing(action.reservationId, true);
+
+    try {
+      await firstValueFrom(
+        this.reservationsService.updateReservationStatus(
+          action.reservationId,
+          'CANCELLED'
+        )
+      );
+      // Remove the action from the list and update stats
+      this.removeActionAndUpdateStats(action.reservationId);
+    } catch (err) {
+      console.error('Error rejecting reservation:', err);
+      this.updateActionProcessing(action.reservationId, false);
+    }
+  }
+
+  /**
+   * Navigate to session detail
+   */
+  viewSession(action: UpcomingAction): void {
+    if (action.sessionId) {
+      this.router.navigate(['/sessions', action.sessionId]);
+    }
+  }
+
+  private updateActionProcessing(
+    reservationId: string,
+    processing: boolean
+  ): void {
+    this.upcomingActions.update((actions) =>
+      actions.map((a) =>
+        a.reservationId === reservationId ? { ...a, processing } : a
+      )
+    );
+  }
+
+  private removeActionAndUpdateStats(reservationId: string): void {
+    // Remove action from list
+    this.upcomingActions.update((actions) =>
+      actions.filter((a) => a.reservationId !== reservationId)
+    );
+
+    // Update pending reservations count in stats
+    this.stats.update((stats) =>
+      stats.map((s) => {
+        if (s.key === 'pending-reservations') {
+          const newValue = Math.max(0, s.value - 1);
+          return {
+            ...s,
+            value: newValue,
+            trend:
+              newValue > 0
+                ? `${newValue} nouvelle${newValue > 1 ? 's' : ''} demande${newValue > 1 ? 's' : ''}`
+                : 'Aucune demande',
+          };
+        }
+        return s;
+      })
+    );
   }
 
   isStatInteractive(stat: DashboardStat): boolean {

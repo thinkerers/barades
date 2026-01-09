@@ -4,7 +4,11 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { EmailService, ReservationEmailData } from '../email/email.service';
+import {
+  EmailService,
+  ReservationEmailData,
+  ReservationStatusEmailData,
+} from '../email/email.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
 import { UpdateReservationDto } from './dto/update-reservation.dto';
@@ -349,6 +353,29 @@ export class ReservationsService {
         where: { id: reservation.session.id },
         data: { playersCurrent: { decrement: 1 } },
       });
+    }
+
+    // Send email notification to the user about reservation status change
+    try {
+      const emailData: ReservationStatusEmailData = {
+        userName: updated.user.username,
+        userEmail: updated.user.email,
+        sessionTitle: updated.session.title,
+        sessionDate: updated.session.date,
+        locationName: updated.session.location.name,
+        locationAddress: updated.session.location.address,
+        hostName: updated.session.host.username,
+        status,
+      };
+      await this.emailService.sendReservationStatusUpdate(emailData);
+      this.logger.log(
+        `Status notification email sent to ${updated.user.email} for reservation ${reservationId}`
+      );
+    } catch (error) {
+      // Don't fail the request if email fails - just log the error
+      this.logger.error(
+        `Failed to send status notification email: ${error instanceof Error ? error.message : error}`
+      );
     }
 
     return updated;
