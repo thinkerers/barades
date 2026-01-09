@@ -8,13 +8,7 @@ export interface Location {
   name: string;
   address: string | null;
   city: string;
-  type:
-    | 'GAME_STORE'
-    | 'CAFE'
-    | 'BAR'
-    | 'COMMUNITY_CENTER'
-    | 'PRIVATE'
-    | 'OTHER';
+  type: LocationType;
   rating: number;
   amenities: string[];
   capacity: number | null;
@@ -25,6 +19,26 @@ export interface Location {
   website: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export type LocationType =
+  | 'BAR'
+  | 'CAFE'
+  | 'GAME_STORE'
+  | 'COMMUNITY_CENTER'
+  | 'PRIVATE';
+
+export interface CreateLocationData {
+  name: string;
+  address?: string;
+  city: string;
+  type: LocationType;
+  lat: number;
+  lon: number;
+  amenities?: string[];
+  capacity?: number;
+  website?: string;
+  icon?: string;
 }
 
 @Injectable({
@@ -51,10 +65,10 @@ export class LocationsService {
     return this.http.get<Location>(`${this.apiUrl}/${id}`);
   }
 
-  // TODO Day 4: Implement POST/PATCH/DELETE
-  createLocation(data: Partial<Location>): Observable<Location> {
-    void data;
-    throw new Error('Not implemented yet');
+  createLocation(data: CreateLocationData): Observable<Location> {
+    return this.http.post<Location>(this.apiUrl, data).pipe(
+      tap(() => this.invalidateLocationsCache())
+    );
   }
 
   updateLocation(id: string, data: Partial<Location>): Observable<Location> {

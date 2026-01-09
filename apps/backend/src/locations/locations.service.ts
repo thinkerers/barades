@@ -7,9 +7,21 @@ import { PrismaService } from '../prisma/prisma.service';
 export class LocationsService {
   constructor(private prisma: PrismaService) {}
 
-  create(_createLocationDto: CreateLocationDto) {
-    // TODO: Implement with proper Zod validation
-    throw new Error('Method not implemented yet');
+  create(createLocationDto: CreateLocationDto) {
+    return this.prisma.location.create({
+      data: {
+        name: createLocationDto.name,
+        address: createLocationDto.address,
+        city: createLocationDto.city,
+        type: createLocationDto.type,
+        lat: createLocationDto.lat,
+        lon: createLocationDto.lon,
+        amenities: createLocationDto.amenities ?? [],
+        capacity: createLocationDto.capacity,
+        website: createLocationDto.website,
+        icon: createLocationDto.icon ?? 'store',
+      },
+    });
   }
 
   findAll() {

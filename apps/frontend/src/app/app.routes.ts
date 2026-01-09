@@ -67,6 +67,14 @@ export const appRoutes: Route[] = [
             (m) => m.LocationsListComponent
           ),
       },
+      {
+        path: 'locations/new',
+        loadComponent: () =>
+          import('./features/locations/location-create').then(
+            (m) => m.LocationCreateComponent
+          ),
+        canActivate: [authGuard],
+      },
       // Groups - Lazy loaded
       {
         path: 'groups',

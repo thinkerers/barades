@@ -1,0 +1,144 @@
+<div class="location-create">
+  <header class="location-create__header">
+    <h1>Ajouter un lieu</h1>
+    <p>Partagez un nouveau lieu de jeu avec la communauté</p>
+  </header>
+
+  @if (error()) {
+  <div class="location-create__error" role="alert">
+    {{ error() }}
+  </div>
+  }
+
+  <form [formGroup]="locationForm" (ngSubmit)="onSubmit()" class="location-create__form">
+    <!-- Informations de base -->
+    <section class="form-section">
+      <h2>Informations générales</h2>
+
+      <div class="form-group">
+        <label for="name">Nom du lieu *</label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          placeholder="Ex: Le Dé qui Roule"
+          [class.invalid]="locationForm.get('name')?.touched && locationForm.get('name')?.invalid"
+        />
+        @if (getErrorMessage('name')) {
+        <span class="error-message">{{ getErrorMessage('name') }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="type">Type de lieu *</label>
+        <select id="type" formControlName="type">
+          @for (locationType of locationTypes; track locationType.value) {
+          <option [value]="locationType.value">{{ locationType.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="city">Ville *</label>
+          <input
+            id="city"
+            type="text"
+            formControlName="city"
+            placeholder="Ex: Bruxelles"
+            [class.invalid]="locationForm.get('city')?.touched && locationForm.get('city')?.invalid"
+          />
+          @if (getErrorMessage('city')) {
+          <span class="error-message">{{ getErrorMessage('city') }}</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="address">Adresse</label>
+          <input
+            id="address"
+            type="text"
+            formControlName="address"
+            placeholder="Ex: Rue de la Loi 42"
+          />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="capacity">Capacité (personnes)</label>
+          <input
+            id="capacity"
+            type="number"
+            formControlName="capacity"
+            placeholder="Ex: 30"
+            min="1"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="website">Site web</label>
+          <input
+            id="website"
+            type="url"
+            formControlName="website"
+            placeholder="https://..."
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- Localisation sur la carte -->
+    <section class="form-section">
+      <h2>Localisation</h2>
+      <p class="form-help">Cliquez sur la carte pour placer le lieu. Vous pouvez ensuite déplacer le marqueur.</p>
+
+      <div class="map-container">
+        <div #locationMap class="location-map"></div>
+      </div>
+
+      @if (locationForm.get('lat')?.value && locationForm.get('lon')?.value) {
+      <p class="coordinates-info">
+        📍 Coordonnées : {{ locationForm.get('lat')?.value | number:'1.4-4' }}, {{ locationForm.get('lon')?.value | number:'1.4-4' }}
+      </p>
+      } @else {
+      <p class="coordinates-warning">
+        ⚠️ Cliquez sur la carte pour définir la position du lieu
+      </p>
+      }
+    </section>
+
+    <!-- Équipements -->
+    <section class="form-section">
+      <h2>Équipements</h2>
+      <p class="form-help">Sélectionnez les équipements disponibles dans ce lieu</p>
+
+      <div class="amenities-grid">
+        @for (amenity of availableAmenities; track amenity) {
+        <button
+          type="button"
+          class="amenity-chip"
+          [class.selected]="isAmenitySelected(amenity)"
+          (click)="toggleAmenity(amenity)"
+        >
+          {{ amenity }}
+        </button>
+        }
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn btn--secondary" (click)="cancel()" [disabled]="loading()">
+        Annuler
+      </button>
+      <button type="submit" class="btn btn--primary" [disabled]="loading()">
+        @if (loading()) {
+        <span>Création en cours...</span>
+        } @else {
+        <span>Créer le lieu</span>
+        }
+      </button>
+    </div>
+  </form>
+</div>
