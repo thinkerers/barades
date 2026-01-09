@@ -256,7 +256,23 @@ async function main() {
     },
   });
 
-  console.log(`✅ Created ${5} sessions\n`);
+  // Session complète (toutes les places prises)
+  const gloomhavenSession = await prisma.session.create({
+    data: {
+      game: 'Gloomhaven',
+      title: 'Gloomhaven Campaign - Session 12 (COMPLET)',
+      description: 'Continuing our Gloomhaven campaign! We\'re deep into the storyline. This session is full but you can join the waitlist.',
+      date: new Date('2025-10-22T18:30:00Z'),
+      online: false,
+      level: SessionLevel.ADVANCED,
+      playersMax: 4,
+      tagColor: TagColor.ORANGE,
+      hostId: dave.id,
+      locationId: gameStoreBrussels.id,
+    },
+  });
+
+  console.log(`✅ Created ${6} sessions\n`);
 
   // ============================================
   // 5. Create Groups
@@ -402,10 +418,36 @@ async function main() {
         status: ReservationStatus.CONFIRMED,
         message: 'Never played before but love bird watching!',
       },
+
+      // Gloomhaven (session complète - 4/4 joueurs)
+      {
+        sessionId: gloomhavenSession.id,
+        userId: alice.id,
+        status: ReservationStatus.CONFIRMED,
+        message: 'Playing the Brute class',
+      },
+      {
+        sessionId: gloomhavenSession.id,
+        userId: bob.id,
+        status: ReservationStatus.CONFIRMED,
+        message: 'Spellweaver reporting for duty!',
+      },
+      {
+        sessionId: gloomhavenSession.id,
+        userId: carol.id,
+        status: ReservationStatus.CONFIRMED,
+        message: 'Tinkerer here, ready to support the team',
+      },
+      {
+        sessionId: gloomhavenSession.id,
+        userId: eve.id,
+        status: ReservationStatus.CONFIRMED,
+        message: 'Scoundrel sneaking in!',
+      },
     ],
   });
 
-  console.log(`✅ Created ${10} reservations\n`);
+  console.log(`✅ Created ${14} reservations\n`);
 
   // ============================================
   // 8. Create Polls
@@ -437,11 +479,14 @@ async function main() {
 📊 Summary:
    • ${5} Users (alice, bob, carol, dave, eve)
    • ${3} Locations (Brussels Game Store, Café Joystick, Online)
-   • ${5} Sessions (D&D, Catan, Poker, Pathfinder, Wingspan)
+   • ${6} Sessions (D&D, Catan, Poker, Pathfinder, Wingspan, Gloomhaven)
    • ${3} Groups (2 public: Adventurers Guild, Casual Board Gamers | 1 private: Elite Strategy Players)
    • ${8} Group Memberships
-   • ${10} Reservations (mix of pending/confirmed)
+   • ${14} Reservations (mix of pending/confirmed)
    • ${1} Poll
+
+🎮 Session complète:
+   • "Gloomhaven Campaign - Session 12" est COMPLET (4/4 joueurs confirmés)
 
 🔑 Test credentials:
    Email: alice@barades.com | Password: password123
