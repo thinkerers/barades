@@ -1,0 +1,153 @@
+<div class="legal-page">
+  <header class="legal-header">
+    <span class="legal-tag">Légal</span>
+    <h1 class="legal-title">Politique des cookies</h1>
+    <p class="legal-subtitle">
+      Dernière mise à jour : {{ lastUpdated }}
+    </p>
+  </header>
+
+  <article class="legal-content">
+    <section class="legal-section">
+      <h2>1. Qu'est-ce qu'un cookie ?</h2>
+      <p>
+        Un cookie est un petit fichier texte stocké sur votre appareil lorsque
+        vous visitez un site web. Les cookies permettent au site de mémoriser vos
+        actions et préférences sur une période donnée.
+      </p>
+    </section>
+
+    <section class="legal-section">
+      <h2>2. Cookies que nous utilisons</h2>
+      
+      <h3>Cookies essentiels</h3>
+      <p>Ces cookies sont nécessaires au fonctionnement du site :</p>
+      <ul>
+        <li>
+          <strong>accessToken :</strong> stocke votre token d'authentification
+          pour maintenir votre session connectée
+        </li>
+        <li>
+          <strong>barades.locations.userPosition :</strong> mémorise votre
+          dernière position géographique connue pour la carte des lieux
+        </li>
+      </ul>
+
+      <h3>Cookies de fonctionnalité</h3>
+      <p>Ces cookies améliorent votre expérience :</p>
+      <ul>
+        <li>
+          <strong>Préférences d'affichage :</strong> état des panneaux repliés,
+          filtres sélectionnés
+        </li>
+      </ul>
+
+      <h3>Cookies tiers</h3>
+      <p>Nous utilisons les services suivants qui peuvent déposer des cookies :</p>
+      <ul>
+        <li>
+          <strong>OpenStreetMap :</strong> pour l'affichage des cartes
+          interactives
+        </li>
+      </ul>
+    </section>
+
+    <section class="legal-section">
+      <h2>3. Données stockées localement</h2>
+      <p>
+        En plus des cookies, nous utilisons le stockage local (localStorage) de
+        votre navigateur pour :
+      </p>
+      <ul>
+        <li>Conserver votre token d'authentification</li>
+        <li>Mémoriser vos préférences d'interface</li>
+        <li>Améliorer les performances via la mise en cache</li>
+      </ul>
+      <p>
+        Ces données restent sur votre appareil et ne sont pas transmises à nos
+        serveurs sauf pour l'authentification.
+      </p>
+    </section>
+
+    <section class="legal-section">
+      <h2>4. Durée de conservation</h2>
+      <table class="legal-table">
+        <thead>
+          <tr>
+            <th>Cookie / Donnée</th>
+            <th>Durée</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>accessToken</td>
+            <td>7 jours (renouvelé à chaque connexion)</td>
+          </tr>
+          <tr>
+            <td>Position utilisateur</td>
+            <td>24 heures</td>
+          </tr>
+          <tr>
+            <td>Préférences d'affichage</td>
+            <td>Jusqu'à suppression manuelle</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="legal-section">
+      <h2>5. Gestion des cookies</h2>
+      <p>
+        Vous pouvez contrôler et supprimer les cookies selon vos préférences :
+      </p>
+      <ul>
+        <li>
+          <strong>Via votre navigateur :</strong> la plupart des navigateurs
+          permettent de bloquer ou supprimer les cookies dans leurs paramètres
+        </li>
+        <li>
+          <strong>Déconnexion :</strong> se déconnecter supprime votre token
+          d'authentification
+        </li>
+      </ul>
+      <p>
+        <strong>Note :</strong> la désactivation des cookies essentiels peut
+        affecter le fonctionnement du site (impossibilité de rester connecté,
+        etc.).
+      </p>
+    </section>
+
+    <section class="legal-section">
+      <h2>6. Cookies et mode hors-ligne (PWA)</h2>
+      <p>
+        Bar à Dés est une Progressive Web App (PWA). Le Service Worker peut
+        mettre en cache certaines ressources pour permettre une utilisation
+        hors-ligne. Ces données sont stockées localement et vous permettent
+        d'accéder au site même sans connexion internet.
+      </p>
+    </section>
+
+    <section class="legal-section">
+      <h2>7. Modifications</h2>
+      <p>
+        Cette politique peut être mise à jour. Les changements seront publiés sur
+        cette page avec une nouvelle date de mise à jour.
+      </p>
+    </section>
+
+    <section class="legal-section">
+      <h2>8. Contact</h2>
+      <p>
+        Pour toute question concernant notre utilisation des cookies :
+      </p>
+      <ul>
+        <li>Email : <a href="mailto:privacy@barades.com" class="legal-link">privacy&#64;barades.com</a></li>
+        <li>Page de contact : <a routerLink="/contact" class="legal-link">Nous contacter</a></li>
+      </ul>
+    </section>
+  </article>
+
+  <footer class="legal-footer">
+    <a routerLink="/" class="legal-back-link">← Retour à l'accueil</a>
+  </footer>
+</div>

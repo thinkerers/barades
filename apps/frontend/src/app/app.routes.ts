@@ -163,6 +163,21 @@ export const appRoutes: Route[] = [
         loadComponent: () =>
           import('./features/partner/partner-page').then((m) => m.PartnerPage),
       },
+      {
+        path: 'privacy',
+        loadComponent: () =>
+          import('./features/legal/privacy-page').then((m) => m.PrivacyPage),
+      },
+      {
+        path: 'terms',
+        loadComponent: () =>
+          import('./features/legal/terms-page').then((m) => m.TermsPage),
+      },
+      {
+        path: 'cookies',
+        loadComponent: () =>
+          import('./features/legal/cookies-page').then((m) => m.CookiesPage),
+      },
     ],
   },
   {
