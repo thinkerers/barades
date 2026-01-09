@@ -28,6 +28,7 @@ export interface Group {
 
 export interface GroupMemberSummary {
   userId: string;
+  role?: 'MEMBER' | 'ADMIN';
   user?: {
     id: string;
     username: string;

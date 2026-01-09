@@ -261,7 +261,7 @@ export class DashboardPage implements OnInit {
   }
 
   isStatInteractive(stat: DashboardStat): boolean {
-    return stat.key === 'sessions-created';
+    return stat.key === 'sessions-created' || stat.key === 'groups-managed';
   }
 
   onCardClick(key: DashboardStatKey): void {
@@ -273,7 +273,10 @@ export class DashboardPage implements OnInit {
         });
         break;
       case 'groups-managed':
-        this.router.navigate(['/groups']);
+        this.router.navigate(['/groups'], {
+          queryParams: { filter: 'my-managed', from: 'dashboard' },
+          replaceUrl: true,
+        });
         break;
       case 'pending-reservations':
         // TODO: Navigate to reservations management when available
@@ -301,6 +304,10 @@ export class DashboardPage implements OnInit {
 
     if (stat.key === 'sessions-created') {
       return `Voir les sessions que j'organise (${stat.value})`;
+    }
+
+    if (stat.key === 'groups-managed') {
+      return `Voir les groupes que je gère (${stat.value})`;
     }
 
     return null;

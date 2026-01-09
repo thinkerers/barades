@@ -1,8 +1,18 @@
 <div class="groups-container">
   <header class="groups-header">
-    <h1>Groupes de jeu</h1>
-    <p>Rejoignez une communauté de joueurs passionnés</p>
+    <h1>{{ pageTitle() }}</h1>
+    <p>{{ pageSubtitle() }}</p>
   </header>
+
+  @if (scopeBannerMessage()) {
+  <div class="scope-banner" role="status">
+    <span class="scope-banner__icon" aria-hidden="true">🎯</span>
+    <span>{{ scopeBannerMessage() }}</span>
+    @if (comingFromDashboard()) {
+    <a routerLink="/groups" class="scope-banner__link">Voir tous les groupes</a>
+    }
+  </div>
+  }
 
   @if (isOffline()) {
   <div class="offline-banner" role="status">
@@ -32,7 +42,7 @@
       }
 
       <!-- Empty State -->
-      @if (groups().length === 0) {
+      @if (filteredGroups().length === 0) {
       <div class="empty-state">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -48,15 +58,21 @@
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
           <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
+        @if (isScopeFilterActive()) {
+        <h3>Vous ne gérez aucun groupe</h3>
+        <p>Créez un groupe pour le voir apparaître ici.</p>
+        <a routerLink="/groups/new" class="empty-state__action">Créer un groupe</a>
+        } @else {
         <h3>Aucun groupe disponible</h3>
         <p>Soyez le premier à créer un groupe !</p>
+        }
       </div>
       }
 
       <!-- Groups Grid -->
-      @if (groups().length > 0) {
+      @if (filteredGroups().length > 0) {
       <div class="groups-grid">
-        @for (group of groups(); track group) {
+        @for (group of filteredGroups(); track group) {
         <lib-group-card
           [group]="group"
           [secondaryActionLabel]="hasJoined(group.id) ? 'Rejoint' : 'Rejoindre'"

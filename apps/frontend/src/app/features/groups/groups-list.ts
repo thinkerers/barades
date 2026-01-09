@@ -7,10 +7,12 @@ import {
   PendingTasks,
   WritableSignal,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
-import { Router } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   AsyncStateComponent,
   AsyncStateStatus,
@@ -29,7 +31,7 @@ import {
 @Component({
   selector: 'app-groups-list',
   standalone: true,
-  imports: [GroupCardComponent, AsyncStateComponent],
+  imports: [GroupCardComponent, AsyncStateComponent, RouterLink],
   templateUrl: './groups-list.html',
   styleUrl: './groups-list.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,9 +39,15 @@ import {
 export class GroupsListComponent implements OnInit {
   private readonly groupsService = inject(GroupsService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly authService = inject(AuthService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly pendingTasks = inject(PendingTasks);
+
+  private readonly queryParamMap = toSignal(this.route.queryParamMap);
+  readonly filterMode = signal<'all' | 'my-managed'>('all');
+  readonly comingFromDashboard = signal<boolean>(false);
+
   readonly groups = signal<Group[]>([]);
   readonly loading = signal<boolean>(false);
   readonly refreshing = signal<boolean>(false);
@@ -76,6 +84,59 @@ export class GroupsListComponent implements OnInit {
     }
 
     return 'ready';
+  });
+
+  readonly isScopeFilterActive = computed(
+    () => this.filterMode() === 'my-managed'
+  );
+
+  readonly pageTitle = computed(() =>
+    this.isScopeFilterActive() ? 'Mes groupes gérés' : 'Groupes de jeu'
+  );
+
+  readonly pageSubtitle = computed(() =>
+    this.isScopeFilterActive()
+      ? 'Retrouvez rapidement les groupes que vous administrez.'
+      : 'Rejoignez une communauté de joueurs passionnés'
+  );
+
+  readonly scopeBannerMessage = computed(() =>
+    this.isScopeFilterActive()
+      ? 'Vous consultez uniquement les groupes que vous gérez.'
+      : ''
+  );
+
+  /** Filtre les groupes selon le mode actif */
+  readonly filteredGroups = computed(() => {
+    const allGroups = this.groups();
+    if (!this.isScopeFilterActive()) {
+      return allGroups;
+    }
+    // En mode my-managed, filtrer pour ne garder que les groupes où l'utilisateur est admin
+    return allGroups.filter((group) => {
+      // Le créateur est toujours admin
+      if (group.creatorId === this.currentUserId) {
+        return true;
+      }
+      // Ou si l'utilisateur a le rôle ADMIN dans les membres
+      return group.members?.some(
+        (m) => m.userId === this.currentUserId && m.role === 'ADMIN'
+      );
+    });
+  });
+
+  private readonly syncFiltersWithQueryParams = effect(() => {
+    const params = this.queryParamMap();
+    if (!params) {
+      return;
+    }
+
+    const filterParam = params.get('filter');
+    const fromParam = params.get('from');
+    const nextMode = filterParam === 'my-managed' ? 'my-managed' : 'all';
+
+    this.filterMode.set(nextMode);
+    this.comingFromDashboard.set(fromParam === 'dashboard');
   });
 
   constructor() {
