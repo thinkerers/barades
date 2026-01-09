@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { MatIconRegistry } from '@angular/material/icon';
+import { DomSanitizer } from '@angular/platform-browser';
 import { RouterOutlet } from '@angular/router';
 
 @Component({
@@ -9,4 +11,14 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './app.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class App {}
+export class App {
+  constructor() {
+    const iconRegistry = inject(MatIconRegistry);
+    const sanitizer = inject(DomSanitizer);
+
+    iconRegistry.addSvgIcon(
+      'logo-barade',
+      sanitizer.bypassSecurityTrustResourceUrl('assets/logo-barade.svg')
+    );
+  }
+}

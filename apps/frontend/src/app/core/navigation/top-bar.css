@@ -10,12 +10,27 @@
 }
 
 .top-bar__logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-weight: 600;
   letter-spacing: 0.08rem;
   text-transform: uppercase;
   text-decoration: none;
   color: white;
   transition: color 0.2s;
+}
+
+.top-bar__logo-icon {
+  width: 32px;
+  height: 32px;
+  color: inherit;
+}
+
+.top-bar__logo-text {
+  @media (width > 480px) {
+    display: none;
+  }
 }
 
 .top-bar__logo:hover {
