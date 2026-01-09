@@ -1,5 +1,5 @@
 ---
-marp: false
+marp: true
 theme: gaia
 class: lead
 backgroundColor: #fff
@@ -13,8 +13,10 @@ style: |
   code { background-color: #edf2f7; color: #c05621; padding: 2px 5px; border-radius: 4px; }
 ---
 
-# 🎲 BARADES
-## L'application pour organiser vos sessions de jeu sur table
+![w:200](rapport/8.%20Table%20des%20figures/logo_barade.png)
+
+# BAR A DES
+##  La plateforme pour organiser vos sessions de jeu sur table
 
 **Théophile Desmedt**
 *Développeur Web Front-End | TFE 2024-2025*
@@ -23,16 +25,13 @@ style: |
 
 # 1. Le Constat & La Problématique
 
-* 📈 **Demande croissante :** +1200 nouveautés/an en France[^2], +9% de croissance mondiale[^1].
-* 😵 **Paralysie du choix :** Face à l'abondance, le joueur est perdu.
+* 📈 **Demande croissante :** +1200 nouveautés/an en France, +9% de croissance mondiale.
 * 🧩 **Casse-tête logistique :** Difficulté majeure à **synchroniser les agendas** et trouver un lieu adapté.
 * 🌍 **Isolement :** Le joueur itinérant ne sait pas *où* jouer ni *avec qui*.
-* 📣 **Visibilité :** Les bars à jeux et assos peinent à communiquer leurs événements.
 
 > **Solution :** Une plateforme centralisée pour faciliter la **rencontre**, la **découverte** et le **test** de jeux avant achat.
 
-[^1]: Gus&Co, *Statistiques jeux de société 2023*, 22 novembre 2023. https://gusandco.net/2023/11/22/statistiques-jeux-de-societe-2023
-[^2]: Le Figaro, *1 200 nouveautés chaque année : la surproduction de jeux de société met-elle le secteur en péril ?*, 27 juillet 2025. https://www.lefigaro.fr/conso/1200-nouveautes-chaque-annee-la-surproduction-de-jeux-de-societe-met-elle-le-secteur-en-peril-20250727
+*Sources : Gus&Co (2023), Le Figaro (2025)*
 
 ---
 
@@ -50,90 +49,206 @@ style: |
 
 # 2.1 Objectifs Techniques
 
-* **📱 Mobile First (PWA) :**
+* **Mobile First (PWA) :**
     * Expérience "App Native" installable.
     * Utilisable **hors connexion** (Service Worker).
-* **⚡ Performance :**
-    * Architecture **Zoneless** pour une réactivité immédiate.
+* **Performance :**
+    * Architecture **Zoneless**.
     * Objectif : chargement initial **< 2s**.
-* **🔒 Sécurité :**
+* **Sécurité :**
     * Validation stricte (**class-validator**).
     * Isolation des données (**RLS** au niveau SQL).
 
 ---
 
-# 3. Méthodologie "Commando"
+# 2.2 Zoom : RLS & class-validator
 
-* **⏱️ Sprint Intensif (2 semaines) :** Développement "Full Stack" complet, de la BDD au déploiement.
-* **🤖 L'Accélérateur IA (Copilote) :**
-    * **Boilerplate & Data :** Génération du `seed.ts` complexe et des DTOs de validation.
-    * **Debugging :** Analyse instantanée des erreurs (ex: sérialisation tests E2E).
-* **🧠 La Plus-Value Humaine (Architecte) :**
-    * **Choix Critiques :** Migration vers **Angular Zoneless** (techno trop récente pour l'IA).
-    * **Sécurité :** Implémentation manuelle des règles **RLS** (Row Level Security).
-    * **Orchestration :** Configuration fine du Monorepo Nx et du CI/CD.
+| Couche | Technologie | Protection |
+|--------|-------------|------------|
+| **API** | `class-validator` | Valide les données entrantes via décorateurs (`@IsEmail()`, `@Min()`) |
+| **Base de données** | **RLS** (Row Level Security) | Filtre les lignes directement dans PostgreSQL |
 
-> **Approche :** L'IA produit le code répétitif, l'humain garantit l'**architecture**, la **sécurité** et la **qualité**.
+```
+Requête API → Validation DTO → Logique métier → RLS PostgreSQL → Données
+              ⛔ Rejet si       ✅ Traitement    ⛔ Filtre selon
+              données invalides                   l'utilisateur
+```
+
+> **Défense en profondeur :** Même si l'API est compromise, la BDD refuse les accès non autorisés.
 
 ---
 
-# 4. Architecture : La Cohérence Full TypeScript
+# 3. Méthodologie
 
-*Une stack unifiée, orchestrée par **Nx**, pour une fiabilité absolue.*
+* **⏱️ Sprint Intensif (2 semaines) :** Full Stack complet, de la BDD au déploiement.
+* **🤖 IA (Copilote) :**
+    * Génération du `seed.ts` et des DTOs
+    * Debugging rapide des erreurs
+* **🧠 Humain (Architecte) :**
+    * Choix UI/UX
+    * Migration **Angular Zoneless**
+    * Règles **RLS** et config Nx/CI
 
-| Couche | Technologie | Rôle & Innovation |
+---
+
+# 4. Architecture
+
+*Stack unifiée (monorepo) avec **Nx***
+
+| Couche | Technologie | Rôle |
 | :--- | :--- | :--- |
-| **Monorepo** | **Nx** | Partage de code (`packages/ui`), Cache de build, CI unifiée. |
-| **Frontend** | **Angular 20.2** | Architecture **Zoneless** (Performance), **Signals**, PWA. |
-| **Backend** | **NestJS 11** | Structure modulaire, Validation stricte (**class-validator**). |
-| **Data** | **Prisma / Supabase** | **PostgreSQL** avec Row Level Security (RLS). |
+| **Monorepo** | **Nx** | Partage de code, cache, CI unifiée |
+| **Frontend** | **Angular 20** | Zoneless, Signals, PWA |
+| **Backend** | **NestJS 11** | Modulaire, validation stricte |
+| **Data** | **Prisma** | PostgreSQL + RLS |
 
-> **💡 L'atout majeur : "End-to-End Type Safety"**
-> Le schéma Prisma génère les types TypeScript, partagés via `packages/ui`.
-> *Résultat :* Toute modification du schéma BDD déclenche une erreur de compilation côté Frontend.
+> **💡 Type Safety E2E :** Prisma génère les types TS partagés entre Frontend et Backend.
 
 ---
 
-# 5. Focus Frontend : Bleeding Edge
+# 4.1 Vue d'ensemble de l'Architecture
 
-* **Angular 20.2 :** Utilisation des dernières innovations.
+```
+        +------------------+
+        |   Nx Monorepo    |
+        +------------------+
+               |
+    +----------+----------+
+    |                     |
++-------+             +-------+
+|Angular| <-------->  |NestJS |
+|  PWA  |             |  API  |
++-------+             +-------+
+    |                     |
+    v                     v
++-------+             +-------+
+|Nomina-|             |Prisma |---> PostgreSQL
+|  tim  |             +-------+---> Resend
++-------+
+```
+
+---
+
+# 5. Frontend
+
+* **Angular 20.2**
 * **Architecture "Zoneless" :**
-    * Suppression de `zone.js` pour alléger le bundle.
+    * Suppression de `zone.js` pour alléger le bundle
     * Utilisation privilégiée des **Signals** pour la réactivité.
-    * *Gain :* **-73%** sur le bundle initial (327 KB → 35 KB gzippé).
-    * *(Mesuré via `webpack-bundle-analyzer` en build prod)*
 * **UI/UX :**
     * **Tailwind CSS** pour le styling utilitaire.
     * **Leaflet** pour la cartographie (Open Source).
-    * **Mobile-first** design.
+---
+
+# 5.1 Autocomplétion Tolérante (Fuzzy Search)
+
+* **Problème :** Les utilisateurs font des fautes de frappe
+  * Ex: "donjon" au lieu de "Dungeons"
+* **Solution :** Algorithme de **Levenshtein**
+  * Calcul de la "distance d'édition" entre la saisie et la liste de jeux
+  * Suggestions pertinentes malgré les erreurs
 
 ---
 
-# 5.1 Zoom Technique : UX Intelligente
+# 5.2 Géolocalisation Intelligente
 
-* **🔍 Autocomplétion Tolérante (Fuzzy Search) :**
-    * **Problème :** Les utilisateurs font des fautes de frappe (ex: "donjon" au lieu de "Dungeons").
-    * **Solution :** Implémentation de l'algorithme de **Levenshtein**.
-    * **Technique :** Calcul de la "distance d'édition" entre la saisie et la liste de jeux pour suggérer les résultats pertinents malgré les erreurs.
-
-* **📍 Géolocalisation Intelligente :**
-    * **Problème :** Trouver les lieux de jeu proches rapidement.
-    * **Solution :** Utilisation de l'API **Geolocation** du navigateur pour centrer la carte sur la position de l'utilisateur.
-
-* **📐 Tri par Distance Réelle (Haversine) :**
-    * **Problème :** Trier les lieux par proximité géographique précise.
-    * **Solution :** Implémentation de la **formule de Haversine** pour calculer la distance en km entre l'utilisateur et chaque lieu.
+* **Problème :** Trouver les lieux de jeu proches rapidement
+* **Solution :** API **Geolocation** du navigateur
+  * Centrage automatique de la carte sur la position de l'utilisateur
 
 ---
 
-# 6. Focus Backend & Sécurité
+# 5.3 Tri par Distance (Haversine)
 
-* **NestJS 11 :** Structure miroir du Frontend (Controllers/Services).
-* **Validation stricte :** Utilisation de `class-validator` (ValidationPipe) pour sécuriser les entrées API.
-* **Emailing :** Intégration de l'API **Resend** pour les notifications transactionnelles.
-* **Sécurité Base de Données :**
-    * **RLS (Row Level Security)** sur Supabase.
-    * Les règles d'accès sont définies au niveau du moteur SQL, pas juste dans l'API.
+* **Problème :** Trier les lieux par proximité géographique
+* **Solution :** **Formule de Haversine**
+  * Calcul de la distance en km entre l'utilisateur et chaque lieu
+  * Tient compte de la courbure de la Terre
+
+---
+
+# 5.4 Géocodage Automatique (Nominatim)
+
+* **Problème :** Saisie manuelle des coordonnées GPS fastidieuse
+* **Solution :** API **OpenStreetMap Nominatim**
+  * Conversion automatique adresse → coordonnées
+  * La carte se repositionne en temps réel (debounce 1s)
+
+---
+
+# 6. Backend (NestJS)
+
+* **NestJS 11 :** Structure miroir du Frontend (Controllers/Services)
+* **Validation stricte :** `class-validator` (ValidationPipe) pour sécuriser les entrées API
+* **Emailing :** API **Resend** pour les notifications transactionnelles
+
+---
+
+# 6.1 Sécurité
+
+* **RLS (Row Level Security)** sur Supabase
+  * Règles d'accès définies au niveau SQL, pas juste dans l'API
+* **Lieux Privés :**
+  * Visibilité configurable (public/privé) par le créateur
+  * Filtrage automatique côté API selon l'utilisateur connecté
+
+---
+
+# 6.2 Controllers & Services
+
+```
+HTTP Request          Controller           Service            Data
+     |                    |                   |                 |
+     |  GET /sessions/123 |                   |                 |
+     |------------------->|                   |                 |
+     |                    |   findOne(123)    |                 |
+     |                    |------------------>|                 |
+     |                    |                   |  prisma.find()  |
+     |                    |                   |---------------->|
+     |                    |                   |     Session     |
+     |                    |                   |<----------------|
+     |                    |     Session       |                 |
+     |                    |<------------------|                 |
+     |      JSON Response |                   |                 |
+     |<-------------------|                   |                 |
+```
+
+---
+
+# 6.3 Séparation des préoccupations
+
+| Couche | Responsabilité |
+|--------|----------------|
+| **Controller** | Routes HTTP, validation, délégation |
+| **Service** | Logique métier, accès données |
+
+> Le Controller ne sait pas *comment* récupérer les données.
+> Le Service ne sait pas *d'où* vient la requête.
+
+---
+
+# 6.4 Modèle de Données
+
+```
+User -----> Session <----- Location
+  |            |               |
+  |            v               |
+  +-----> Registration         |
+  |                            |
+  +----------------------> crée
+
+Game -----> Session (joué dans)
+```
+
+---
+
+# 6.4 Modèle de Données
+
+| Entité | Champs clés |
+|--------|-------------|
+| **User** | id, email, pseudo |
+| **Session** | date, maxPlayers, isPrivate |
+| **Location** | name, lat, lng, isPrivate |
 
 ---
 
@@ -143,7 +258,6 @@ style: |
 |-------|------|------------|
 | **Playwright** | Tests E2E | Inscription → Création Session (Chromium) |
 | **Jest** | Tests Unitaires | Logique métier, services |
-| **Storybook 9** | Documentation UI | Composants isolés (`packages/ui`) |
 
 ---
 
@@ -158,9 +272,15 @@ style: |
 # 8. Démonstration
 *(Navigation dans l'application)*
 
-1.  **Recherche** d'un lieu sur la carte.
-2.  **Consultation** des sessions disponibles.
-3.  **Inscription** à une table de jeu.
+**Scénario Joueur :**
+1. 📍 Arrivée sur la carte → géolocalisation automatique
+2. 🔍 Recherche d'un jeu avec tolérance aux fautes
+3. 📋 Consultation d'une session et inscription
+
+**Scénario Organisateur :**
+4. ➕ Création d'un nouveau lieu (géocodage auto)
+5. 🎲 Création d'une session de jeu
+6. 👥 Gestion des participants
 
 ---
 
@@ -181,6 +301,7 @@ style: |
 * **🚀 Court terme (UX) :**
     * Notifications Push (PWA) pour les rappels de jeu.
     * Filtres avancés (par type de jeu, niveau, horaires).
+    * **Storybook** pour la documentation des composants UI.
 * **🛠 Moyen terme (Fonctionnel) :**
     * Chat en temps réel (via WebSockets Supabase).
     * Connexion avec l'API BoardGameGeek (BGG) pour importer sa ludothèque.
