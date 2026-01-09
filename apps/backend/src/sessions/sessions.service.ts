@@ -7,6 +7,17 @@ import { UpdateSessionDto } from './dto/update-session.dto';
 export class SessionsService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Compute playersCurrent from confirmed reservations count
+   */
+  private computePlayersCurrent<
+    T extends { reservations?: Array<{ status: string }> },
+  >(session: T): T & { playersCurrent: number } {
+    const confirmedCount =
+      session.reservations?.filter((r) => r.status === 'CONFIRMED').length ?? 0;
+    return { ...session, playersCurrent: confirmedCount };
+  }
+
   create(createSessionDto: CreateSessionDto) {
     return this.prisma.session.create({
       data: {
@@ -39,8 +50,8 @@ export class SessionsService {
     });
   }
 
-  findAll() {
-    return this.prisma.session.findMany({
+  async findAll() {
+    const sessions = await this.prisma.session.findMany({
       include: {
         host: {
           select: {
@@ -66,10 +77,11 @@ export class SessionsService {
         date: 'asc',
       },
     });
+    return sessions.map((session) => this.computePlayersCurrent(session));
   }
 
-  findAllCreatedByUser(userId: string) {
-    return this.prisma.session.findMany({
+  async findAllCreatedByUser(userId: string) {
+    const sessions = await this.prisma.session.findMany({
       where: {
         hostId: userId,
       },
@@ -98,42 +110,42 @@ export class SessionsService {
         date: 'asc',
       },
     });
+    return sessions.map((session) => this.computePlayersCurrent(session));
   }
 
-  findOne(id: string) {
-    return this.prisma.session
-      .findUnique({
-        where: { id },
-        include: {
-          host: {
-            select: {
-              id: true,
-              username: true,
-              avatar: true,
-              bio: true,
-            },
+  async findOne(id: string) {
+    const session = await this.prisma.session.findUnique({
+      where: { id },
+      include: {
+        host: {
+          select: {
+            id: true,
+            username: true,
+            avatar: true,
+            bio: true,
           },
-          location: true,
-          reservations: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  username: true,
-                  avatar: true,
-                  skillLevel: true,
-                },
+        },
+        location: true,
+        reservations: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                avatar: true,
+                skillLevel: true,
               },
             },
           },
         },
-      })
-      .then((session) => {
-        if (!session) {
-          throw new NotFoundException(`Session with ID ${id} not found`);
-        }
-        return session;
-      });
+      },
+    });
+
+    if (!session) {
+      throw new NotFoundException(`Session with ID ${id} not found`);
+    }
+
+    return this.computePlayersCurrent(session);
   }
 
   async update(id: string, updateSessionDto: UpdateSessionDto) {
