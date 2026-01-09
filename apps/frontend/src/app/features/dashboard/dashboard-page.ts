@@ -7,8 +7,9 @@ import {
   signal,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { firstValueFrom, forkJoin } from 'rxjs';
+import { firstValueFrom, forkJoin, take } from 'rxjs';
 import { GroupsService } from '../../core/services/groups.service';
+import { LocationsService } from '../../core/services/locations.service';
 import { ReservationsService } from '../../core/services/reservations.service';
 import { SessionsService } from '../../core/services/sessions.service';
 import { ActionItems, UsersService } from '../../core/services/users.service';
@@ -16,7 +17,8 @@ import { ActionItems, UsersService } from '../../core/services/users.service';
 type DashboardStatKey =
   | 'sessions-created'
   | 'groups-managed'
-  | 'pending-reservations';
+  | 'pending-reservations'
+  | 'locations';
 
 interface DashboardStat {
   key: DashboardStatKey;
@@ -48,6 +50,7 @@ interface UpcomingAction {
 export class DashboardPage implements OnInit {
   private readonly sessionsService = inject(SessionsService);
   private readonly groupsService = inject(GroupsService);
+  private readonly locationsService = inject(LocationsService);
   private readonly reservationsService = inject(ReservationsService);
   private readonly usersService = inject(UsersService);
   private readonly router = inject(Router);
@@ -78,6 +81,8 @@ export class DashboardPage implements OnInit {
           forkJoin({
             sessionStats: this.sessionsService.getCreatedByMeStats(),
             groupStats: this.groupsService.getManagedByMeStats(),
+            // take(1) so forkJoin doesn't wait forever on the shared locations stream
+            locations: this.locationsService.getLocationsCreatedByMe().pipe(take(1)),
             pendingReservations:
               this.reservationsService.getPendingForMySessions(),
             actionItems: this.usersService.getActionItems(),
@@ -99,6 +104,12 @@ export class DashboardPage implements OnInit {
             label: 'Groupes gérés',
             value: data.groupStats.totalCount,
             trend: 'Stable',
+          },
+          {
+            key: 'locations',
+            label: 'Lieux créés',
+            value: data.locations.length,
+            trend: 'Gérer mes lieux',
           },
           {
             key: 'pending-reservations',
@@ -261,7 +272,7 @@ export class DashboardPage implements OnInit {
   }
 
   isStatInteractive(stat: DashboardStat): boolean {
-    return stat.key === 'sessions-created' || stat.key === 'groups-managed';
+    return stat.key === 'sessions-created' || stat.key === 'groups-managed' || stat.key === 'locations';
   }
 
   onCardClick(key: DashboardStatKey): void {
@@ -275,6 +286,12 @@ export class DashboardPage implements OnInit {
       case 'groups-managed':
         this.router.navigate(['/groups'], {
           queryParams: { filter: 'my-managed', from: 'dashboard' },
+          replaceUrl: true,
+        });
+        break;
+      case 'locations':
+        this.router.navigate(['/locations'], {
+          queryParams: { filter: 'my-created', from: 'dashboard' },
           replaceUrl: true,
         });
         break;
@@ -308,6 +325,10 @@ export class DashboardPage implements OnInit {
 
     if (stat.key === 'groups-managed') {
       return `Voir les groupes que je gère (${stat.value})`;
+    }
+
+    if (stat.key === 'locations') {
+      return `Gérer mes lieux créés (${stat.value})`;
     }
 
     return null;
