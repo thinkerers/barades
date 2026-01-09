@@ -127,6 +127,29 @@
       </div>
     </section>
 
+    <!-- Visibilité -->
+    <section class="form-section">
+      <h2>Visibilité</h2>
+
+      <label class="toggle-container">
+        <input
+          type="checkbox"
+          formControlName="isPrivate"
+          class="toggle-input"
+        />
+        <span class="toggle-switch"></span>
+        <span class="toggle-label">Lieu privé</span>
+      </label>
+
+      <p class="form-help privacy-info">
+        @if (locationForm.get('isPrivate')?.value) {
+        🔒 Ce lieu sera visible uniquement par vous. Les membres acceptés dans une session utilisant ce lieu pourront également le voir.
+        } @else {
+        🌐 Ce lieu sera visible par tous les utilisateurs de la plateforme.
+        }
+      </p>
+    </section>
+
     <!-- Actions -->
     <div class="form-actions">
       <button type="button" class="btn btn--secondary" (click)="cancel()" [disabled]="loading()">

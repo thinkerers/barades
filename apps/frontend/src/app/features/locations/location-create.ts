@@ -25,6 +25,8 @@ import {
   LocationType,
   LocationsService,
 } from '../../core/services/locations.service';
+import { GeocodingService } from '../../core/services/geocoding.service';
+import { debounceTime, distinctUntilChanged, filter, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-location-create',
@@ -39,6 +41,7 @@ export class LocationCreateComponent implements OnInit, AfterViewInit {
   private readonly router = inject(Router);
   private readonly locationsService = inject(LocationsService);
   private readonly authService = inject(AuthService);
+  private readonly geocodingService = inject(GeocodingService);
   private readonly destroyRef = inject(DestroyRef);
 
   @ViewChild('locationMap', { static: true })
@@ -92,6 +95,7 @@ export class LocationCreateComponent implements OnInit, AfterViewInit {
       lon: [null as number | null, Validators.required],
       capacity: [null as number | null],
       website: [''],
+      isPrivate: [false],
     });
 
     this.destroyRef.onDestroy(() => {
@@ -101,11 +105,43 @@ export class LocationCreateComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    // Nothing specific for now
+    // Écouter les changements d'adresse et de ville pour géolocaliser automatiquement
+    this.locationForm.valueChanges
+      .pipe(
+        debounceTime(1000),
+        filter((val) => val.city && val.city.length > 2),
+        distinctUntilChanged(
+          (prev, curr) =>
+            prev.city === curr.city && prev.address === curr.address
+        ),
+        switchMap((val) => {
+          const query = val.address
+            ? `${val.address}, ${val.city}`
+            : `${val.city}`;
+          return this.geocodingService.searchAddress(query);
+        })
+      )
+      .subscribe((results) => {
+        if (results && results.length > 0) {
+          const bestMatch = results[0];
+          this.updateMapPosition(bestMatch.lat, bestMatch.lon);
+        }
+      });
   }
 
   ngAfterViewInit(): void {
     this.initMap();
+  }
+
+  private updateMapPosition(lat: number, lon: number): void {
+    // Mettre à jour le formulaire
+    this.locationForm.patchValue({ lat, lon }, { emitEvent: false });
+
+    // Mettre à jour la carte
+    if (this.map) {
+      this.map.setView([lat, lon], 16);
+      this.setMarkerPosition(lat, lon);
+    }
   }
 
   private initMap(): void {
@@ -235,6 +271,7 @@ export class LocationCreateComponent implements OnInit, AfterViewInit {
       amenities: this.selectedAmenities(),
       capacity: formValue.capacity || undefined,
       website: formValue.website || undefined,
+      isPrivate: formValue.isPrivate || false,
     };
 
     try {

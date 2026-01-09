@@ -217,3 +217,98 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* Toggle Switch */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 1rem;
+}
+
+.toggle-input {
+  display: none;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  background: rgba(75, 85, 99, 0.5);
+  border-radius: 13px;
+  transition: background 0.3s;
+  flex-shrink: 0;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+
+.toggle-input:checked + .toggle-switch {
+  background: #6366f1;
+}
+
+.toggle-input:checked + .toggle-switch::after {
+  transform: translateX(22px);
+}
+
+.toggle-label {
+  color: #fff;
+  font-weight: 500;
+}
+
+.privacy-info {
+  padding: 0.75rem 1rem;
+  background: rgba(17, 24, 39, 0.5);
+  border-radius: 0.5rem;
+  border-left: 3px solid;
+  margin-top: 0;
+}
+
+.privacy-info:has(+ .toggle-input:checked) {
+  border-left-color: #f59e0b;
+}
+
+/* Dynamic coloring based on form state */
+.form-section:has(.toggle-input:checked) .privacy-info {
+  border-left-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.form-section:has(.toggle-input:not(:checked)) .privacy-info {
+  border-left-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+/* Form Actions Layout */
+.form-actions__right {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Danger Button */
+.btn--danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: #ef4444;
+  color: #fff;
+}
+
+.btn--danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
