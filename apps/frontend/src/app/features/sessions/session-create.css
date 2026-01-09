@@ -176,6 +176,26 @@
   border-color: rgba(75, 85, 99, 0.8);
 }
 
+/* Form Actions Layout */
+.form-actions__right {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Danger Button */
+.button--danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.button--danger:hover:not(:disabled) {
+  background: #ef4444;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(239, 68, 68, 0.3);
+}
+
 /* Loading State */
 .loading-container {
   display: flex;

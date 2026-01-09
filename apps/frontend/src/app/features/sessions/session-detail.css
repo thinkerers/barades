@@ -478,7 +478,6 @@
 
 .reservation-card__info {
   padding: 1rem;
-  background-color: #eff6ff;
   border-radius: 0.5rem;
   border-left: 3px solid var(--color-primary, #6366f1);
 }

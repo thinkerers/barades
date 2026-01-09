@@ -43,6 +43,7 @@ export class SessionEditComponent implements OnInit {
   sessionForm!: FormGroup;
   readonly loading = signal(true);
   readonly saving = signal(false);
+  readonly deleting = signal(false);
   readonly error = signal<string | null>(null);
   sessionId: string | null = null;
   readonly session = signal<Session | null>(null);
@@ -237,6 +238,41 @@ export class SessionEditComponent implements OnInit {
       );
     } finally {
       this.saving.set(false);
+    }
+  }
+
+  async onDelete(): Promise<void> {
+    if (!this.sessionId) {
+      this.error.set('ID de session invalide');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Êtes-vous sûr de vouloir supprimer cette session ? Cette action est irréversible.'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.deleting.set(true);
+
+    try {
+      await firstValueFrom(
+        this.sessionsService.deleteSession(this.sessionId)
+      );
+      this.notifications.success('Session supprimée avec succès.');
+      this.router.navigate(['/sessions'], {
+        queryParams: { filter: 'my-hosted' },
+      });
+    } catch (err: unknown) {
+      console.error('Erreur lors de la suppression:', err);
+      this.error.set(
+        (err as { error?: { message?: string } })?.error?.message ||
+          'Une erreur est survenue lors de la suppression de la session'
+      );
+    } finally {
+      this.deleting.set(false);
     }
   }
 

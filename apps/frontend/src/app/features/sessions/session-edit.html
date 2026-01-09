@@ -172,21 +172,35 @@
         type="button"
         (click)="cancel()"
         class="button button--secondary"
-        [disabled]="saving()"
+        [disabled]="saving() || deleting()"
       >
         Annuler
       </button>
-      <button
-        type="submit"
-        class="button button--primary"
-        [disabled]="saving() || sessionForm.invalid"
-      >
-        @if (!saving()) {
-        <span>Enregistrer les modifications</span>
-        } @if (saving()) {
-        <span>Enregistrement en cours...</span>
-        }
-      </button>
+      <div class="form-actions__right">
+        <button
+          type="button"
+          (click)="onDelete()"
+          class="button button--danger"
+          [disabled]="saving() || deleting()"
+        >
+          @if (deleting()) {
+          <span>Suppression...</span>
+          } @else {
+          <span>Supprimer</span>
+          }
+        </button>
+        <button
+          type="submit"
+          class="button button--primary"
+          [disabled]="saving() || deleting() || sessionForm.invalid"
+        >
+          @if (!saving()) {
+          <span>Enregistrer les modifications</span>
+          } @if (saving()) {
+          <span>Enregistrement en cours...</span>
+          }
+        </button>
+      </div>
     </div>
   </form>
 </div>
