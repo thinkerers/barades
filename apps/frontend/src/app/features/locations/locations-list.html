@@ -13,6 +13,17 @@
       aria-label="Carte des lieux de jeu"
     ></div>
     <div class="map-stage__overlay map-stage__overlay--header">
+      @if (isScopeFilterActive()) {
+      <lib-sessions-scope-banner
+        [message]="scopeBannerMessage()"
+        [showBackAction]="comingFromDashboard()"
+        [leadingIcon]="'place'"
+        [clearActionLabel]="'Voir tous les lieux'"
+        (clearAction)="clearScopeFilter()"
+        (backAction)="returnToDashboard()"
+      ></lib-sessions-scope-banner>
+      }
+
       <section
         class="locations-filters-card"
         role="region"
@@ -22,8 +33,8 @@
           <div class="locations-filters-card__title">
             <mat-icon aria-hidden="true">filter_alt</mat-icon>
             <div class="locations-filters-card__title-text">
-              <h1>Lieux de jeu</h1>
-              <p>Trouvez l'endroit idéal pour vos sessions</p>
+              <h1>{{ pageTitle() }}</h1>
+              <p>{{ pageSubtitle() }}</p>
             </div>
           </div>
           <button
@@ -158,14 +169,26 @@
                     >
                   </div>
                 </div>
-                <button
-                  type="button"
-                  class="locations-details__close"
-                  (click)="selectedLocationId = null"
-                  aria-label="Effacer le lieu sélectionné"
-                >
-                  <mat-icon aria-hidden="true">close</mat-icon>
-                </button>
+                <div class="locations-details__header-actions">
+                  @if (isOwner(location)) {
+                  <button
+                    type="button"
+                    class="button button--edit"
+                    (click)="onEdit(location.id)"
+                  >
+                    <mat-icon>edit</mat-icon>
+                    Modifier
+                  </button>
+                  }
+                  <button
+                    type="button"
+                    class="locations-details__close"
+                    (click)="selectedLocationId = null"
+                    aria-label="Effacer le lieu sélectionné"
+                  >
+                    <mat-icon aria-hidden="true">close</mat-icon>
+                  </button>
+                </div>
               </header>
 
               <section class="locations-details__selected-body">

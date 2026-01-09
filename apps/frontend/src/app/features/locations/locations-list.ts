@@ -6,23 +6,29 @@ import {
   OnInit,
   PendingTasks,
   afterNextRender,
+  computed,
+  effect,
   inject,
   runInInjectionContext,
   signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   AsyncStateComponent,
   AsyncStateStatus,
   SearchInputComponent,
+  SessionsScopeBanner,
 } from '@org/ui';
 import * as L from 'leaflet';
 import 'leaflet.locatecontrol';
 import { EmptyError, Subject, firstValueFrom, timer } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { AuthService } from '../../core/services/auth.service';
 import {
   Location,
   LocationsService,
@@ -87,6 +93,7 @@ interface StoredUserPosition {
     MatSelectModule,
     AsyncStateComponent,
     SearchInputComponent,
+    SessionsScopeBanner,
   ],
   templateUrl: './locations-list.html',
   styleUrl: './locations-list.css',
@@ -107,6 +114,7 @@ export class LocationsListComponent implements OnInit, OnDestroy {
     'CAFE',
     'BAR',
     'COMMUNITY_CENTER',
+    'PRIVATE',
     'OTHER',
   ] as const;
 
@@ -160,8 +168,14 @@ export class LocationsListComponent implements OnInit, OnDestroy {
   }
 
   private locationsService = inject(LocationsService);
+  private readonly authService = inject(AuthService);
   private readonly injector = inject(Injector);
   private readonly pendingTasks = inject(PendingTasks);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly queryParamMap = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
 
   readonly locationTypeOptions: ReadonlyArray<{
     value: string;
@@ -191,10 +205,32 @@ export class LocationsListComponent implements OnInit, OnDestroy {
   private readonly isDetailsCollapsedSignal = signal(false);
   private readonly selectedLocationIdSignal = signal<string | null>(null);
   private readonly pendingDelayCancelers = new Set<() => void>();
+  readonly filterMode = signal<'all' | 'my-created'>('all');
+  readonly comingFromDashboard = signal<boolean>(false);
 
   readonly loadingMessage = 'Chargement des lieux...';
   readonly defaultErrorMessage =
     'Impossible de charger les lieux. Veuillez réessayer.';
+
+  readonly isScopeFilterActive = computed(
+    () => this.filterMode() === 'my-created'
+  );
+
+  readonly pageTitle = computed(() =>
+    this.isScopeFilterActive() ? 'Mes lieux créés' : 'Lieux de jeu'
+  );
+
+  readonly pageSubtitle = computed(() =>
+    this.isScopeFilterActive()
+      ? 'Retrouvez rapidement les lieux que vous avez créés.'
+      : 'Trouvez l\'endroit idéal pour vos sessions'
+  );
+
+  readonly scopeBannerMessage = computed(() =>
+    this.isScopeFilterActive()
+      ? 'Vous consultez uniquement les lieux que vous avez créés.'
+      : ''
+  );
 
   private scheduleAfterNextRender(
     callback: () => void,
@@ -374,6 +410,25 @@ export class LocationsListComponent implements OnInit, OnDestroy {
   private skipNextNearestAdjust = false;
   private readonly userLocationStorageKey = 'barades.locations.userPosition';
 
+  private readonly syncFiltersWithQueryParams = effect(() => {
+    const params = this.queryParamMap();
+    if (!params) {
+      return;
+    }
+
+    const filterParam = params.get('filter');
+    const fromParam = params.get('from');
+    const nextMode = filterParam === 'my-created' ? 'my-created' : 'all';
+    const shouldReload = this.filterMode() !== nextMode;
+
+    this.filterMode.set(nextMode);
+    this.comingFromDashboard.set(fromParam === 'dashboard');
+
+    if (shouldReload) {
+      void this.loadLocations();
+    }
+  });
+
   onSearchTermChange(value: string): void {
     this.searchTerm = value;
     this.applyFilters();
@@ -449,9 +504,11 @@ export class LocationsListComponent implements OnInit, OnDestroy {
     console.log('[LocationsList] Loading locations...');
     this.errorSignal.set(null);
 
-    const cachedLocations = this.locationsService.getCachedLocationsSnapshot();
-    const hasCachedData =
-      Array.isArray(cachedLocations) && cachedLocations.length > 0;
+    const isCreatedMode = this.filterMode() === 'my-created';
+    const cachedLocations = isCreatedMode
+      ? this.locationsService.getCachedCreatedLocationsSnapshot()
+      : this.locationsService.getCachedLocationsSnapshot();
+    const hasCachedData = Array.isArray(cachedLocations);
 
     if (hasCachedData && cachedLocations) {
       const filtered = this.normalizeLocations(cachedLocations);
@@ -463,9 +520,13 @@ export class LocationsListComponent implements OnInit, OnDestroy {
     this.loadingSignal.set(!hasCachedData);
     this.refreshingSignal.set(hasCachedData);
 
+    const source$ = isCreatedMode
+      ? this.locationsService.getLocationsCreatedByMe()
+      : this.locationsService.getLocations();
+
     await this.pendingTasks.run(async () => {
       try {
-        const data = await firstValueFrom(this.locationsService.getLocations());
+        const data = await firstValueFrom(source$);
         console.log(
           '[LocationsList] Locations loaded:',
           data.length,
@@ -1086,6 +1147,22 @@ export class LocationsListComponent implements OnInit, OnDestroy {
     void this.loadLocations();
   }
 
+  clearScopeFilter(): void {
+    if (!this.isScopeFilterActive()) {
+      return;
+    }
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { filter: null, from: null },
+      queryParamsHandling: 'merge',
+    });
+  }
+
+  returnToDashboard(): void {
+    this.router.navigate(['/dashboard']);
+  }
+
   get locationsState(): AsyncStateStatus {
     if (this.loading) {
       return 'loading';
@@ -1507,5 +1584,24 @@ export class LocationsListComponent implements OnInit, OnDestroy {
 
   private deg2rad(deg: number): number {
     return deg * (Math.PI / 180);
+  }
+
+  /**
+   * Check if the current user is the owner of a location
+   */
+  isOwner(location: Location): boolean {
+    const currentUser = this.authService.getCurrentUser();
+    return !!(
+      currentUser &&
+      location.creatorId &&
+      location.creatorId === currentUser.id
+    );
+  }
+
+  /**
+   * Navigate to edit page for a location
+   */
+  onEdit(locationId: string): void {
+    this.router.navigate(['/locations', locationId, 'edit']);
   }
 }

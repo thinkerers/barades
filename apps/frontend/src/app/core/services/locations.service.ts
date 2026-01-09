@@ -17,6 +17,8 @@ export interface Location {
   lat: number;
   lon: number;
   website: string | null;
+  isPrivate: boolean;
+  creatorId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -39,6 +41,7 @@ export interface CreateLocationData {
   capacity?: number;
   website?: string;
   icon?: string;
+  isPrivate?: boolean;
 }
 
 @Injectable({
@@ -48,7 +51,9 @@ export class LocationsService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/locations`;
   private refreshLocations$ = new BehaviorSubject<void>(undefined);
+  private refreshCreatedLocations$ = new BehaviorSubject<void>(undefined);
   private latestLocations: Location[] | null = null;
+  private latestCreatedLocations: Location[] | null = null;
   private locations$ = this.refreshLocations$.pipe(
     switchMap(() => this.http.get<Location[]>(this.apiUrl)),
     tap((locations) => {
@@ -56,9 +61,20 @@ export class LocationsService {
     }),
     shareReplay({ bufferSize: 1, refCount: true })
   );
+  private createdLocations$ = this.refreshCreatedLocations$.pipe(
+    switchMap(() => this.http.get<Location[]>(`${this.apiUrl}/created-by-me`)),
+    tap((locations) => {
+      this.latestCreatedLocations = locations;
+    }),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
 
   getLocations(): Observable<Location[]> {
     return this.locations$;
+  }
+
+  getLocationsCreatedByMe(): Observable<Location[]> {
+    return this.createdLocations$;
   }
 
   getLocation(id: string): Observable<Location> {
@@ -72,21 +88,27 @@ export class LocationsService {
   }
 
   updateLocation(id: string, data: Partial<Location>): Observable<Location> {
-    void id;
-    void data;
-    throw new Error('Not implemented yet');
+    return this.http.patch<Location>(`${this.apiUrl}/${id}`, data).pipe(
+      tap(() => this.invalidateLocationsCache())
+    );
   }
 
   deleteLocation(id: string): Observable<void> {
-    void id;
-    throw new Error('Not implemented yet');
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      tap(() => this.invalidateLocationsCache())
+    );
   }
 
   invalidateLocationsCache(): void {
     this.refreshLocations$.next();
+    this.refreshCreatedLocations$.next();
   }
 
   getCachedLocationsSnapshot(): Location[] | null {
     return this.latestLocations;
+  }
+
+  getCachedCreatedLocationsSnapshot(): Location[] | null {
+    return this.latestCreatedLocations;
   }
 }
