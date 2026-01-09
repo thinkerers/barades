@@ -1,0 +1,182 @@
+<div class="location-create">
+  <header class="location-create__header">
+    <h1>Modifier le lieu</h1>
+    <p>Mettez à jour les informations de votre lieu</p>
+  </header>
+
+  @if (error()) {
+  <div class="location-create__error" role="alert">
+    {{ error() }}
+  </div>
+  }
+
+  @if (loading()) {
+  <div class="location-create__loading">
+    <p>Chargement du lieu...</p>
+  </div>
+  } @else {
+  <form [formGroup]="locationForm" (ngSubmit)="onSubmit()" class="location-create__form">
+    <!-- Informations de base -->
+    <section class="form-section">
+      <h2>Informations générales</h2>
+
+      <div class="form-group">
+        <label for="name">Nom du lieu *</label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          placeholder="Ex: Le Dé qui Roule"
+          [class.invalid]="locationForm.get('name')?.touched && locationForm.get('name')?.invalid"
+        />
+        @if (getErrorMessage('name')) {
+        <span class="error-message">{{ getErrorMessage('name') }}</span>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="type">Type de lieu *</label>
+        <select id="type" formControlName="type">
+          @for (locationType of locationTypes; track locationType.value) {
+          <option [value]="locationType.value">{{ locationType.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="city">Ville *</label>
+          <input
+            id="city"
+            type="text"
+            formControlName="city"
+            placeholder="Ex: Bruxelles"
+            [class.invalid]="locationForm.get('city')?.touched && locationForm.get('city')?.invalid"
+          />
+          @if (getErrorMessage('city')) {
+          <span class="error-message">{{ getErrorMessage('city') }}</span>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="address">Adresse</label>
+          <input
+            id="address"
+            type="text"
+            formControlName="address"
+            placeholder="Ex: Rue de la Loi 42"
+          />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="capacity">Capacité (personnes)</label>
+          <input
+            id="capacity"
+            type="number"
+            formControlName="capacity"
+            placeholder="Ex: 30"
+            min="1"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="website">Site web</label>
+          <input
+            id="website"
+            type="url"
+            formControlName="website"
+            placeholder="https://..."
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- Localisation sur la carte -->
+    <section class="form-section">
+      <h2>Localisation</h2>
+      <p class="form-help">Cliquez sur la carte pour placer le lieu. Vous pouvez ensuite déplacer le marqueur.</p>
+
+      <div class="map-container">
+        <div #locationMap class="location-map"></div>
+      </div>
+
+      @if (locationForm.get('lat')?.value && locationForm.get('lon')?.value) {
+      <p class="coordinates-info">
+        📍 Coordonnées : {{ locationForm.get('lat')?.value | number:'1.4-4' }}, {{ locationForm.get('lon')?.value | number:'1.4-4' }}
+      </p>
+      } @else {
+      <p class="coordinates-warning">
+        ⚠️ Cliquez sur la carte pour définir la position du lieu
+      </p>
+      }
+    </section>
+
+    <!-- Équipements -->
+    <section class="form-section">
+      <h2>Équipements</h2>
+      <p class="form-help">Sélectionnez les équipements disponibles dans ce lieu</p>
+
+      <div class="amenities-grid">
+        @for (amenity of availableAmenities; track amenity) {
+        <button
+          type="button"
+          class="amenity-chip"
+          [class.selected]="isAmenitySelected(amenity)"
+          (click)="toggleAmenity(amenity)"
+        >
+          {{ amenity }}
+        </button>
+        }
+      </div>
+    </section>
+
+    <!-- Visibilité -->
+    <section class="form-section">
+      <h2>Visibilité</h2>
+
+      <label class="toggle-container">
+        <input
+          type="checkbox"
+          formControlName="isPrivate"
+          class="toggle-input"
+        />
+        <span class="toggle-switch"></span>
+        <span class="toggle-label">Lieu privé</span>
+      </label>
+
+      <p class="form-help privacy-info">
+        @if (locationForm.get('isPrivate')?.value) {
+        🔒 Ce lieu sera visible uniquement par vous. Les membres acceptés dans une session utilisant ce lieu pourront également le voir.
+        } @else {
+        🌐 Ce lieu sera visible par tous les utilisateurs de la plateforme.
+        }
+      </p>
+    </section>
+
+    <!-- Actions -->
+    <div class="form-actions">
+      <button type="button" class="btn btn--secondary" (click)="cancel()" [disabled]="saving() || deleting()">
+        Annuler
+      </button>
+      <div class="form-actions__right">
+        <button type="button" class="btn btn--danger" (click)="onDelete()" [disabled]="saving() || deleting()">
+          @if (deleting()) {
+          <span>Suppression...</span>
+          } @else {
+          <span>Supprimer</span>
+          }
+        </button>
+        <button type="submit" class="btn btn--primary" [disabled]="saving() || deleting()">
+          @if (saving()) {
+          <span>Modification en cours...</span>
+          } @else {
+          <span>Enregistrer les modifications</span>
+          }
+        </button>
+      </div>
+    </div>
+  </form>
+  }
+</div>

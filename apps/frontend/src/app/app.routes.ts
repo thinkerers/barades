@@ -75,6 +75,14 @@ export const appRoutes: Route[] = [
           ),
         canActivate: [authGuard],
       },
+      {
+        path: 'locations/:id/edit',
+        loadComponent: () =>
+          import('./features/locations/location-edit').then(
+            (m) => m.LocationEditComponent
+          ),
+        canActivate: [authGuard],
+      },
       // Groups - Lazy loaded
       {
         path: 'groups',
